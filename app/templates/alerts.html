@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AirSense alerts</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #18312a; background: #f3f7f4; }
+    body { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    h1, h2 { margin-top: 0; }
+    .panel, .alert { background: white; border: 1px solid #d6e2da; border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+    .panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .8rem; align-items: end; }
+    label { display: grid; gap: .35rem; font-weight: 600; }
+    input, button { font: inherit; padding: .65rem; border: 1px solid #aebfb4; border-radius: 7px; }
+    button { color: white; background: #176849; border-color: #176849; cursor: pointer; font-weight: 650; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #81c7a6; outline-offset: 2px; }
+    .status { display: inline-block; border-radius: 20px; padding: .25rem .7rem; font-size: .9rem; font-weight: 700; }
+    .active { background: #fff0dc; color: #784300; }
+    .acknowledged { background: #e8efff; color: #203d7b; }
+    .cleared { background: #e1f4e8; color: #185c35; }
+    .message { border-left: 4px solid #176849; padding: .7rem 1rem; background: #e8f4ec; }
+    .error { border-color: #a62222; background: #fff0f0; color: #7e1717; }
+    .muted { color: #52645a; }
+    .ack-form { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; margin-top: 1rem; }
+    .ack-form label { min-width: min(100%, 220px); }
+    @media (max-width: 520px) { body { padding: 1rem .75rem; } .panel { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AirSense alerts</h1>
+    <p class="muted">Acknowledge active alerts and track when room readings return to their configured threshold.</p>
+  </header>
+
+  {% if notice %}<p class="message" role="status">{{ notice }}</p>{% endif %}
+  {% if error %}<p class="message error" role="alert">{{ error }}</p>{% endif %}
+
+  <section aria-labelledby="reading-title">
+    <h2 id="reading-title">Record a CO₂ reading</h2>
+    <form class="panel" method="post" action="{{ url_for('submit_reading') }}">
+      <label>Room
+        <input name="room" maxlength="100" required placeholder="Bedroom">
+      </label>
+      <label>CO₂ reading (ppm)
+        <input name="co2_ppm" type="number" min="0" step="any" required>
+      </label>
+      <label>Alert threshold (ppm)
+        <input name="threshold_ppm" type="number" min="0.1" step="any" value="1000" required>
+      </label>
+      <button type="submit">Save reading</button>
+    </form>
+  </section>
+
+  <section aria-labelledby="alerts-title">
+    <h2 id="alerts-title">Alert history</h2>
+    {% if not alerts %}
+      <p class="muted">No alerts yet. Record a reading above the threshold to create one.</p>
+    {% endif %}
+    {% for alert in alerts %}
+      <article class="alert">
+        <p>
+          <strong>{{ alert.room_name }}</strong>
+          <span class="status {{ alert.status }}">
+            {% if alert.status == "cleared" %}All clear{% else %}{{ alert.status|capitalize }}{% endif %}
+          </span>
+        </p>
+        <p>Current reading: {{ alert.latest_co2_ppm|round|int }} ppm
+          <span class="muted">(threshold {{ alert.threshold_ppm|round|int }} ppm)</span>
+        </p>
+        <p class="muted">Alert began {{ alert.created_at }}</p>
+        {% if alert.status == "acknowledged" %}
+          <p>Acknowledged by {{ alert.acknowledged_by }} at {{ alert.acknowledged_at }}.</p>
+        {% elif alert.status == "active" %}
+          <form class="ack-form" method="post" action="{{ url_for('acknowledge', alert_id=alert.id) }}">
+            <label>Acknowledged by
+              <input name="acknowledged_by" maxlength="120" required placeholder="Household member">
+            </label>
+            <button type="submit">Acknowledge</button>
+          </form>
+        {% elif alert.status == "cleared" %}
+          <p class="muted">Returned below threshold at {{ alert.cleared_at }}.</p>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </section>
+  <footer class="muted">
+    AirSense is a ventilation-support tool, not a medical or safety device. It does not replace a certified carbon monoxide alarm.
+  </footer>
+</body>
+</html>
