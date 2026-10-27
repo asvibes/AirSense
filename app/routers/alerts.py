@@ -22,6 +22,7 @@ from app.repositories.alerts import (
     acknowledge_alert,
     configure_policy,
     list_alerts,
+    list_latest_readings,
     process_reading,
 )
 
@@ -33,8 +34,8 @@ alerts = Blueprint("alerts", __name__)
 def require_api_token():
     if (
         not current_app.config["REQUIRE_API_TOKEN"]
-        or request.endpoint == "health"
-        or request.endpoint == "static"
+        or request.endpoint
+        in {"health", "static", "alerts.index", "alerts.alerts_page"}
     ):
         return None
     expected = current_app.config["API_TOKEN"]
@@ -57,14 +58,27 @@ def index():
 
 @alerts.get("/alerts")
 def alerts_page():
-    session = get_session()
     return render_template(
         "alerts.html",
-        alerts=list_alerts(session),
         error=request.args.get("error"),
         notice=request.args.get("notice"),
         high_threshold=current_app.config["HIGH_THRESHOLD"],
         elevated_threshold=current_app.config["ELEVATED_THRESHOLD"],
+        api_token_required=current_app.config["REQUIRE_API_TOKEN"],
+    )
+
+
+@alerts.get("/api/dashboard")
+def api_dashboard():
+    try:
+        home_id = _text(request.args, "home_id", "demo-home", 64)
+    except ValueError as error:
+        return _request_error(str(error), 400)
+    session = get_session()
+    return jsonify(
+        home_id=home_id,
+        readings=list_latest_readings(session, home_id),
+        alerts=list_alerts(session, home_id),
     )
 
 
