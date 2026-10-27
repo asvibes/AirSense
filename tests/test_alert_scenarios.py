@@ -63,6 +63,10 @@ class AlertLifecycleTests(unittest.TestCase):
         self.assertEqual(
             [alert["level"] for alert in first.json["created"]], ["high"]
         )
+        self.assertIn(
+            "above the guideline level used by AirSense",
+            first.json["created"][0]["detail"],
+        )
         self.assertEqual(second.status_code, 201)
         self.assertEqual(second.json["created"], [])
         alerts = self.client.get("/api/alerts").json["alerts"]
@@ -226,8 +230,31 @@ class AlertLifecycleTests(unittest.TestCase):
 
         self.assertEqual(page.status_code, 200)
         self.assertIn(b"High", page.data)
-        self.assertIn(b"guideline level used by AirSense", page.data)
+        self.assertNotIn(b"SUBJECT CONSTRAINTS", page.data)
+        self.assertIn(b"certified carbon monoxide alarm", page.data)
+        self.assertIn(b"dashboard.js", page.data)
         self.assertEqual(self.client.get("/api/health").json, {"status": "ok"})
+
+    def test_dashboard_returns_latest_reading_and_trend_per_room_metric(self):
+        self.record(900, seconds=0)
+        self.record(1100, seconds=30)
+
+        response = self.client.get("/api/dashboard?home_id=demo-home")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json["readings"]), 1)
+        reading = response.json["readings"][0]
+        self.assertEqual(reading["room"], "Bedroom")
+        self.assertEqual(reading["metric"], "CO2")
+        self.assertEqual(reading["value"], 1100)
+        self.assertEqual(reading["previous_value"], 900)
+        self.assertEqual(reading["trend"], "rising")
+        self.assertEqual(reading["unit"], "ppm")
+        self.assertEqual(reading["source"], "simulated")
+        self.assertEqual(
+            self.client.get("/api/dashboard?home_id=another-home").json["readings"],
+            [],
+        )
 
     def test_browser_forms_use_html_routes_and_redirect(self):
         response = self.client.post(
@@ -236,7 +263,7 @@ class AlertLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 302)
         page = self.client.get("/alerts")
-        self.assertIn(b'action="/alerts/1/acknowledge"', page.data)
+        self.assertIn(b"Recent alerts", page.data)
         acknowledged = self.client.post(
             "/alerts/1/acknowledge",
             data={"acknowledged_by": "Ari"},
@@ -271,7 +298,7 @@ class AlertLifecycleTests(unittest.TestCase):
             [alert["level"] for alert in breach.json["created"]], ["high"]
         )
 
-    def test_production_token_restricts_ui_and_api_routes(self):
+    def test_production_token_allows_ui_shell_and_restricts_api_routes(self):
         protected = create_app(
             {
                 "TESTING": True,
@@ -283,7 +310,9 @@ class AlertLifecycleTests(unittest.TestCase):
         ).test_client()
 
         self.assertEqual(protected.get("/api/alerts").status_code, 401)
-        self.assertEqual(protected.get("/alerts").status_code, 401)
+        page = protected.get("/alerts")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b"Connect to the protected API", page.data)
         self.assertEqual(
             protected.post("/api/readings", json={"room": "Bedroom"}).status_code,
             401,

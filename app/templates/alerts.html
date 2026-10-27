@@ -3,87 +3,204 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AirSense alerts</title>
-  <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #18312a; background: #f3f7f4; }
-    body { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
-    h1, h2 { margin-top: 0; }
-    .panel, .alert { background: white; border: 1px solid #d6e2da; border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
-    .panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .8rem; align-items: end; }
-    label { display: grid; gap: .35rem; font-weight: 600; }
-    input, button { font: inherit; padding: .65rem; border: 1px solid #aebfb4; border-radius: 7px; }
-    button { color: white; background: #176849; border-color: #176849; cursor: pointer; font-weight: 650; }
-    button:focus-visible, input:focus-visible { outline: 3px solid #81c7a6; outline-offset: 2px; }
-    .status { display: inline-block; border-radius: 20px; padding: .25rem .7rem; font-size: .9rem; font-weight: 700; }
-    .active { background: #fff0dc; color: #784300; }
-    .acknowledged { background: #e8efff; color: #203d7b; }
-    .all_clear { background: #e1f4e8; color: #185c35; }
-    .message { border-left: 4px solid #176849; padding: .7rem 1rem; background: #e8f4ec; }
-    .error { border-color: #a62222; background: #fff0f0; color: #7e1717; }
-    .muted { color: #52645a; }
-    .ack-form { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; margin-top: 1rem; }
-    .ack-form label { min-width: min(100%, 220px); }
-    @media (max-width: 520px) { body { padding: 1rem .75rem; } .panel { grid-template-columns: 1fr; } }
-  </style>
+  <meta name="theme-color" content="#f5f7f2">
+  <title>AirSense | Home air monitor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <script defer src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </head>
-<body>
-  <header>
-    <h1>AirSense alerts</h1>
-    <p class="muted">Acknowledge active alerts and track when readings remain below their configured threshold.</p>
+<body
+  data-home-id="demo-home"
+  data-home-name="Demo Home"
+  data-api-token-required="{{ 'true' if api_token_required else 'false' }}"
+  data-high-threshold="{{ high_threshold }}"
+  data-elevated-threshold="{{ elevated_threshold }}"
+>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('alerts.alerts_page') }}" aria-label="AirSense home">
+      <span class="brand-mark" aria-hidden="true">A</span>
+      <span>airsense</span>
+    </a>
+    <div class="topbar-actions">
+      <span class="connection-state" id="connection-state"><span class="connection-dot"></span> Connecting</span>
+      <button class="button button-quiet" id="refresh-button" type="button">Refresh</button>
+    </div>
   </header>
 
-  {% if notice %}<p class="message" role="status">{{ notice }}</p>{% endif %}
-  {% if error %}<p class="message error" role="alert">{{ error }}</p>{% endif %}
+  <main class="page-shell">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">INDOOR AIR MONITOR</p>
+        <h1>Know what’s in the air at home.</h1>
+        <p class="intro-copy">A room-by-room view of sensor readings, trends and alerts to support ventilation decisions.</p>
+      </div>
+      <form class="home-switcher" id="home-form">
+        <label for="home-id">Demo home ID</label>
+        <div class="home-fields">
+          <input id="home-id" name="home_id" value="demo-home" maxlength="64" required>
+          <button class="button button-dark" type="submit">Open</button>
+        </div>
+        <span class="field-help">This demo has no household accounts or home-level access control.</span>
+      </form>
+    </section>
 
-  <section aria-labelledby="reading-title">
-    <h2 id="reading-title">Record a CO₂ reading</h2>
-    <form class="panel" method="post" action="{{ url_for('alerts.submit_reading') }}">
-      <label>Room
-        <input name="room" maxlength="100" required placeholder="Bedroom">
-      </label>
-      <label>CO₂ reading (ppm)
-        <input name="co2_ppm" type="number" min="0" step="any" required>
-      </label>
-      <button type="submit">Save reading</button>
-    </form>
-    <p class="muted">Current demo thresholds: High {{ high_threshold|round|int }} ppm; Elevated {{ elevated_threshold|round|int }} ppm after sustained readings. Configure thresholds for the dataset and published guideline before household use.</p>
-  </section>
-
-  <section aria-labelledby="alerts-title">
-    <h2 id="alerts-title">Alert history</h2>
-    {% if not alerts %}
-      <p class="muted">No alerts yet. Record a reading above the threshold to create one.</p>
+    {% if api_token_required %}
+    <section class="token-panel" id="token-panel" aria-labelledby="token-title">
+      <div>
+        <p class="eyebrow">DEPLOYMENT ACCESS</p>
+        <h2 id="token-title">Connect to the protected API</h2>
+        <p>The deployment uses a shared API token, not individual household sign-in. It stays in this browser tab only.</p>
+      </div>
+      <form id="token-form" class="token-form">
+        <label for="api-token">API token</label>
+        <div class="home-fields">
+          <input id="api-token" type="password" autocomplete="off" required>
+          <button class="button button-dark" type="submit">Connect</button>
+        </div>
+      </form>
+    </section>
     {% endif %}
-    {% for alert in alerts %}
-      <article class="alert">
-        <p>
-          <strong>{{ alert.room }}</strong>
-          <span class="status {{ alert.status }}">
-            {% if alert.status == "all_clear" %}All clear{% else %}{{ alert.level|replace("_", " ")|capitalize }} — {{ alert.status|capitalize }}{% endif %}
-          </span>
-        </p>
-        <p>Latest observed value: {{ alert.latest_value|round|int }} {{ alert.threshold_unit }}
-          <span class="muted">(trigger threshold {{ alert.threshold_value|round|int }} {{ alert.threshold_unit }})</span>
-        </p>
-        <p>{{ alert.detail }}</p>
-        <p class="muted">Alert began {{ alert.created_at }}</p>
-        {% if alert.status == "acknowledged" %}
-          <p>Acknowledged by {{ alert.acknowledged_by }} at {{ alert.acknowledged_at }}.</p>
-        {% elif alert.status == "active" %}
-          <form class="ack-form" method="post" action="{{ url_for('alerts.acknowledge', alert_id=alert.id) }}">
-            <label>Acknowledged by
-              <input name="acknowledged_by" maxlength="120" required placeholder="Household member">
-            </label>
-            <button type="submit">Acknowledge</button>
-          </form>
-        {% elif alert.status == "all_clear" %}
-          <p class="muted">Readings remained below the applicable threshold for {{ alert.clear_duration_seconds }} seconds. All clear at {{ alert.all_clear_at }}.</p>
-        {% endif %}
+
+    <p class="notice notice-error" id="error-message" role="alert" hidden></p>
+    <p class="notice notice-success" id="success-message" role="status" hidden></p>
+
+    <section class="summary-grid" aria-label="Home overview">
+      <article class="summary-card">
+        <span class="summary-label">Rooms reporting</span>
+        <strong class="summary-value" id="room-count">—</strong>
+        <span class="summary-note">Rooms with recorded readings</span>
       </article>
-    {% endfor %}
-  </section>
-  <footer class="muted">
-    AirSense supports ventilation decisions; it is not a medical or safety device and does not replace a certified carbon monoxide alarm.
-  </footer>
+      <article class="summary-card">
+        <span class="summary-label">Open alerts</span>
+        <strong class="summary-value" id="open-alert-count">—</strong>
+        <span class="summary-note">Need household attention</span>
+      </article>
+      <article class="summary-card summary-card-wide">
+        <span class="summary-label">Most recent report</span>
+        <strong class="summary-value summary-latest" id="latest-report">Waiting for data</strong>
+        <span class="summary-note" id="last-updated">Dashboard refreshes every 20 seconds</span>
+      </article>
+    </section>
+
+    <section class="panel chart-panel" aria-labelledby="chart-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">AT A GLANCE</p>
+          <h2 id="chart-title">Latest readings by room</h2>
+        </div>
+        <button class="button button-quiet" id="rotation-button" type="button" aria-pressed="false">Pause rotation</button>
+      </div>
+      <div class="chart-toolbar">
+        <div class="metric-tabs" id="metric-tabs" role="tablist" aria-label="Metric"></div>
+        <span class="muted" id="chart-updated">Waiting for data</span>
+      </div>
+      <div class="bar-chart" id="room-chart" aria-live="polite"></div>
+      <p class="empty-state" id="chart-empty">No readings yet. Record a sample or connect a data replay.</p>
+    </section>
+
+    <section class="section-block" aria-labelledby="rooms-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">ROOM STATUS</p>
+          <h2 id="rooms-title">Your rooms</h2>
+        </div>
+        <span class="muted" id="room-count-label">Updates every 20 seconds</span>
+      </div>
+      <div class="room-grid" id="room-grid">
+        <p class="empty-state">No rooms are reporting yet.</p>
+      </div>
+    </section>
+
+    <div class="workbench-grid">
+      <section class="panel" aria-labelledby="reading-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ADD A SAMPLE</p>
+            <h2 id="reading-title">Record a reading</h2>
+          </div>
+          <span class="source-pill source-simulated">Demo input</span>
+        </div>
+        <form class="form-grid" id="reading-form">
+          <label class="field field-wide" for="reading-room">
+            <span class="field-label">Room</span>
+            <input id="reading-room" name="room" maxlength="100" placeholder="Bedroom" required>
+          </label>
+          <label class="field" for="reading-value">
+            <span class="field-label">CO₂ reading <span class="unit-label">ppm</span></span>
+            <input id="reading-value" name="value" type="number" min="0" step="any" inputmode="decimal" placeholder="850" required>
+          </label>
+          <label class="field" for="reading-source">
+            <span class="field-label">Source</span>
+            <select id="reading-source" name="source">
+              <option value="simulated">Simulated Data</option>
+              <option value="dataset">Recorded Data: Replay</option>
+            </select>
+          </label>
+          <button class="button button-dark field-wide" type="submit">Save reading</button>
+        </form>
+        <p class="field-help">The backend validates the value and timestamp, rejects duplicate or out-of-order samples, then evaluates alerts in the same transaction.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="policy-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">OWNER CONFIGURATION</p>
+            <h2 id="policy-title">CO₂ alert thresholds</h2>
+          </div>
+          <span class="unit-label">ppm</span>
+        </div>
+        <form class="form-grid" id="policy-form">
+          <label class="field field-wide" for="policy-room">
+            <span class="field-label">Room</span>
+            <input id="policy-room" name="room" maxlength="100" placeholder="Bedroom" required>
+          </label>
+          <label class="field" for="high-threshold">
+            <span class="field-label">High</span>
+            <input id="high-threshold" name="high_threshold" type="number" min="1" step="any" required>
+          </label>
+          <label class="field" for="elevated-threshold">
+            <span class="field-label">Elevated</span>
+            <input id="elevated-threshold" name="elevated_threshold" type="number" min="0" step="any" required>
+          </label>
+          <label class="field" for="elevated-duration">
+            <span class="field-label">Elevated duration (sec)</span>
+            <input id="elevated-duration" name="elevated_duration_seconds" type="number" min="1" step="1" value="300" required>
+          </label>
+          <label class="field" for="rapid-rise">
+            <span class="field-label">Rapid rise per minute</span>
+            <input id="rapid-rise" name="rapid_rise_per_minute" type="number" min="1" step="any" value="200" required>
+          </label>
+          <label class="field" for="all-clear-duration">
+            <span class="field-label">All-clear duration (sec)</span>
+            <input id="all-clear-duration" name="all_clear_duration_seconds" type="number" min="1" step="1" value="300" required>
+          </label>
+          <label class="field" for="max-reading-gap">
+            <span class="field-label">Max sample gap (sec)</span>
+            <input id="max-reading-gap" name="max_reading_gap_seconds" type="number" min="1" step="1" value="120" required>
+          </label>
+          <button class="button button-dark field-wide" type="submit">Save room thresholds</button>
+        </form>
+        <p class="field-help">Demo defaults are illustrative, not published health guidance. Record a guideline source before using thresholds outside a demo.</p>
+      </section>
+    </div>
+
+    <section class="section-block" aria-labelledby="alerts-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">ALERT ACTIVITY</p>
+          <h2 id="alerts-title">Recent alerts</h2>
+        </div>
+        <span class="muted">High · Elevated · Rapid rise · All clear</span>
+      </div>
+      <div class="alert-list" id="alert-list">
+        <p class="empty-state">No alerts recorded.</p>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <span>AirSense · ventilation-support tool</span>
+      <span>Not a medical or safety device; does not replace a certified carbon monoxide alarm.</span>
+      <span id="last-refresh">Not yet refreshed</span>
+    </footer>
+  </main>
 </body>
 </html>

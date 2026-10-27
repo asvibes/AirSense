@@ -1,23 +1,6 @@
 # AirSense
 
-AirSense is a responsive indoor-air-quality project that turns sensor readings into room-wise statuses, alerts, history, and ventilation guidance. It consumes readings; it does not measure air quality itself.
-
-The current runnable slice implements the alert lifecycle from the PRD:
-
-* **High:** opens immediately when a reading reaches the configured high threshold.
-* **Elevated:** opens only after consecutive readings stay at or above the configured elevated threshold for the configured duration.
-* **Rapid rise:** opens when the rate of increase between consecutive readings reaches the configured rate.
-* **Acknowledgement:** records a display name and timestamp. Repeating acknowledgement does not overwrite the original acknowledgement.
-* **All clear:** an open alert clears only after readings remain below its applicable threshold for the alert's configured duration. Missing samples or gaps beyond the configured maximum restart the timer.
-* **Duplicate prevention:** a PostgreSQL/SQLite partial unique index allows at most one open alert for a home, room, metric, and level. A new breach after all-clear creates a new alert.
-
-## Status and scope
-
-The alert vertical slice and a basic Flask UI/API are implemented. The original repository has no recoverable feature implementation in its history: commit `bbf7ad6` (`Added files empty`) added the empty placeholders. The attached product requirements are broader than this slice. Registration, household membership and role checks, sensor provisioning/authentication, the general dashboard, history/CSV, audit log, simulator/replay ingestion, and Power BI integration remain future work; the current alert UI/API is not a complete household application.
-
-The demo threshold defaults are **illustrative configuration values, not sourced health or safety guidelines**. Set metric-specific values and durations for the intended sensor and cite their source before household use. Alert acknowledgements use caller-supplied display labels; they are not authenticated identities. A bearer API token can restrict write endpoints, but it does not replace user accounts, roles, or per-device credentials. Do not put personal or household sensor data on a public deployment until authentication and home-level authorization are implemented.
-
-AirSense is a ventilation-support tool, not a medical or safety device. It does not replace a certified carbon monoxide alarm.
+AirSense is a ventilation-support demo that shows indoor air readings, room trends, and threshold alerts. It consumes readings from external sensors or replay data; it does not measure air quality itself.
 
 ## Run locally
 
@@ -31,39 +14,32 @@ python -m alembic upgrade head
 python -m flask --app "app.main:create_app()" run
 ```
 
-Open `http://127.0.0.1:5000/alerts`. For local development, the default database is SQLite at `instance\airsense.sqlite3`. Alembic applies the versioned schema. Set `DATABASE_URL` to use another SQLAlchemy URL.
+Open `http://127.0.0.1:5000/`. The default database is SQLite at `instance\airsense.sqlite3`; set `DATABASE_URL` to use another supported SQLAlchemy database URL. `AUTO_CREATE_SCHEMA` defaults to `true` for local development.
 
-Run tests with:
+Run the backend and dashboard tests with:
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-## Configuration
+## Dashboard
 
-Copy `.env.example` to `.env` and export its values in your shell or hosting environment. The app does not load `.env` files automatically.
+The Flask-rendered interface is responsive and served from `/alerts` (the root route redirects there). It polls the dashboard API every 20 seconds and provides:
 
-| Variable | Purpose | Demo default |
-| --- | --- | --- |
-| `DATABASE_URL` | SQLAlchemy database URL; PostgreSQL URLs are adapted to psycopg 3 | local SQLite |
-| `SECRET_KEY` | Flask secret key | development-only fallback |
-| `AIRSENSE_HIGH_THRESHOLD` | Immediate High threshold, in the configured metric's unit | `1500` |
-| `AIRSENSE_ELEVATED_THRESHOLD` | Sustained Elevated threshold | `1000` |
-| `AIRSENSE_ELEVATED_DURATION_SECONDS` | Required sustained Elevated duration | `300` |
-| `AIRSENSE_RAPID_RISE_PER_MINUTE` | Rapid-rise threshold in metric units per minute | `200` |
-| `AIRSENSE_ALL_CLEAR_DURATION_SECONDS` | Required below-threshold duration before clearing | `300` |
-| `AIRSENSE_MAX_READING_GAP_SECONDS` | Larger sample gaps reset sustained timers | `120` |
-| `AIRSENSE_API_TOKEN` | Shared bearer token for hosted application routes | unset |
-| `REQUIRE_API_TOKEN` | Require the token on application routes | `false` |
+* Latest reading by room and metric, including source, sample age, and direction of change when a previous sample exists.
+* Room status and alert history, with alert acknowledgement.
+* CO₂ reading entry for simulated and recorded replay data.
+* Per-room CO₂ threshold configuration for High, sustained Elevated, rapid rise, and all-clear behavior.
 
-Set `REQUIRE_API_TOKEN=true` and a random `AIRSENSE_API_TOKEN` of at least 32 characters before exposing application routes. API clients then send `Authorization: Bearer <token>`. This shared token is a deployment guard, not household-member authentication. The hosted browser UI also requires this header; interactive account login is not implemented yet.
+The dashboard uses HTML, CSS, and vanilla JavaScript served by Flask; no separate frontend build or third-party browser package is required.
 
 ## API
 
 * `GET /api/health` checks application/database availability.
-* `GET /api/alerts?home_id=demo-home` lists alert history (all homes if no filter is supplied).
-* `POST /api/policies` configures the alert thresholds and durations for one home/room/metric. Its JSON body includes `room`, `metric`, `unit`, `high_threshold`, `elevated_threshold`, `elevated_duration_seconds`, `rapid_rise_per_minute`, `all_clear_duration_seconds`, and `max_reading_gap_seconds`.
-* `POST /api/readings` records and evaluates a reading. Example:
+* `GET /api/dashboard?home_id=demo-home` returns the latest two readings per room/metric (for trend calculation) and alert history for the selected home ID.
+* `GET /api/alerts?home_id=demo-home` returns alert history.
+* `POST /api/policies` configures one room/metric policy. Its JSON body includes `room`, `metric`, `unit`, `high_threshold`, `elevated_threshold`, `elevated_duration_seconds`, `rapid_rise_per_minute`, `all_clear_duration_seconds`, and `max_reading_gap_seconds`.
+* `POST /api/readings` stores and evaluates a reading. Example:
 
 ```json
 {
@@ -73,26 +49,27 @@ Set `REQUIRE_API_TOKEN=true` and a random `AIRSENSE_API_TOKEN` of at least 32 ch
   "metric": "CO2",
   "unit": "ppm",
   "value": 1650,
-  "source": "simulated",
-  "measured_at": "2026-10-27T06:35:00Z"
+  "source": "simulated"
 }
 ```
 
-`source` is `dataset`, `simulated`, or `device`. `measured_at` is an optional ISO-8601 timestamp with timezone. The response includes newly created alerts, all-clear transitions, and active alerts. Replayed timestamps must be newer than the latest sample for that home/room/metric.
+`source` is `dataset`, `simulated`, or `device`. Timestamps are ISO-8601 with a timezone; omitted timestamps use the current time. A sample must be newer than the most recent reading for its home/room/metric.
 
 * `POST /api/alerts/{id}/acknowledge` accepts `{"acknowledged_by":"Member name"}`.
 
-Invalid input returns a 400 response; missing alerts return 404; attempting to acknowledge an all-clear alert returns 409. The API does not yet verify that the supplied acknowledgement name belongs to the home.
+When `REQUIRE_API_TOKEN=true`, API requests require `Authorization: Bearer <AIRSENSE_API_TOKEN>`. The dashboard itself remains available as a shell so a user can enter the deployment token; the browser holds it in tab-scoped session storage. This token is a shared deployment guard, not an account or household permission.
 
-## Database and deployment
+## Subject constraints and implementation status
 
-Alembic migrations live in `migrations/versions/`; the schema uses SQLAlchemy types and a filtered unique index that is supported by both PostgreSQL and SQLite. Apply changes with `python -m alembic upgrade head`. The deployment command runs migrations before starting the application.
+* **System Design:** One Flask application, REST endpoints, and 20-second polling; no websockets or microservices. Replay and simulated readings use the same alert evaluation path.
+* **RDBMS:** Readings and alerts use relational SQLAlchemy models. Duplicate room/metric/timestamp readings are rejected, open-alert uniqueness is enforced in the database, and reading/alert updates are transactional.
+* **DP-900:** Readings retain metric, unit, source, and timestamp. The current dashboard supports CO₂/ppm only. The backend does not yet persist citations for the illustrative default thresholds.
+* **Cloud Security:** A shared bearer token can guard API routes, but user accounts, home-membership authorization, and per-device keys are not implemented. Do not enter private household data. Use HTTPS before any hosted use.
 
-For Render:
+AirSense makes no medical or diagnostic claims and does not replace a certified carbon monoxide alarm. CO and NO₂ are advisory metrics; their entry screens are not enabled in this demo.
 
-1. Create a PostgreSQL database and a web service from this repository's `render.yaml`.
-2. Set `DATABASE_URL` to the database's **internal** connection URL.
-3. Set `SECRET_KEY` and `AIRSENSE_API_TOKEN` to unique generated secrets in the Render dashboard.
-4. The blueprint requires the bearer token for all write requests. Keep household data out of this deployment until account authentication, household authorization, and per-sensor credentials are added.
+## Current scope and limitations
 
-Render deployment configuration is provided; this repository has not been deployed or verified against a live Render service.
+This checkout implements the alert lifecycle and its connected demo dashboard. Registration, household membership and role checks, sensor provisioning, per-sensor freshness intervals, CO/NO₂ screens, DALTON upload/replay tools, history charts and CSV export, audit logging, private blob storage, Power BI integration, and live sensor ingestion are not implemented. The dashboard does not label a sensor stale because no expected reporting interval is stored. Do not use this demo with personal household data.
+
+Alert thresholds shown by default are illustrative configuration values, not published health or safety guidelines. Record a guideline source for each threshold and verify the metric units and sensor range before any non-demo use.

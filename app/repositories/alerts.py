@@ -435,6 +435,69 @@ def list_alerts(session: Session, home_id: str | None = None) -> list[dict]:
     ]
 
 
+def list_latest_readings(session: Session, home_id: str) -> list[dict]:
+    ranked_readings = (
+        select(
+            Reading.id.label("reading_id"),
+            func.row_number()
+            .over(
+                partition_by=(Reading.room_id, Reading.metric_code),
+                order_by=(Reading.measured_at.desc(), Reading.id.desc()),
+            )
+            .label("position"),
+        )
+        .where(Reading.home_id == home_id)
+        .subquery()
+    )
+    rows = session.execute(
+        select(
+            Reading,
+            Room.name,
+            Metric.name,
+            Metric.unit,
+            ranked_readings.c.position,
+        )
+        .join(ranked_readings, ranked_readings.c.reading_id == Reading.id)
+        .join(Room, Reading.room_id == Room.id)
+        .join(Metric, Reading.metric_code == Metric.code)
+        .where(ranked_readings.c.position <= 2)
+        .order_by(Room.name, Reading.metric_code, ranked_readings.c.position)
+    )
+
+    latest_by_scope: dict[tuple[str, str], dict] = {}
+    for reading, room_name, metric_name, unit, position in rows:
+        scope = (room_name, reading.metric_code)
+        latest = latest_by_scope.get(scope)
+        if position == 1:
+            latest = {
+                "room": room_name,
+                "metric": reading.metric_code,
+                "metric_name": metric_name,
+                "value": reading.value,
+                "unit": unit,
+                "source": reading.source,
+                "measured_at": _utc(reading.measured_at)
+                .isoformat()
+                .replace("+00:00", "Z"),
+                "previous_value": None,
+                "trend": "unavailable",
+                "change": None,
+            }
+            latest_by_scope[scope] = latest
+        elif latest is not None:
+            latest["previous_value"] = reading.value
+            latest["change"] = latest["value"] - reading.value
+            latest["trend"] = (
+                "rising"
+                if latest["value"] > reading.value
+                else "falling"
+                if latest["value"] < reading.value
+                else "steady"
+            )
+
+    return list(latest_by_scope.values())
+
+
 def acknowledge_alert(
     session: Session, alert_id: int, acknowledged_by: str
 ) -> dict:
