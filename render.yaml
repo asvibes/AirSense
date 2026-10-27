@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: airsense
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: python -m alembic upgrade head
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 "app.main:create_app()"
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AIRSENSE_API_TOKEN
+        sync: false
+      - key: REQUIRE_API_TOKEN
+        value: "true"
+      - key: AUTO_CREATE_SCHEMA
+        value: "false"

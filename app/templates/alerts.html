@@ -17,7 +17,7 @@
     .status { display: inline-block; border-radius: 20px; padding: .25rem .7rem; font-size: .9rem; font-weight: 700; }
     .active { background: #fff0dc; color: #784300; }
     .acknowledged { background: #e8efff; color: #203d7b; }
-    .cleared { background: #e1f4e8; color: #185c35; }
+    .all_clear { background: #e1f4e8; color: #185c35; }
     .message { border-left: 4px solid #176849; padding: .7rem 1rem; background: #e8f4ec; }
     .error { border-color: #a62222; background: #fff0f0; color: #7e1717; }
     .muted { color: #52645a; }
@@ -29,7 +29,7 @@
 <body>
   <header>
     <h1>AirSense alerts</h1>
-    <p class="muted">Acknowledge active alerts and track when room readings return to their configured threshold.</p>
+    <p class="muted">Acknowledge active alerts and track when readings remain below their configured threshold.</p>
   </header>
 
   {% if notice %}<p class="message" role="status">{{ notice }}</p>{% endif %}
@@ -37,18 +37,16 @@
 
   <section aria-labelledby="reading-title">
     <h2 id="reading-title">Record a CO₂ reading</h2>
-    <form class="panel" method="post" action="{{ url_for('submit_reading') }}">
+    <form class="panel" method="post" action="{{ url_for('alerts.submit_reading') }}">
       <label>Room
         <input name="room" maxlength="100" required placeholder="Bedroom">
       </label>
       <label>CO₂ reading (ppm)
         <input name="co2_ppm" type="number" min="0" step="any" required>
       </label>
-      <label>Alert threshold (ppm)
-        <input name="threshold_ppm" type="number" min="0.1" step="any" value="1000" required>
-      </label>
       <button type="submit">Save reading</button>
     </form>
+    <p class="muted">Current demo thresholds: High {{ high_threshold|round|int }} ppm; Elevated {{ elevated_threshold|round|int }} ppm after sustained readings. Configure thresholds for the dataset and published guideline before household use.</p>
   </section>
 
   <section aria-labelledby="alerts-title">
@@ -59,32 +57,33 @@
     {% for alert in alerts %}
       <article class="alert">
         <p>
-          <strong>{{ alert.room_name }}</strong>
+          <strong>{{ alert.room }}</strong>
           <span class="status {{ alert.status }}">
-            {% if alert.status == "cleared" %}All clear{% else %}{{ alert.status|capitalize }}{% endif %}
+            {% if alert.status == "all_clear" %}All clear{% else %}{{ alert.level|replace("_", " ")|capitalize }} — {{ alert.status|capitalize }}{% endif %}
           </span>
         </p>
-        <p>Current reading: {{ alert.latest_co2_ppm|round|int }} ppm
-          <span class="muted">(threshold {{ alert.threshold_ppm|round|int }} ppm)</span>
+        <p>Latest observed value: {{ alert.latest_value|round|int }} {{ alert.threshold_unit }}
+          <span class="muted">(trigger threshold {{ alert.threshold_value|round|int }} {{ alert.threshold_unit }})</span>
         </p>
+        <p>{{ alert.detail }}</p>
         <p class="muted">Alert began {{ alert.created_at }}</p>
         {% if alert.status == "acknowledged" %}
           <p>Acknowledged by {{ alert.acknowledged_by }} at {{ alert.acknowledged_at }}.</p>
         {% elif alert.status == "active" %}
-          <form class="ack-form" method="post" action="{{ url_for('acknowledge', alert_id=alert.id) }}">
+          <form class="ack-form" method="post" action="{{ url_for('alerts.acknowledge', alert_id=alert.id) }}">
             <label>Acknowledged by
               <input name="acknowledged_by" maxlength="120" required placeholder="Household member">
             </label>
             <button type="submit">Acknowledge</button>
           </form>
-        {% elif alert.status == "cleared" %}
-          <p class="muted">Returned below threshold at {{ alert.cleared_at }}.</p>
+        {% elif alert.status == "all_clear" %}
+          <p class="muted">Readings remained below the applicable threshold for {{ alert.clear_duration_seconds }} seconds. All clear at {{ alert.all_clear_at }}.</p>
         {% endif %}
       </article>
     {% endfor %}
   </section>
   <footer class="muted">
-    AirSense is a ventilation-support tool, not a medical or safety device. It does not replace a certified carbon monoxide alarm.
+    AirSense supports ventilation decisions; it is not a medical or safety device and does not replace a certified carbon monoxide alarm.
   </footer>
 </body>
 </html>
