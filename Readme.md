@@ -95,4 +95,4 @@ For Render:
 3. Set `SECRET_KEY` and `AIRSENSE_API_TOKEN` to unique generated secrets in the Render dashboard.
 4. The blueprint requires the bearer token for all write requests. Keep household data out of this deployment until account authentication, household authorization, and per-sensor credentials are added.
 
-Render deployment configuration is provided; this repository has not been deployed or verified against a live Render service.
+Render deployment configuration is provided; this repository has not been deployed or verified against a live Render service. 
