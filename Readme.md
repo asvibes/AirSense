@@ -24,14 +24,15 @@ python -m unittest discover -s tests -v
 
 ## Dashboard
 
-The Flask-rendered interface is responsive and served from `/alerts` (the root route redirects there). It polls the dashboard API every 20 seconds and provides:
+The responsive frontend preview is served from `/alerts` (the root route redirects there). It uses illustrative sample data held in browser memory and does not call the backend APIs. Its views include:
 
-* Latest reading by room and metric, including source, sample age, and direction of change when a previous sample exists.
-* Room status and alert history, with alert acknowledgement.
-* CO₂ reading entry for simulated and recorded replay data.
-* Per-room CO₂ threshold configuration for High, sustained Elevated, rapid rise, and all-clear behavior.
+* Overview, rooms, sensors, alerts, history, thresholds, members, activity, and a demo lab.
+* Local-only navigation and interactions, including sample alert acknowledgement, room/sensor/member edits, demo scenarios, and threshold changes.
+* A daily bar chart with date labels, a weekday/month/date coverage calendar, and CSV export generated from sample values.
+* A light/dark theme toggle for the preview interface.
+* Clear labels that the displayed values are not live and are not DALTON data. DALTON import/replay is not connected yet.
 
-The dashboard uses HTML, CSS, and vanilla JavaScript served by Flask; no separate frontend build or third-party browser package is required.
+The interface uses HTML, CSS, and vanilla JavaScript served by Flask; no separate frontend build or third-party browser package is required. Backend API endpoints remain available independently and are documented below.
 
 ## API
 
@@ -70,6 +71,6 @@ AirSense makes no medical or diagnostic claims and does not replace a certified 
 
 ## Current scope and limitations
 
-This checkout implements the alert lifecycle and its connected demo dashboard. Registration, household membership and role checks, sensor provisioning, per-sensor freshness intervals, CO/NO₂ screens, DALTON upload/replay tools, history charts and CSV export, audit logging, private blob storage, Power BI integration, and live sensor ingestion are not implemented. The dashboard does not label a sensor stale because no expected reporting interval is stored. Do not use this demo with personal household data.
+The current frontend is a standalone prototype and is not connected to the backend. Its sample interactions are not persisted. DALTON data import/replay, account and household authorization, real sensor provisioning/ingestion, authoritative threshold references, and persisted audit history remain future work. The backend alert API remains available but is not consumed by this frontend. Do not use this preview with personal household data.
 
 Alert thresholds shown by default are illustrative configuration values, not published health or safety guidelines. Record a guideline source for each threshold and verify the metric units and sensor range before any non-demo use.

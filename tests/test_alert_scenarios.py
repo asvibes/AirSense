@@ -232,7 +232,13 @@ class AlertLifecycleTests(unittest.TestCase):
         self.assertIn(b"High", page.data)
         self.assertNotIn(b"SUBJECT CONSTRAINTS", page.data)
         self.assertIn(b"certified carbon monoxide alarm", page.data)
+        self.assertIn(b"illustrative sample readings, not live sensor or DALTON data", page.data)
+        self.assertIn(b"DALTON replay is not connected", page.data)
         self.assertIn(b"dashboard.js", page.data)
+        script = self.client.get("/static/js/dashboard.js")
+        self.assertEqual(script.status_code, 200)
+        self.assertNotIn(b"fetch(", script.data)
+        script.close()
         self.assertEqual(self.client.get("/api/health").json, {"status": "ok"})
 
     def test_dashboard_returns_latest_reading_and_trend_per_room_metric(self):
@@ -312,7 +318,7 @@ class AlertLifecycleTests(unittest.TestCase):
         self.assertEqual(protected.get("/api/alerts").status_code, 401)
         page = protected.get("/alerts")
         self.assertEqual(page.status_code, 200)
-        self.assertIn(b"Connect to the protected API", page.data)
+        self.assertIn(b"Frontend preview", page.data)
         self.assertEqual(
             protected.post("/api/readings", json={"room": "Bedroom"}).status_code,
             401,

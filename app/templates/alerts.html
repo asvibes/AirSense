@@ -8,199 +8,222 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
   <script defer src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </head>
-<body
-  data-home-id="demo-home"
-  data-home-name="Demo Home"
-  data-api-token-required="{{ 'true' if api_token_required else 'false' }}"
-  data-high-threshold="{{ high_threshold }}"
-  data-elevated-threshold="{{ elevated_threshold }}"
->
-  <header class="topbar">
-    <a class="brand" href="{{ url_for('alerts.alerts_page') }}" aria-label="AirSense home">
-      <span class="brand-mark" aria-hidden="true">A</span>
-      <span>airsense</span>
-    </a>
-    <div class="topbar-actions">
-      <span class="connection-state" id="connection-state"><span class="connection-dot"></span> Connecting</span>
-      <button class="button button-quiet" id="refresh-button" type="button">Refresh</button>
-    </div>
-  </header>
-
-  <main class="page-shell">
-    <section class="intro">
-      <div>
-        <p class="eyebrow">INDOOR AIR MONITOR</p>
-        <h1>Know what’s in the air at home.</h1>
-        <p class="intro-copy">A room-by-room view of sensor readings, trends and alerts to support ventilation decisions.</p>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="AirSense overview" data-nav="overview">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>airsense</span>
+      </a>
+      <div class="home-picker">
+        <span class="home-avatar">M</span>
+        <span class="home-picker-copy"><strong>Meera’s home</strong><small>Home dashboard</small></span>
+        <span class="chevron">⌄</span>
       </div>
-      <form class="home-switcher" id="home-form">
-        <label for="home-id">Demo home ID</label>
-        <div class="home-fields">
-          <input id="home-id" name="home_id" value="demo-home" maxlength="64" required>
-          <button class="button button-dark" type="submit">Open</button>
+      <p class="nav-caption">HOME</p>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link active" type="button" data-nav="overview"><span class="nav-icon">⌂</span>Overview</button>
+        <button class="nav-link" type="button" data-nav="rooms"><span class="nav-icon">▦</span>Rooms</button>
+        <button class="nav-link" type="button" data-nav="sensors"><span class="nav-icon">◉</span>Sensors</button>
+        <button class="nav-link" type="button" data-nav="alerts"><span class="nav-icon">♧</span>Alerts<span class="nav-count" id="nav-alert-count">2</span></button>
+        <button class="nav-link" type="button" data-nav="history"><span class="nav-icon">⌁</span>History</button>
+      </nav>
+      <p class="nav-caption nav-caption-spaced">MANAGE</p>
+      <nav class="main-nav" aria-label="Home management">
+        <button class="nav-link" type="button" data-nav="thresholds"><span class="nav-icon">⚙</span>Thresholds</button>
+        <button class="nav-link" type="button" data-nav="members"><span class="nav-icon">♙</span>Members</button>
+        <button class="nav-link" type="button" data-nav="activity"><span class="nav-icon">☷</span>Activity log</button>
+        <button class="nav-link" type="button" data-nav="demo"><span class="nav-icon">▶</span>Demo lab</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="prototype-note"><span class="prototype-dot"></span><span><strong>Prototype mode</strong><small>Sample data only</small></span></div>
+        <button class="profile-button" type="button" data-nav="members">
+          <span class="profile-avatar">M</span>
+          <span class="profile-copy"><strong>Meera Sharma</strong><small>Home owner · preview</small></span>
+          <span class="chevron">···</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+        <div class="breadcrumb"><span>Meera’s home</span><span class="breadcrumb-slash">/</span><strong id="breadcrumb-current">Overview</strong></div>
+        <div class="topbar-actions">
+          <span class="preview-chip"><span></span>Preview data</span>
+          <button class="icon-button theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false" title="Switch to dark theme">☾</button>
+          <button class="icon-button" type="button" aria-label="Notifications" data-nav="alerts">♧<i></i></button>
+          <span class="top-avatar">M</span>
         </div>
-        <span class="field-help">This demo has no household accounts or home-level access control.</span>
-      </form>
-    </section>
+      </header>
 
-    {% if api_token_required %}
-    <section class="token-panel" id="token-panel" aria-labelledby="token-title">
-      <div>
-        <p class="eyebrow">DEPLOYMENT ACCESS</p>
-        <h2 id="token-title">Connect to the protected API</h2>
-        <p>The deployment uses a shared API token, not individual household sign-in. It stays in this browser tab only.</p>
+      <div class="prototype-banner">
+        <span class="banner-icon">i</span>
+        <span><strong>Frontend preview</strong> · These are illustrative sample readings, not live sensor or DALTON data.</span>
+        <button id="banner-dismiss" type="button" aria-label="Dismiss preview notice">×</button>
       </div>
-      <form id="token-form" class="token-form">
-        <label for="api-token">API token</label>
-        <div class="home-fields">
-          <input id="api-token" type="password" autocomplete="off" required>
-          <button class="button button-dark" type="submit">Connect</button>
-        </div>
-      </form>
-    </section>
-    {% endif %}
 
-    <p class="notice notice-error" id="error-message" role="alert" hidden></p>
-    <p class="notice notice-success" id="success-message" role="status" hidden></p>
-
-    <section class="summary-grid" aria-label="Home overview">
-      <article class="summary-card">
-        <span class="summary-label">Rooms reporting</span>
-        <strong class="summary-value" id="room-count">—</strong>
-        <span class="summary-note">Rooms with recorded readings</span>
-      </article>
-      <article class="summary-card">
-        <span class="summary-label">Open alerts</span>
-        <strong class="summary-value" id="open-alert-count">—</strong>
-        <span class="summary-note">Need household attention</span>
-      </article>
-      <article class="summary-card summary-card-wide">
-        <span class="summary-label">Most recent report</span>
-        <strong class="summary-value summary-latest" id="latest-report">Waiting for data</strong>
-        <span class="summary-note" id="last-updated">Dashboard refreshes every 20 seconds</span>
-      </article>
-    </section>
-
-    <section class="panel chart-panel" aria-labelledby="chart-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">AT A GLANCE</p>
-          <h2 id="chart-title">Latest readings by room</h2>
-        </div>
-        <button class="button button-quiet" id="rotation-button" type="button" aria-pressed="false">Pause rotation</button>
-      </div>
-      <div class="chart-toolbar">
-        <div class="metric-tabs" id="metric-tabs" role="tablist" aria-label="Metric"></div>
-        <span class="muted" id="chart-updated">Waiting for data</span>
-      </div>
-      <div class="bar-chart" id="room-chart" aria-live="polite"></div>
-      <p class="empty-state" id="chart-empty">No readings yet. Record a sample or connect a data replay.</p>
-    </section>
-
-    <section class="section-block" aria-labelledby="rooms-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">ROOM STATUS</p>
-          <h2 id="rooms-title">Your rooms</h2>
-        </div>
-        <span class="muted" id="room-count-label">Updates every 20 seconds</span>
-      </div>
-      <div class="room-grid" id="room-grid">
-        <p class="empty-state">No rooms are reporting yet.</p>
-      </div>
-    </section>
-
-    <div class="workbench-grid">
-      <section class="panel" aria-labelledby="reading-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">ADD A SAMPLE</p>
-            <h2 id="reading-title">Record a reading</h2>
+      <div class="page-content">
+        <section class="view active" id="view-overview" data-view="overview">
+          <div class="page-heading">
+            <div><p class="eyebrow">TUESDAY, 27 OCTOBER</p><h1>Good evening, Meera <span class="wave">✳</span></h1><p class="page-subtitle">Here’s how the air is looking around your home.</p></div>
+            <button class="button button-outline" type="button" data-nav="demo">▶ <span>Explore demo</span></button>
           </div>
-          <span class="source-pill source-simulated">Demo input</span>
-        </div>
-        <form class="form-grid" id="reading-form">
-          <label class="field field-wide" for="reading-room">
-            <span class="field-label">Room</span>
-            <input id="reading-room" name="room" maxlength="100" placeholder="Bedroom" required>
-          </label>
-          <label class="field" for="reading-value">
-            <span class="field-label">CO₂ reading <span class="unit-label">ppm</span></span>
-            <input id="reading-value" name="value" type="number" min="0" step="any" inputmode="decimal" placeholder="850" required>
-          </label>
-          <label class="field" for="reading-source">
-            <span class="field-label">Source</span>
-            <select id="reading-source" name="source">
-              <option value="simulated">Simulated Data</option>
-              <option value="dataset">Recorded Data: Replay</option>
-            </select>
-          </label>
-          <button class="button button-dark field-wide" type="submit">Save reading</button>
-        </form>
-        <p class="field-help">The backend validates the value and timestamp, rejects duplicate or out-of-order samples, then evaluates alerts in the same transaction.</p>
-      </section>
-
-      <section class="panel" aria-labelledby="policy-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">OWNER CONFIGURATION</p>
-            <h2 id="policy-title">CO₂ alert thresholds</h2>
+          <div class="overview-grid">
+            <article class="metric-overview-card">
+              <div class="card-topline"><span class="card-label">Home air snapshot</span><span class="preview-pill">SAMPLE</span></div>
+              <div class="snapshot-main">
+                <div class="air-score"><div class="score-number">72</div><div class="score-caption">Home<br>snapshot</div></div>
+                <div class="snapshot-copy"><span class="status-pill status-elevated">A room needs attention</span><p>Bedroom CO₂ is above the guideline level used by AirSense.</p><button class="text-button" type="button" data-nav="alerts">See what needs attention <span>→</span></button></div>
+              </div>
+              <div class="snapshot-footer"><span>Based on <strong>4 rooms</strong></span><span>Sample values · <strong>Not live</strong></span></div>
+            </article>
+            <article class="summary-card">
+              <div class="card-topline"><span class="card-label">Room status</span><span class="tiny-icon">⌂</span></div>
+              <strong class="summary-value" id="room-count">4<span class="summary-denom"> / 4</span></strong>
+              <span class="summary-note">Rooms with sample readings</span>
+              <div class="mini-room-status"><span class="mini-status-dot good"></span>2 look good <span class="mini-status-dot attention"></span>2 need a look</div>
+            </article>
+            <article class="summary-card alert-summary-card">
+              <div class="card-topline"><span class="card-label">Open alerts</span><span class="tiny-icon alert-icon">♧</span></div>
+              <strong class="summary-value" id="open-alert-count">2</strong>
+              <span class="summary-note">Based on sample scenarios</span>
+              <button class="text-button" type="button" data-nav="alerts">Review alerts <span>→</span></button>
+            </article>
           </div>
-          <span class="unit-label">ppm</span>
-        </div>
-        <form class="form-grid" id="policy-form">
-          <label class="field field-wide" for="policy-room">
-            <span class="field-label">Room</span>
-            <input id="policy-room" name="room" maxlength="100" placeholder="Bedroom" required>
-          </label>
-          <label class="field" for="high-threshold">
-            <span class="field-label">High</span>
-            <input id="high-threshold" name="high_threshold" type="number" min="1" step="any" required>
-          </label>
-          <label class="field" for="elevated-threshold">
-            <span class="field-label">Elevated</span>
-            <input id="elevated-threshold" name="elevated_threshold" type="number" min="0" step="any" required>
-          </label>
-          <label class="field" for="elevated-duration">
-            <span class="field-label">Elevated duration (sec)</span>
-            <input id="elevated-duration" name="elevated_duration_seconds" type="number" min="1" step="1" value="300" required>
-          </label>
-          <label class="field" for="rapid-rise">
-            <span class="field-label">Rapid rise per minute</span>
-            <input id="rapid-rise" name="rapid_rise_per_minute" type="number" min="1" step="any" value="200" required>
-          </label>
-          <label class="field" for="all-clear-duration">
-            <span class="field-label">All-clear duration (sec)</span>
-            <input id="all-clear-duration" name="all_clear_duration_seconds" type="number" min="1" step="1" value="300" required>
-          </label>
-          <label class="field" for="max-reading-gap">
-            <span class="field-label">Max sample gap (sec)</span>
-            <input id="max-reading-gap" name="max_reading_gap_seconds" type="number" min="1" step="1" value="120" required>
-          </label>
-          <button class="button button-dark field-wide" type="submit">Save room thresholds</button>
-        </form>
-        <p class="field-help">Demo defaults are illustrative, not published health guidance. Record a guideline source before using thresholds outside a demo.</p>
-      </section>
-    </div>
 
-    <section class="section-block" aria-labelledby="alerts-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">ALERT ACTIVITY</p>
-          <h2 id="alerts-title">Recent alerts</h2>
-        </div>
-        <span class="muted">High · Elevated · Rapid rise · All clear</span>
+          <section class="panel chart-panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">AT A GLANCE</p><h2>Latest readings by room</h2></div>
+              <div class="chart-controls"><div class="metric-tabs" id="metric-tabs" role="tablist" aria-label="Reading metric"></div><button class="icon-button chart-pause" id="rotation-button" type="button" aria-label="Pause metric rotation" aria-pressed="false">Ⅱ</button></div>
+            </div>
+            <div class="chart-legend"><span><i class="legend-bar"></i>Sample reading</span><span class="muted" id="chart-updated">Sample values · preview</span></div>
+            <div class="bar-chart" id="room-chart"></div>
+          </section>
+
+          <div class="content-columns">
+            <section class="section-block">
+              <div class="section-heading"><div><p class="eyebrow">YOUR HOME</p><h2>Room status</h2></div><button class="text-button" type="button" data-nav="rooms">All rooms <span>→</span></button></div>
+              <div class="room-grid compact-room-grid" id="room-grid"></div>
+            </section>
+            <section class="section-block">
+              <div class="section-heading"><div><p class="eyebrow">NEEDS A LOOK</p><h2>Recent alerts</h2></div><button class="text-button" type="button" data-nav="alerts">View all <span>→</span></button></div>
+              <div class="preview-alert-list" id="overview-alerts"></div>
+            </section>
+          </div>
+          <p class="disclaimer">AirSense supports ventilation decisions; it is not a medical or safety device and does not replace a certified carbon monoxide alarm.</p>
+        </section>
+
+        <section class="view" id="view-rooms" data-view="rooms">
+          <div class="page-heading"><div><p class="eyebrow">YOUR HOME</p><h1>Rooms</h1><p class="page-subtitle">A closer look at each room’s sample readings and ventilation setup.</p></div><button class="button button-dark" type="button" data-open-modal="room-modal">＋ Add room</button></div>
+          <div class="filter-row"><div class="filter-pills" id="room-filters"><button class="filter-pill selected" data-filter="all">All rooms <span>4</span></button><button class="filter-pill" data-filter="attention">Needs a look <span>2</span></button></div><span class="muted">Sample data · illustrative only</span></div>
+          <div class="room-grid full-room-grid" id="all-room-grid"></div>
+          <div class="panel lower-panel"><div><p class="eyebrow">VENTILATION SETUP</p><h2>Small changes can help refresh a room.</h2><p class="muted">Room features shown here are demo settings. Add windows, exhaust fans, or other ventilation sources when the room management flow is connected.</p></div><button class="button button-outline" type="button" data-open-modal="room-modal">Manage rooms</button></div>
+        </section>
+
+        <section class="view" id="view-sensors" data-view="sensors">
+          <div class="page-heading"><div><p class="eyebrow">DEVICES</p><h1>Sensors</h1><p class="page-subtitle">Manage the sensors associated with your rooms.</p></div><button class="button button-dark" type="button" data-open-modal="sensor-modal">＋ Pair a sensor</button></div>
+          <div class="info-banner"><span class="banner-icon">i</span><span>Sensor pairing is a visual prototype. No device is provisioned and no keys are issued.</span></div>
+          <section class="panel table-panel">
+            <div class="table-toolbar"><div><h2>Home sensors <span class="table-count" id="sensor-count">4 devices</span></h2><p class="muted">Sample device inventory</p></div><label class="search-field"><span>⌕</span><input id="sensor-search" placeholder="Search sensors" aria-label="Search sensors"></label></div>
+            <div class="table-scroll"><table><thead><tr><th>Sensor</th><th>Room</th><th>Data source</th><th>Last sample</th><th>State</th><th></th></tr></thead><tbody id="sensor-table-body"></tbody></table></div>
+          </section>
+          <div class="bottom-note">Live sensor ingestion and provisioning will be connected later.</div>
+        </section>
+
+        <section class="view" id="view-alerts" data-view="alerts">
+          <div class="page-heading"><div><p class="eyebrow">ALERT CENTER</p><h1>Alerts</h1><p class="page-subtitle">Review sample alerts and acknowledge them in this prototype.</p></div><span class="preview-pill">SAMPLE SCENARIOS</span></div>
+          <div class="alert-stats"><article class="summary-card"><span class="summary-label">Open</span><strong class="summary-value" id="alert-open-stat">2</strong><span class="summary-note">Sample alerts</span></article><article class="summary-card"><span class="summary-label">Acknowledged</span><strong class="summary-value" id="alert-ack-stat">1</strong><span class="summary-note">In this preview</span></article><article class="summary-card"><span class="summary-label">All clear</span><strong class="summary-value" id="alert-clear-stat">1</strong><span class="summary-note">Sample history</span></article></div>
+          <div class="filter-row"><div class="filter-pills" id="alert-filters"><button class="filter-pill selected" data-alert-filter="all">All</button><button class="filter-pill" data-alert-filter="open">Open</button><button class="filter-pill" data-alert-filter="acknowledged">Acknowledged</button><button class="filter-pill" data-alert-filter="all_clear">All clear</button></div></div>
+          <div class="alert-list" id="alert-list"></div>
+          <p class="disclaimer">Alert language is advisory and refers to the guideline level configured for this demo. CO and NO₂ are advisory metrics only; this prototype does not replace a certified CO alarm.</p>
+        </section>
+
+        <section class="view" id="view-history" data-view="history">
+          <div class="page-heading"><div><p class="eyebrow">PATTERNS OVER TIME</p><h1>History</h1><p class="page-subtitle">Explore sample readings and data availability by day.</p></div><button class="button button-outline" id="export-csv" type="button">↓ Export sample CSV</button></div>
+          <section class="panel history-panel">
+            <div class="history-filters">
+              <label class="field">Room<select id="history-room"></select></label>
+              <label class="field">Metric<select id="history-metric"></select></label>
+              <label class="field">Date range<select id="history-range"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></label>
+              <span class="preview-pill">SAMPLE DATA</span>
+            </div>
+            <div class="history-chart-heading"><div><span class="card-label" id="history-series-title">Bedroom · CO₂</span><strong class="history-current" id="history-current-value">1,180 <small>ppm</small></strong></div><span class="muted">Each bar is one day · hover for the full date</span></div>
+            <div class="history-chart-wrap"><svg id="history-chart" viewBox="0 0 1000 320" role="img" aria-label="Daily illustrative sample readings"></svg></div>
+            <div class="chart-axis" id="history-axis"></div>
+            <div class="chart-caption">Illustrative values only · not sourced from DALTON or a live sensor.</div>
+          </section>
+          <section class="panel heatmap-panel">
+            <div class="section-heading"><div><p class="eyebrow">DATA AVAILABILITY</p><h2>Sample coverage</h2><p class="muted">Weekdays run top to bottom; month and day labels identify each date. Hover a cell for its full date.</p></div><div class="heatmap-legend"><span>Less</span><i></i><i></i><i></i><i></i><span>More</span></div></div>
+            <div class="heatmap-calendar">
+              <div class="heatmap-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+              <div class="heatmap-dates">
+                <div class="heatmap-months" id="heatmap-months" aria-hidden="true"></div>
+                <div class="heatmap-grid" id="heatmap-grid" role="group" aria-label="Sample data availability by date"></div>
+              </div>
+            </div>
+          </section>
+          <div class="info-banner"><span class="banner-icon">i</span><span>CSV export contains only generated sample data. DALTON history and its validated units will be added later.</span></div>
+        </section>
+
+        <section class="view" id="view-thresholds" data-view="thresholds">
+          <div class="page-heading"><div><p class="eyebrow">OWNER SETTINGS</p><h1>Thresholds</h1><p class="page-subtitle">Configure sample alert rules by room and metric.</p></div><button class="button button-dark" type="button" id="save-thresholds">Save changes</button></div>
+          <div class="info-banner"><span class="banner-icon">i</span><span>All default values below are illustrative demo settings—not published health guidance. Guideline references are placeholders.</span></div>
+          <section class="panel threshold-panel">
+            <div class="section-heading"><div><h2>CO₂ · ppm</h2><p class="muted">Threshold rules in this prototype are stored in browser memory only.</p></div><span class="preview-pill">DEMO CONFIG</span></div>
+            <div class="table-scroll"><table><thead><tr><th>Room</th><th>Elevated</th><th>High</th><th>Elevated duration</th><th>Rapid rise / min</th></tr></thead><tbody id="threshold-table-body"></tbody></table></div>
+          </section>
+          <div class="settings-grid"><article class="panel setting-card"><span class="setting-icon">◷</span><div><h2>All-clear timer</h2><p class="muted">How long sample values remain below a threshold before an alert clears.</p></div><label class="inline-input"><input id="clear-duration" type="number" min="1" value="5"><span>minutes</span></label></article><article class="panel setting-card"><span class="setting-icon">⌁</span><div><h2>Sample gap</h2><p class="muted">Gaps above this duration reset sustained demo rules.</p></div><label class="inline-input"><input id="sample-gap" type="number" min="1" value="2"><span>minutes</span></label></article></div>
+          <p class="bottom-note">Guideline source and note fields will be connected when the threshold backend is ready.</p>
+        </section>
+
+        <section class="view" id="view-members" data-view="members">
+          <div class="page-heading"><div><p class="eyebrow">HOUSEHOLD ACCESS</p><h1>Members</h1><p class="page-subtitle">Preview owner and member roles for this demo home.</p></div><button class="button button-dark" type="button" data-open-modal="invite-modal">＋ Invite member</button></div>
+          <div class="info-banner"><span class="banner-icon">i</span><span>This page does not create accounts or send invitations. Role and access controls are not connected.</span></div>
+          <section class="panel table-panel"><div class="table-toolbar"><div><h2>People in this home</h2><p class="muted">Example household members</p></div><span class="preview-pill">PREVIEW</span></div><div class="table-scroll"><table><thead><tr><th>Member</th><th>Role</th><th>Joined</th><th></th></tr></thead><tbody id="member-table-body"></tbody></table></div></section>
+          <section class="panel invite-preview"><div><p class="eyebrow">INVITE FLOW PREVIEW</p><h2>Bring your household into the loop.</h2><p class="muted">In the connected app, owners will be able to invite members with a time-limited code.</p></div><button class="button button-outline" type="button" data-open-modal="invite-modal">Preview invite</button></section>
+        </section>
+
+        <section class="view" id="view-activity" data-view="activity">
+          <div class="page-heading"><div><p class="eyebrow">HOME HISTORY</p><h1>Activity log</h1><p class="page-subtitle">A preview of events an owner could review.</p></div><span class="preview-pill">EXAMPLE EVENTS</span></div>
+          <div class="info-banner"><span class="banner-icon">i</span><span>Events here are static examples; this prototype does not authenticate users or write audit records.</span></div>
+          <section class="panel table-panel"><div class="table-toolbar"><div><h2>Recent activity</h2><p class="muted">Showing example events</p></div><select id="activity-filter" class="compact-select"><option value="all">All activity</option><option value="sensor">Sensors</option><option value="threshold">Thresholds</option><option value="member">Members</option></select></div><div class="table-scroll"><table><thead><tr><th>Event</th><th>Who</th><th>When</th><th>Details</th></tr></thead><tbody id="activity-table-body"></tbody></table></div></section>
+        </section>
+
+        <section class="view" id="view-demo" data-view="demo">
+          <div class="page-heading"><div><p class="eyebrow">TRY THE EXPERIENCE</p><h1>Demo lab</h1><p class="page-subtitle">Trigger sample scenarios to explore the interface. Nothing is sent to a backend.</p></div><span class="preview-pill">LOCAL PREVIEW</span></div>
+          <div class="info-banner"><span class="banner-icon">i</span><span>Simulator scenarios only update this browser’s sample state. DALTON replay is not connected yet.</span></div>
+          <div class="scenario-grid">
+            <article class="panel scenario-card"><span class="scenario-number">01</span><p class="eyebrow">IMMEDIATE ALERT</p><h2>High reading</h2><p>Show how an immediate high sample appears on the room and alert screens.</p><button class="button button-dark" type="button" data-scenario="high">Run scenario <span>→</span></button></article>
+            <article class="panel scenario-card"><span class="scenario-number">02</span><p class="eyebrow">SUSTAINED LEVEL</p><h2>Elevated over time</h2><p>Preview an elevated reading that stays above its illustrative threshold.</p><button class="button button-outline" type="button" data-scenario="elevated">Run scenario <span>→</span></button></article>
+            <article class="panel scenario-card"><span class="scenario-number">03</span><p class="eyebrow">FAST CHANGE</p><h2>Rapid rise</h2><p>Show a fast increase from the previous sample and the resulting alert state.</p><button class="button button-outline" type="button" data-scenario="rapid">Run scenario <span>→</span></button></article>
+            <article class="panel scenario-card"><span class="scenario-number">04</span><p class="eyebrow">RESOLVED</p><h2>All clear</h2><p>Preview a below-threshold sample and an all-clear alert state.</p><button class="button button-outline" type="button" data-scenario="clear">Run scenario <span>→</span></button></article>
+          </div>
+          <section class="panel replay-panel"><div class="replay-icon">↻</div><div><p class="eyebrow">COMING LATER</p><h2>DALTON recorded data replay</h2><p class="muted">A residential dataset will be prepared, checked, and connected to the same experience later. No DALTON records are included in this preview.</p></div><button class="button button-disabled" type="button" disabled>Replay unavailable</button></section>
+        </section>
+
+        <footer class="global-footer"><span>AirSense · ventilation support</span><span>Prototype sample data · not live</span></footer>
       </div>
-      <div class="alert-list" id="alert-list">
-        <p class="empty-state">No alerts recorded.</p>
-      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="room-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="room-modal-title">
+      <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">ROOM SETUP · PREVIEW</p><h2 id="room-modal-title">Add a room</h2><p class="muted">This adds a sample room in this browser only.</p>
+      <form class="form-grid modal-form" id="room-form"><label class="field field-wide"><span class="field-label">Room name</span><input name="name" maxlength="60" placeholder="Guest room" required></label><label class="field field-wide"><span class="field-label">Ventilation sources</span><select name="ventilation"><option>Window</option><option>Exhaust fan</option><option>Air conditioner</option><option>Kitchen chimney</option><option>Not specified</option></select></label><button class="button button-dark field-wide" type="submit">Add sample room</button></form>
     </section>
-
-    <footer class="page-footer">
-      <span>AirSense · ventilation-support tool</span>
-      <span>Not a medical or safety device; does not replace a certified carbon monoxide alarm.</span>
-      <span id="last-refresh">Not yet refreshed</span>
-    </footer>
-  </main>
+  </div>
+  <div class="modal-backdrop" id="sensor-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="sensor-modal-title">
+      <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">SENSOR SETUP · PREVIEW</p><h2 id="sensor-modal-title">Pair a sensor</h2><p class="muted">No device key is generated in prototype mode.</p>
+      <form class="form-grid modal-form" id="sensor-form"><label class="field field-wide"><span class="field-label">Device name</span><input name="name" maxlength="60" placeholder="Bedroom sensor" required></label><label class="field field-wide"><span class="field-label">Assign to room</span><select name="room" id="sensor-room-select"></select></label><button class="button button-dark field-wide" type="submit">Add sample sensor</button></form>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="invite-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
+      <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">HOUSEHOLD ACCESS · PREVIEW</p><h2 id="invite-modal-title">Invite a member</h2><p class="muted">This visual preview does not send an invitation.</p>
+      <form class="form-grid modal-form" id="invite-form"><label class="field field-wide"><span class="field-label">Email address</span><input name="email" type="email" placeholder="name@example.com" required></label><button class="button button-dark field-wide" type="submit">Preview invite code</button></form><div class="invite-code-box" id="invite-code-box" hidden></div>
+    </section>
+  </div>
 </body>
 </html>
