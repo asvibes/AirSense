@@ -203,4 +203,3 @@ These percentages are estimates from reading the code and running the test suite
 * Thresholds do not currently have stored authoritative citations.
 * DALTON replay, email delivery, automatic sensor adapters, and live vendor integrations are not configured.
 * The rate limiter is process-local and is not suitable for coordinating multiple workers.
-
