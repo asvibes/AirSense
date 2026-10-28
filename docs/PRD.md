@@ -1,6 +1,6 @@
-# AirSense product scope status
+# AirSense implementation status
 
-The attached AirSense PRD (`AirSense PRD.docx`, dated October 26, 2026) is the authoritative product specification. This document tracks the Must-have scope implemented in the current branch; it is not a replacement for the complete PRD.
+The attached AirSense PRD (`AirSense PRD.docx`, dated October 26, 2026) is the authoritative product specification. The [AirSense Product Requirements Document](./product-requirements.md) records the proposed product scope and target architecture. This document tracks the Must-have scope implemented in the current branch; proposed requirements and target services must not be treated as completed work.
 
 ## Implemented Must-have flows
 
