@@ -1,6 +1,6 @@
-# AirSense product scope status
+# AirSense implementation status
 
-The attached AirSense PRD (`AirSense PRD.docx`, dated October 26, 2026) is the authoritative product specification. This repository document tracks the scope implemented in the current branch; it is not a replacement for the complete PRD.
+The [AirSense Product Requirements Document](./product-requirements.md) records the proposed product scope and target architecture. This document tracks what the current branch implements; proposed requirements and target services must not be treated as completed work.
 
 ## Implemented vertical slice
 
@@ -18,6 +18,6 @@ Threshold policies are stored per home, room, and metric. Demo defaults are illu
 
 ## Not yet implemented
 
-The attached PRD's other Must-have features—registration, login, household roles and invitations, sensor provisioning and device-key authentication, unified dataset/simulator ingestion, room dashboard and freshness, historical charts/CSV/heatmap, and owner-only audit logging—are not included in this alert slice. Should/Could/Stretch features (demo replay, email, critical alarm mode, room photos, live sensors) are also out of scope. The placeholder files for those features remain unimplemented; do not treat their presence as a completed implementation.
+The product requirements document's other Must-have features—registration, login, household roles and invitations, sensor provisioning and device-key authentication, unified dataset/simulator ingestion, room dashboard and freshness, historical charts/CSV/heatmap, and owner-only audit logging—are not included in this alert slice. Should/Could/Stretch features (demo replay, email, critical alarm mode, room photos, live sensors) are also out of scope. The placeholder files for those features remain unimplemented; do not treat their presence as a completed implementation.
 
 Until user accounts and home-level authorization are delivered, the demo relies on a shared optional bearer token to guard application routes in a hosted configuration. Acknowledgement names are caller-supplied display labels rather than verified account identities. Do not use the demo with personal household data.
