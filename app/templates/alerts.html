@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f7f2">
+  <meta name="theme-color" content="#f4f7f5">
+  <link rel="icon" href="data:,">
   <title>AirSense | Home air monitor</title>
   <meta name="csrf-token" content="{{ csrf_token }}">
   <script id="airsense-config" type="application/json">{{ {"homeId": active_home.id, "homeName": active_home.name, "userId": current_user.id, "userName": current_user.display_name, "userEmail": current_user.email, "role": active_home.role, "csrfToken": csrf_token, "defaults": {"high_threshold": high_threshold, "elevated_threshold": elevated_threshold, "elevated_duration_seconds": config.ELEVATED_DURATION_SECONDS, "rapid_rise_per_minute": config.RAPID_RISE_PER_MINUTE, "all_clear_duration_seconds": config.ALL_CLEAR_DURATION_SECONDS, "max_reading_gap_seconds": config.MAX_READING_GAP_SECONDS}}|tojson }}</script>
@@ -12,218 +13,149 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="#" aria-label="AirSense overview" data-nav="overview">
-        <span class="brand-mark" aria-hidden="true">A</span>
+    <aside class="sidebar" id="app-sidebar">
+      <a class="brand" href="#overview" aria-label="AirSense overview" data-nav="overview">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><path d="M7 22c1.5-4.5 5.3-7.2 11.2-8.2 2.8-.5 5.1-1.5 6.8-3.8-.3 7.5-3 12.2-8.8 14.4-3.4 1.3-6.5.6-9.2-2.4Z"/><path d="M8 25c3.6-5.4 7.6-8.9 13.7-11.7"/></svg></span>
         <span>airsense</span>
       </a>
       <div class="home-picker">
         <span class="home-avatar">{{ active_home.name[:1]|upper }}</span>
-        <label class="home-picker-copy" for="home-picker"><strong>{{ active_home.name }}</strong><select id="home-picker" aria-label="Select home">{% for home in homes %}<option value="{{ home.id }}" {% if home.id == active_home.id %}selected{% endif %}>{{ home.name }}</option>{% endfor %}</select></label>
+        <label class="home-picker-copy" for="home-picker">
+          <small>YOUR HOME</small><strong>{{ active_home.name }}</strong>
+          <select id="home-picker" aria-label="Select home">{% for home in homes %}<option value="{{ home.id }}" {% if home.id == active_home.id %}selected{% endif %}>{{ home.name }}</option>{% endfor %}</select>
+        </label>
+        <span class="chevron" aria-hidden="true">⌄</span>
       </div>
-      <p class="nav-caption">HOME</p>
+      <p class="nav-caption">MONITOR</p>
       <nav class="main-nav" aria-label="Main navigation">
-        <button class="nav-link active" type="button" data-nav="overview"><span class="nav-icon">⌂</span>Overview</button>
-        <button class="nav-link" type="button" data-nav="rooms"><span class="nav-icon">▦</span>Rooms</button>
-        <button class="nav-link" type="button" data-nav="sensors"><span class="nav-icon">◉</span>Sensors</button>
-        <button class="nav-link" type="button" data-nav="alerts"><span class="nav-icon">♧</span>Alerts<span class="nav-count" id="nav-alert-count">2</span></button>
-        <button class="nav-link" type="button" data-nav="history"><span class="nav-icon">⌁</span>History</button>
+        <button class="nav-link active" type="button" data-nav="overview" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span>Overview</span></button>
+        <button class="nav-link" type="button" data-nav="rooms"><span class="nav-icon" aria-hidden="true">▦</span><span>Rooms</span></button>
+        <button class="nav-link" type="button" data-nav="sensors"><span class="nav-icon" aria-hidden="true">◉</span><span>Sensors</span></button>
+        <button class="nav-link" type="button" data-nav="alerts"><span class="nav-icon" aria-hidden="true">⌁</span><span>Alerts</span><span class="nav-count" id="nav-alert-count">0</span></button>
+        <button class="nav-link" type="button" data-nav="history"><span class="nav-icon" aria-hidden="true">▤</span><span>History</span></button>
       </nav>
-      <p class="nav-caption nav-caption-spaced">MANAGE</p>
+      <p class="nav-caption nav-caption-spaced">HOUSEHOLD</p>
       <nav class="main-nav" aria-label="Home management">
-        <button class="nav-link" type="button" data-nav="thresholds"><span class="nav-icon">⚙</span>Thresholds</button>
-        <button class="nav-link" type="button" data-nav="members"><span class="nav-icon">♙</span>Members</button>
-        <button class="nav-link" type="button" data-nav="activity"><span class="nav-icon">☷</span>Activity log</button>
-        <button class="nav-link" type="button" data-nav="demo"><span class="nav-icon">▶</span>Demo lab</button>
+        <button class="nav-link" type="button" data-nav="thresholds"><span class="nav-icon" aria-hidden="true">⚙</span><span>Thresholds</span></button>
+        <button class="nav-link" type="button" data-nav="members"><span class="nav-icon" aria-hidden="true">♙</span><span>Members</span></button>
+        <button class="nav-link" type="button" data-nav="activity"><span class="nav-icon" aria-hidden="true">☷</span><span>Activity log</span></button>
+        <button class="nav-link" type="button" data-nav="demo"><span class="nav-icon" aria-hidden="true">▶</span><span>Demo lab</span></button>
       </nav>
       <div class="sidebar-bottom">
-        <div class="prototype-note"><span class="prototype-dot"></span><span><strong>Connected mode</strong><small>Home data syncs from server</small></span></div>
-        <button class="profile-button" type="button" data-nav="members">
-          <span class="profile-avatar">{{ current_user.display_name[:1]|upper }}</span>
-          <span class="profile-copy"><strong>{{ current_user.display_name }}</strong><small>{{ active_home.role|title }} · signed in</small></span>
-          <span class="chevron">···</span>
-        </button>
+        <div class="prototype-note"><span class="prototype-dot" aria-hidden="true"></span><span><strong>Home data</strong><small>Private to your household</small></span></div>
+        <button class="profile-button" type="button" data-nav="members"><span class="profile-avatar">{{ current_user.display_name[:1]|upper }}</span><span class="profile-copy"><strong>{{ current_user.display_name }}</strong><small>{{ active_home.role|title }} · signed in</small></span><span class="chevron" aria-hidden="true">···</span></button>
       </div>
     </aside>
+    <button class="nav-backdrop" id="nav-backdrop" type="button" aria-label="Close navigation" hidden></button>
 
     <main class="main-area">
       <header class="topbar">
-        <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
-        <div class="breadcrumb"><span>{{ active_home.name }}</span><span class="breadcrumb-slash">/</span><strong id="breadcrumb-current">Overview</strong></div>
-        <div class="topbar-actions">
-          <span class="preview-chip"><span></span><strong id="preview-chip-label">Connecting</strong></span>
+        <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="app-sidebar">☰</button>
+        <div class="breadcrumb"><span>{{ active_home.name }}</span><span class="breadcrumb-slash" aria-hidden="true">/</span><strong id="breadcrumb-current">Overview</strong></div>
+      <div class="topbar-actions">
+          <span class="preview-chip"><span aria-hidden="true"></span><strong id="preview-chip-label">Connecting</strong></span>
+          <span class="sync-time" id="last-sync">—</span>
           <button class="icon-button theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false" title="Switch to dark theme">☾</button>
-          <button class="icon-button" type="button" aria-label="Notifications" data-nav="alerts">♧<i></i></button>
+          <button class="icon-button notification-button" type="button" aria-label="View alerts" data-nav="alerts">⌁<i aria-hidden="true"></i></button>
           <button class="text-button sign-out" id="sign-out" type="button">Sign out</button>
-          <span class="top-avatar">{{ current_user.display_name[:1]|upper }}</span>
+          <span class="top-avatar" aria-hidden="true">{{ current_user.display_name[:1]|upper }}</span>
         </div>
       </header>
-
-      <div class="prototype-banner">
-        <span class="banner-icon">i</span>
-        <span><strong>AirSense dashboard</strong> · Readings are provided by configured sensors or manually entered simulator data. DALTON files are not included.</span>
-        <button id="banner-dismiss" type="button" aria-label="Dismiss preview notice">×</button>
-      </div>
-
+      <div class="prototype-banner" role="note"><span class="banner-icon" aria-hidden="true">i</span><span><strong>Ventilation support, at a glance.</strong> Readings come from configured sensors or simulator data; AirSense does not measure air itself. DALTON files are not included.</span><button id="banner-dismiss" type="button" aria-label="Dismiss information">×</button></div>
       <div class="page-content">
         {% if error %}<div class="info-banner error-banner" role="alert">{{ error }}</div>{% endif %}
         {% if notice %}<div class="info-banner" role="status">{{ notice }}</div>{% endif %}
+        <div id="app-status" class="info-banner" role="status" hidden></div>
+
         <section class="view active" id="view-overview" data-view="overview">
-          <div class="page-heading">
-            <div><p class="eyebrow" id="today-label"></p><h1>Welcome, {{ current_user.display_name }} <span class="wave">✳</span></h1><p class="page-subtitle">Here’s how the air is looking around your home.</p></div>
-            <button class="button button-outline" type="button" data-nav="demo">▶ <span>Explore demo</span></button>
-          </div>
+          <div class="page-heading"><div><p class="eyebrow" id="today-label"></p><h1>Welcome, {{ current_user.display_name }}<span class="wave" aria-hidden="true">✳</span></h1><p class="page-subtitle">A room-by-room view of the latest readings in your home.</p></div><button class="button button-dark" type="button" data-nav="demo"><span aria-hidden="true">▶</span> Explore demo</button></div>
           <div class="overview-grid">
             <article class="metric-overview-card">
-              <div class="card-topline"><span class="card-label">Home air snapshot</span><span class="preview-pill">SERVER DATA</span></div>
-              <div class="snapshot-main" id="snapshot-main"><div class="air-score"><div class="score-number">—</div><div class="score-caption">Home<br>snapshot</div></div><div class="snapshot-copy"><span class="status-pill status-none">Waiting for readings</span><p>Connect a sensor or enter a simulator reading to see home conditions.</p><button class="text-button" type="button" data-nav="demo">Enter a reading <span>→</span></button></div></div>
-              <div class="snapshot-footer"><span>Based on <strong id="snapshot-room-count">0 rooms</strong></span><span>Updated <strong id="snapshot-updated">—</strong></span></div>
+              <div class="card-topline"><span class="card-label">Home air snapshot</span><span class="preview-pill"><span class="tiny-dot" aria-hidden="true"></span> LIVE OVERVIEW</span></div>
+              <div class="snapshot-main" id="snapshot-main"><div class="snapshot-symbol" aria-hidden="true"><span>⌁</span></div><div class="snapshot-copy"><span class="status-pill status-none">Waiting for readings</span><p>Connect a sensor or send a simulator reading to see the latest home conditions.</p><button class="text-button" type="button" data-nav="demo">Send a demo reading <span aria-hidden="true">→</span></button></div></div>
+              <div class="snapshot-footer"><span>Coverage <strong id="snapshot-room-count">0 rooms</strong></span><span>Latest update <strong id="snapshot-updated">—</strong></span></div>
             </article>
-            <article class="summary-card">
-              <div class="card-topline"><span class="card-label">Room status</span><span class="tiny-icon">⌂</span></div>
-              <strong class="summary-value" id="room-count">0</strong>
-              <span class="summary-note">Rooms in this home</span>
-              <div class="mini-room-status" id="mini-room-status">No readings yet</div>
-            </article>
-            <article class="summary-card alert-summary-card">
-              <div class="card-topline"><span class="card-label">Open alerts</span><span class="tiny-icon alert-icon">♧</span></div>
-              <strong class="summary-value" id="open-alert-count">2</strong>
-              <span class="summary-note">Active or acknowledged alerts</span>
-              <button class="text-button" type="button" data-nav="alerts">Review alerts <span>→</span></button>
-            </article>
+            <article class="summary-card room-summary-card"><div class="card-topline"><span class="card-label">Rooms monitored</span><span class="summary-icon" aria-hidden="true">⌂</span></div><strong class="summary-value" id="room-count">0</strong><span class="summary-note">Rooms in this home</span><div class="mini-room-status" id="mini-room-status">No rooms configured</div></article>
+            <article class="summary-card alert-summary-card"><div class="card-topline"><span class="card-label">Open alerts</span><span class="summary-icon alert-icon" aria-hidden="true">⌁</span></div><strong class="summary-value" id="open-alert-count">0</strong><span class="summary-note">Awaiting acknowledgment</span><button class="text-button" type="button" data-nav="alerts">Review alerts <span aria-hidden="true">→</span></button></article>
           </div>
-
           <section class="panel chart-panel">
-            <div class="section-heading">
-              <div><p class="eyebrow">AT A GLANCE</p><h2>Latest readings by room</h2></div>
-              <div class="chart-controls"><div class="metric-tabs" id="metric-tabs" role="tablist" aria-label="Reading metric"></div><button class="icon-button chart-pause" id="rotation-button" type="button" aria-label="Pause metric rotation" aria-pressed="false">Ⅱ</button></div>
-            </div>
-            <div class="chart-legend"><span><i class="legend-bar"></i>Latest reading</span><span class="muted" id="chart-updated">Waiting for readings</span></div>
-            <div class="bar-chart" id="room-chart"></div>
+            <div class="section-heading"><div><p class="eyebrow">AT A GLANCE</p><h2>Latest readings by room</h2><p class="section-subtitle">Compare the most recent sample from each room.</p></div><div class="chart-controls"><div class="metric-tabs" id="metric-tabs" role="tablist" aria-label="Reading metric"></div><button class="rotation-button" id="rotation-button" type="button" aria-label="Pause automatic metric rotation" aria-pressed="true"><span class="rotation-glyph" aria-hidden="true">Ⅱ</span><span class="rotation-label">Pause</span></button></div></div>
+            <div class="chart-legend"><span><i class="legend-bar" aria-hidden="true"></i>Latest sample</span><span class="muted" id="chart-updated">Waiting for readings</span></div><div class="bar-chart" id="room-chart" aria-live="polite"></div>
           </section>
-
           <div class="content-columns">
-            <section class="section-block">
-              <div class="section-heading"><div><p class="eyebrow">YOUR HOME</p><h2>Room status</h2></div><button class="text-button" type="button" data-nav="rooms">All rooms <span>→</span></button></div>
-              <div class="room-grid compact-room-grid" id="room-grid"></div>
-            </section>
-            <section class="section-block">
-              <div class="section-heading"><div><p class="eyebrow">NEEDS A LOOK</p><h2>Recent alerts</h2></div><button class="text-button" type="button" data-nav="alerts">View all <span>→</span></button></div>
-              <div class="preview-alert-list" id="overview-alerts"></div>
-            </section>
+            <section class="section-block"><div class="section-heading"><div><p class="eyebrow">YOUR HOME</p><h2>Room status</h2></div><button class="text-button" type="button" data-nav="rooms">All rooms <span aria-hidden="true">→</span></button></div><div class="room-grid compact-room-grid" id="room-grid"></div></section>
+            <section class="section-block"><div class="section-heading"><div><p class="eyebrow">NEEDS A LOOK</p><h2>Recent alerts</h2></div><button class="text-button" type="button" data-nav="alerts">View all <span aria-hidden="true">→</span></button></div><div class="preview-alert-list" id="overview-alerts"></div></section>
           </div>
-          <p class="disclaimer">AirSense supports ventilation decisions; it is not a medical or safety device and does not replace a certified carbon monoxide alarm.</p>
+          <p class="disclaimer">AirSense is a ventilation-support tool, not a medical or safety device. It does not replace a certified carbon monoxide alarm.</p>
         </section>
 
         <section class="view" id="view-rooms" data-view="rooms">
-          <div class="page-heading"><div><p class="eyebrow">YOUR HOME</p><h1>Rooms</h1><p class="page-subtitle">Room readings, sensor freshness, and ventilation notes.</p></div><button class="button button-dark owner-only" type="button" data-open-modal="room-modal">＋ Add room</button></div>
-          <div class="filter-row"><div class="filter-pills" id="room-filters"><button class="filter-pill selected" type="button" data-filter="all">All rooms <span>0</span></button><button class="filter-pill" type="button" data-filter="attention">Needs a look <span>0</span></button></div><span class="muted">This home’s configured rooms</span></div>
-          <div class="room-grid full-room-grid" id="all-room-grid"></div>
-          <div class="panel lower-panel"><div><p class="eyebrow">VENTILATION SETUP</p><h2>Small changes can help refresh a room.</h2><p class="muted">Ventilation sources are stored with each room and shown alongside its latest readings.</p></div><button class="button button-outline owner-only" type="button" data-open-modal="room-modal">Manage rooms</button></div>
+          <div class="page-heading"><div><p class="eyebrow">YOUR HOME</p><h1>Rooms</h1><p class="page-subtitle">See current status, the latest samples, and whether data is fresh.</p></div><button class="button button-dark owner-only" type="button" data-open-modal="room-modal"><span aria-hidden="true">＋</span> Add room</button></div>
+          <div class="filter-row"><div class="filter-pills" id="room-filters"><button class="filter-pill selected" type="button" data-filter="all">All rooms <span>0</span></button><button class="filter-pill" type="button" data-filter="attention">Needs a look <span>0</span></button></div><span class="muted">Status and freshness are shown with text, not color alone.</span></div>
+          <div class="room-grid full-room-grid" id="all-room-grid"></div><div class="panel lower-panel"><div><p class="eyebrow">VENTILATION SETUP</p><h2>Know what can bring fresh air in.</h2><p class="muted">Keep room ventilation sources up to date to make guidance more useful.</p></div><button class="button button-outline owner-only" type="button" data-open-modal="room-modal">Manage rooms</button></div>
         </section>
 
         <section class="view" id="view-sensors" data-view="sensors">
-          <div class="page-heading"><div><p class="eyebrow">DEVICES</p><h1>Sensors</h1><p class="page-subtitle">Manage the sensors associated with your rooms.</p></div><button class="button button-dark owner-only" type="button" data-open-modal="sensor-modal">＋ Pair a sensor</button></div>
-          <div class="info-banner"><span class="banner-icon">i</span><span>Provisioning generates a one-time device key. Copy it now; the server stores only its hash.</span></div>
-          <section class="panel table-panel">
-            <div class="table-toolbar"><div><h2>Home sensors <span class="table-count" id="sensor-count">0 devices</span></h2><p class="muted">Provisioned devices and last-seen status</p></div><label class="search-field"><span>⌕</span><input id="sensor-search" placeholder="Search sensors" aria-label="Search sensors"></label></div>
-            <div class="table-scroll"><table><thead><tr><th>Sensor</th><th>Room</th><th>Data source</th><th>Last sample</th><th>State</th><th></th></tr></thead><tbody id="sensor-table-body"></tbody></table></div>
-          </section>
-          <div class="bottom-note">Sensor readings authenticate with a device-specific key and are evaluated by the same alert pipeline.</div>
+          <div class="page-heading"><div><p class="eyebrow">DEVICES</p><h1>Sensors</h1><p class="page-subtitle">Pair and manage the devices that report readings to your home.</p></div><button class="button button-dark owner-only" type="button" data-open-modal="sensor-modal"><span aria-hidden="true">＋</span> Pair a sensor</button></div>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>A device key is shown once after provisioning. Copy it securely; only its hash is stored.</span></div>
+          <section class="panel table-panel"><div class="table-toolbar"><div><h2>Home sensors <span class="table-count" id="sensor-count">0 devices</span></h2><p class="muted">Source, room assignment, and last-seen freshness</p></div><label class="search-field"><span aria-hidden="true">⌕</span><input id="sensor-search" placeholder="Search sensors" aria-label="Search sensors"></label></div><div class="table-scroll"><table><thead><tr><th>Sensor</th><th>Room</th><th>Data source</th><th>Last sample</th><th>Freshness</th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody id="sensor-table-body"></tbody></table></div></section>
+          <div class="bottom-note">Sensor readings use a device-specific key and pass through the same validation and alert pipeline.</div>
         </section>
 
         <section class="view" id="view-alerts" data-view="alerts">
-          <div class="page-heading"><div><p class="eyebrow">ALERT CENTER</p><h1>Alerts</h1><p class="page-subtitle">Review and acknowledge alerts for this home.</p></div></div>
-          <div class="alert-stats"><article class="summary-card"><span class="summary-label">Open</span><strong class="summary-value" id="alert-open-stat">2</strong><span class="summary-note">Sample alerts</span></article><article class="summary-card"><span class="summary-label">Acknowledged</span><strong class="summary-value" id="alert-ack-stat">1</strong><span class="summary-note">In this preview</span></article><article class="summary-card"><span class="summary-label">All clear</span><strong class="summary-value" id="alert-clear-stat">1</strong><span class="summary-note">Sample history</span></article></div>
-          <div class="filter-row"><div class="filter-pills" id="alert-filters"><button class="filter-pill selected" data-alert-filter="all">All</button><button class="filter-pill" data-alert-filter="open">Open</button><button class="filter-pill" data-alert-filter="acknowledged">Acknowledged</button><button class="filter-pill" data-alert-filter="all_clear">All clear</button></div></div>
-          <div class="alert-list" id="alert-list"></div>
-          <p class="disclaimer">Alert language is advisory and refers to the guideline level configured for this demo. CO and NO₂ are advisory metrics only; this prototype does not replace a certified CO alarm.</p>
+          <div class="page-heading"><div><p class="eyebrow">ALERT CENTER</p><h1>Alerts</h1><p class="page-subtitle">Review the room, metric, and guideline level behind each alert.</p></div></div>
+          <div class="alert-stats"><article class="summary-card"><span class="summary-label">Open</span><strong class="summary-value" id="alert-open-stat">0</strong><span class="summary-note">Awaiting acknowledgment</span></article><article class="summary-card"><span class="summary-label">Acknowledged</span><strong class="summary-value" id="alert-ack-stat">0</strong><span class="summary-note">Being followed up</span></article><article class="summary-card"><span class="summary-label">All clear</span><strong class="summary-value" id="alert-clear-stat">0</strong><span class="summary-note">Recently resolved</span></article></div>
+          <div class="filter-row"><div class="filter-pills" id="alert-filters"><button class="filter-pill selected" type="button" data-alert-filter="all">All</button><button class="filter-pill" type="button" data-alert-filter="open">Open</button><button class="filter-pill" type="button" data-alert-filter="acknowledged">Acknowledged</button><button class="filter-pill" type="button" data-alert-filter="all_clear">All clear</button></div></div>
+          <div class="alert-list" id="alert-list"></div><p class="disclaimer">Alert wording refers to the guideline level configured for AirSense. CO and NO₂ are advisory metrics only and do not replace a certified carbon monoxide alarm.</p>
         </section>
 
         <section class="view" id="view-history" data-view="history">
-          <div class="page-heading"><div><p class="eyebrow">PATTERNS OVER TIME</p><h1>History</h1><p class="page-subtitle">Explore readings received by this home.</p></div><button class="button button-outline" id="export-csv" type="button">↓ Export CSV</button></div>
-          <section class="panel history-panel">
-            <div class="history-filters">
-              <label class="field">Room<select id="history-room"></select></label>
-              <label class="field">Metric<select id="history-metric"></select></label>
-              <label class="field">Date range<select id="history-range"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></label>
-              <span class="preview-pill">STORED READINGS</span>
-            </div>
-            <div class="history-chart-heading"><div><span class="card-label" id="history-series-title">Room · CO₂</span><strong class="history-current" id="history-current-value">— <small>ppm</small></strong></div><span class="muted">Each bar is the daily average · hover for the full date</span></div>
-            <div class="history-chart-wrap"><svg id="history-chart" viewBox="0 0 1000 320" role="img" aria-label="Daily illustrative sample readings"></svg></div>
-            <div class="chart-axis" id="history-axis"></div>
-            <div class="chart-caption">Daily averages and coverage are calculated from readings stored for this home. No DALTON records are loaded.</div>
+          <div class="page-heading"><div><p class="eyebrow">PATTERNS OVER TIME</p><h1>History</h1><p class="page-subtitle">Explore readings by room and metric, then export a CSV for this home.</p></div><button class="button button-dark" id="export-csv" type="button"><span aria-hidden="true">↓</span> Export CSV</button></div>
+          <section class="panel history-panel"><div class="history-filters"><label class="field">Room<select id="history-room"></select></label><label class="field">Metric<select id="history-metric"></select></label><label class="field">Date range<select id="history-range"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></label><span class="preview-pill">STORED READINGS</span></div>
+            <div class="history-chart-heading"><div><span class="card-label" id="history-series-title">Room · CO₂</span><strong class="history-current" id="history-current-value">— <small>ppm</small></strong></div><span class="muted">Daily averages · hover a bar for its date</span></div><div class="history-chart-wrap"><svg id="history-chart" viewBox="0 0 1000 320" role="img" aria-label="Daily stored readings"></svg></div><div class="chart-axis" id="history-axis"></div><div class="chart-caption">Coverage is calculated from readings stored for this home. Missing data is shown as a gap, never as zero.</div>
           </section>
-          <section class="panel heatmap-panel">
-            <div class="section-heading"><div><p class="eyebrow">DATA AVAILABILITY</p><h2>Reading coverage</h2><p class="muted">Weekdays run top to bottom; month and day labels identify dates with readings.</p></div><div class="heatmap-legend"><span>Less</span><i></i><i></i><i></i><i></i><span>More</span></div></div>
-            <div class="heatmap-calendar">
-              <div class="heatmap-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-              <div class="heatmap-dates">
-                <div class="heatmap-months" id="heatmap-months" aria-hidden="true"></div>
-                <div class="heatmap-grid" id="heatmap-grid" role="group" aria-label="Sample data availability by date"></div>
-              </div>
-            </div>
-          </section>
-          <div class="info-banner"><span class="banner-icon">i</span><span>History contains only readings recorded for this home. DALTON import remains separate and is not configured.</span></div>
+          <section class="panel heatmap-panel"><div class="section-heading"><div><p class="eyebrow">DATA AVAILABILITY</p><h2>Reading coverage</h2><p class="section-subtitle">Each square represents one day in the selected room’s history.</p></div><div class="heatmap-legend"><span>Less</span><i></i><i></i><i></i><i></i><span>More</span></div></div><div class="heatmap-calendar"><div class="heatmap-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div class="heatmap-dates"><div class="heatmap-months" id="heatmap-months" aria-hidden="true"></div><div class="heatmap-grid" id="heatmap-grid" role="group" aria-label="Data availability by date"></div></div></div></section>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Only readings recorded for this home are shown. DALTON replay is not connected in this build.</span></div>
         </section>
 
         <section class="view" id="view-thresholds" data-view="thresholds">
-          <div class="page-heading"><div><p class="eyebrow">OWNER SETTINGS</p><h1>Thresholds</h1><p class="page-subtitle">Configure sample alert rules by room and metric.</p></div><button class="button button-dark" type="button" id="save-thresholds">Save changes</button></div>
-          <div class="info-banner"><span class="banner-icon">i</span><span>Defaults are illustrative configuration only—not published health guidance. Changes are saved for this home and affect subsequent readings.</span></div>
-          <section class="panel threshold-panel">
-            <div class="section-heading"><div><h2>CO₂ · ppm</h2><p class="muted">Threshold changes are stored for this home.</p></div></div>
-            <div class="table-scroll"><table><thead><tr><th>Room</th><th>Elevated</th><th>High</th><th>Elevated duration</th><th>Rapid rise / min</th></tr></thead><tbody id="threshold-table-body"></tbody></table></div>
-          </section>
-          <div class="settings-grid"><article class="panel setting-card"><span class="setting-icon">◷</span><div><h2>All-clear timer</h2><p class="muted">How long sample values remain below a threshold before an alert clears.</p></div><label class="inline-input"><input id="clear-duration" type="number" min="1" value="5"><span>minutes</span></label></article><article class="panel setting-card"><span class="setting-icon">⌁</span><div><h2>Sample gap</h2><p class="muted">Gaps above this duration reset sustained demo rules.</p></div><label class="inline-input"><input id="sample-gap" type="number" min="1" value="2"><span>minutes</span></label></article></div>
-          <p class="bottom-note">Thresholds are advisory settings and do not replace certified safety alarms.</p>
+          <div class="page-heading"><div><p class="eyebrow">OWNER SETTINGS</p><h1>Thresholds</h1><p class="page-subtitle">Configure advisory CO₂ alert rules for each room.</p></div><button class="button button-dark" type="button" id="save-thresholds">Save changes</button></div>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Defaults are illustrative configuration, not published health guidance. Changes apply to subsequent readings.</span></div>
+          <section class="panel threshold-panel"><div class="section-heading"><div><h2>CO₂ · ppm</h2><p class="muted">Threshold settings are stored for this home.</p></div></div><div class="table-scroll"><table><thead><tr><th>Room</th><th>Elevated</th><th>High</th><th>Elevated duration</th><th>Rapid rise / min</th></tr></thead><tbody id="threshold-table-body"></tbody></table></div></section>
+          <div class="settings-grid"><article class="panel setting-card"><span class="setting-icon" aria-hidden="true">◷</span><div><h2>All-clear timer</h2><p class="muted">How long values remain below a threshold before an alert clears.</p></div><label class="inline-input"><input id="clear-duration" type="number" min="1" value="5"><span>minutes</span></label></article><article class="panel setting-card"><span class="setting-icon" aria-hidden="true">⌁</span><div><h2>Sample gap</h2><p class="muted">Gaps above this duration reset sustained demo rules.</p></div><label class="inline-input"><input id="sample-gap" type="number" min="1" value="2"><span>minutes</span></label></article></div>
+          <p class="bottom-note">Thresholds are advisory settings. AirSense does not replace certified safety alarms.</p>
         </section>
 
         <section class="view" id="view-members" data-view="members">
-          <div class="page-heading"><div><p class="eyebrow">HOUSEHOLD ACCESS</p><h1>Members</h1><p class="page-subtitle">Manage the people and roles for this home.</p></div><button class="button button-dark owner-only" type="button" data-open-modal="invite-modal">＋ Invite member</button></div>
-          <div class="info-banner"><span class="banner-icon">i</span><span>Invitations expire after seven days. Email delivery is not configured; share the one-time invite link securely.</span></div>
-          <section class="panel table-panel"><div class="table-toolbar"><div><h2>People in this home</h2><p class="muted">Owner and member access</p></div></div><div class="table-scroll"><table><thead><tr><th>Member</th><th>Role</th><th>Joined</th><th></th></tr></thead><tbody id="member-table-body"></tbody></table></div></section>
+          <div class="page-heading"><div><p class="eyebrow">HOUSEHOLD ACCESS</p><h1>Members</h1><p class="page-subtitle">Manage who can view and contribute to this home.</p></div><button class="button button-dark owner-only" type="button" data-open-modal="invite-modal"><span aria-hidden="true">＋</span> Invite member</button></div>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Invite links expire after seven days. Email delivery is not configured, so share the one-time link securely.</span></div>
+          <section class="panel table-panel"><div class="table-toolbar"><div><h2>People in this home</h2><p class="muted">Owner and member access</p></div></div><div class="table-scroll"><table><thead><tr><th>Member</th><th>Role</th><th>Joined</th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody id="member-table-body"></tbody></table></div></section>
         </section>
 
         <section class="view" id="view-activity" data-view="activity">
-          <div class="page-heading"><div><p class="eyebrow">HOME HISTORY</p><h1>Activity log</h1><p class="page-subtitle">Owner-only history of changes made in this home.</p></div></div>
-          <div class="info-banner"><span class="banner-icon">i</span><span>Audit entries record account actions and ingestion outcomes. Device keys and passwords are never recorded.</span></div>
+          <div class="page-heading"><div><p class="eyebrow">HOME HISTORY</p><h1>Activity log</h1><p class="page-subtitle">An owner-only record of important changes in this home.</p></div></div>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Audit entries record account actions and ingestion outcomes. Device keys and passwords are never recorded.</span></div>
           <section class="panel table-panel"><div class="table-toolbar"><div><h2>Recent activity</h2><p class="muted">Persisted account and sensor events</p></div></div><div class="table-scroll"><table><thead><tr><th>Event</th><th>Who</th><th>When</th><th>Details</th></tr></thead><tbody id="activity-table-body"></tbody></table></div></section>
         </section>
 
         <section class="view" id="view-demo" data-view="demo">
-          <div class="page-heading"><div><p class="eyebrow">TRY THE EXPERIENCE</p><h1>Simulator</h1><p class="page-subtitle">Send a simulated CO₂ reading through the normal server-side alert pipeline.</p></div></div>
-          <div class="info-banner"><span class="banner-icon">i</span><span>Simulator readings are labeled as simulated and saved to this home. DALTON replay is not connected.</span></div>
+          <div class="page-heading"><div><p class="eyebrow">TRY THE EXPERIENCE</p><h1>Simulator</h1><p class="page-subtitle">Submit sample readings through the same server-side alert pipeline.</p></div><span class="source-pill source-simulated">Simulated data</span></div>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Simulator readings are labeled and saved to this home. DALTON replay is not connected.</span></div>
           <div class="scenario-grid">
-            <article class="panel scenario-card"><span class="scenario-number">01</span><p class="eyebrow">IMMEDIATE ALERT</p><h2>High reading</h2><p>Show how an immediate high sample appears on the room and alert screens.</p><button class="button button-dark" type="button" data-scenario="high">Run scenario <span>→</span></button></article>
-            <article class="panel scenario-card"><span class="scenario-number">02</span><p class="eyebrow">ELEVATED SAMPLE</p><h2>Submit an elevated value</h2><p>Uses the configured sustained-duration rule; one sample does not immediately open an elevated alert.</p><button class="button button-outline" type="button" data-scenario="elevated">Send reading <span>→</span></button></article>
-            <article class="panel scenario-card"><span class="scenario-number">03</span><p class="eyebrow">RATE CHECK</p><h2>Submit a higher value</h2><p>A rapid-rise alert is created only when a previous, timely reading meets this home’s configured rate threshold.</p><button class="button button-outline" type="button" data-scenario="rapid">Send reading <span>→</span></button></article>
-            <article class="panel scenario-card"><span class="scenario-number">04</span><p class="eyebrow">BELOW THRESHOLD</p><h2>Submit a lower value</h2><p>Open alerts clear only after the configured all-clear duration is met by subsequent readings.</p><button class="button button-outline" type="button" data-scenario="clear">Send reading <span>→</span></button></article>
+            <article class="panel scenario-card"><span class="scenario-number">01</span><p class="eyebrow">IMMEDIATE ALERT</p><h2>High reading</h2><p>Show how an immediate high sample appears on the room and alert screens.</p><button class="button button-dark" type="button" data-scenario="high">Run scenario <span aria-hidden="true">→</span></button></article>
+            <article class="panel scenario-card"><span class="scenario-number">02</span><p class="eyebrow">ELEVATED SAMPLE</p><h2>Submit an elevated value</h2><p>Uses the sustained-duration rule; one sample does not immediately open an elevated alert.</p><button class="button button-outline" type="button" data-scenario="elevated">Send reading <span aria-hidden="true">→</span></button></article>
+            <article class="panel scenario-card"><span class="scenario-number">03</span><p class="eyebrow">RATE CHECK</p><h2>Rapid rise</h2><p>A rapid-rise alert depends on the previous timely reading and this home’s configured rate threshold.</p><button class="button button-outline" type="button" data-scenario="rapid">Send reading <span aria-hidden="true">→</span></button></article>
+            <article class="panel scenario-card"><span class="scenario-number">04</span><p class="eyebrow">BELOW THRESHOLD</p><h2>All-clear check</h2><p>Open alerts clear only after the configured duration is met by subsequent readings.</p><button class="button button-outline" type="button" data-scenario="clear">Send reading <span aria-hidden="true">→</span></button></article>
           </div>
-          <section class="panel replay-panel"><div class="replay-icon">↻</div><div><p class="eyebrow">COMING LATER</p><h2>DALTON recorded data replay</h2><p class="muted">A residential dataset will be prepared, checked, and connected to the same experience later. No DALTON records are included in this preview.</p></div><button class="button button-disabled" type="button" disabled>Replay unavailable</button></section>
+          <section class="panel replay-panel"><div class="replay-icon" aria-hidden="true">↻</div><div><p class="eyebrow">NOT CONNECTED</p><h2>DALTON recorded data replay</h2><p class="muted">Recorded residential data is not included in this build. When available, it will use the same ingestion path and appear with a source label.</p></div><button class="button button-disabled" type="button" disabled>Replay unavailable</button></section>
         </section>
-
-        <footer class="global-footer"><span>AirSense · ventilation support</span><span>Data syncs from the selected home</span></footer>
+        <footer class="global-footer"><span>AirSense · ventilation support</span><span>Data syncs securely from the selected home</span></footer>
       </div>
     </main>
   </div>
 
-  <div class="modal-backdrop" id="room-modal" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="room-modal-title">
-      <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">ROOM SETUP</p><h2 id="room-modal-title">Add a room</h2><p class="muted">Room details are saved to this home.</p>
-      <form class="form-grid modal-form" id="room-form"><label class="field field-wide"><span class="field-label">Room name</span><input name="name" maxlength="100" placeholder="Guest room" required></label><fieldset class="field field-wide ventilation-options"><legend class="field-label">Ventilation sources <span class="unit-label">Choose all that apply</span></legend><div class="ventilation-checkboxes"><label><input type="checkbox" name="ventilation_sources" value="Window">Window</label><label><input type="checkbox" name="ventilation_sources" value="Exhaust fan">Exhaust fan</label><label><input type="checkbox" name="ventilation_sources" value="Air conditioner">Air conditioner</label><label><input type="checkbox" name="ventilation_sources" value="Kitchen chimney">Kitchen chimney</label><label><input type="checkbox" name="ventilation_sources" value="Not specified">Not specified</label></div></fieldset><button class="button button-dark field-wide" type="submit">Add room</button></form>
-    </section>
-  </div>
-  <div class="modal-backdrop" id="sensor-modal" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="sensor-modal-title">
-      <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">SENSOR SETUP</p><h2 id="sensor-modal-title">Pair a sensor</h2><p class="muted">A one-time device key will be shown after provisioning.</p>
-      <form class="form-grid modal-form" id="sensor-form"><label class="field field-wide"><span class="field-label">Device name</span><input name="name" maxlength="120" placeholder="Bedroom sensor" required></label><label class="field field-wide"><span class="field-label">Assign to room</span><select name="room_id" id="sensor-room-select" required></select></label><label class="field field-wide"><span class="field-label">Expected reporting interval</span><input name="reporting_interval_seconds" type="number" min="30" max="86400" value="300" required></label><button class="button button-dark field-wide" type="submit">Provision sensor</button></form>
-    </section>
-  </div>
-  <div class="modal-backdrop" id="invite-modal" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
-      <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">HOUSEHOLD ACCESS</p><h2 id="invite-modal-title">Invite a member</h2><p class="muted">Creates a single-use invitation that expires after seven days.</p>
-      <form class="form-grid modal-form" id="invite-form"><label class="field field-wide"><span class="field-label">Email address</span><input name="email" type="email" placeholder="name@example.com" required></label><button class="button button-dark field-wide" type="submit">Create invitation</button></form><div class="invite-code-box" id="invite-code-box" hidden></div>
-    </section>
-  </div>
+  <div class="modal-backdrop" id="room-modal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="room-modal-title"><button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">ROOM SETUP</p><h2 id="room-modal-title">Add a room</h2><p class="muted">Room details are saved to this home.</p><form class="form-grid modal-form" id="room-form"><label class="field field-wide"><span class="field-label">Room name</span><input name="name" maxlength="100" placeholder="Guest room" required></label><fieldset class="field field-wide ventilation-options"><legend class="field-label">Ventilation sources <span class="unit-label">Choose all that apply</span></legend><div class="ventilation-checkboxes"><label><input type="checkbox" name="ventilation_sources" value="Window">Window</label><label><input type="checkbox" name="ventilation_sources" value="Exhaust fan">Exhaust fan</label><label><input type="checkbox" name="ventilation_sources" value="Air conditioner">Air conditioner</label><label><input type="checkbox" name="ventilation_sources" value="Kitchen chimney">Kitchen chimney</label><label><input type="checkbox" name="ventilation_sources" value="Not specified">Not specified</label></div></fieldset><button class="button button-dark field-wide" type="submit">Add room</button></form></section></div>
+  <div class="modal-backdrop" id="sensor-modal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="sensor-modal-title"><button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">SENSOR SETUP</p><h2 id="sensor-modal-title">Pair a sensor</h2><p class="muted">A one-time device key will be shown after provisioning.</p><form class="form-grid modal-form" id="sensor-form"><label class="field field-wide"><span class="field-label">Device name</span><input name="name" maxlength="120" placeholder="Bedroom sensor" required></label><label class="field field-wide"><span class="field-label">Assign to room</span><select name="room_id" id="sensor-room-select" required></select></label><label class="field field-wide"><span class="field-label">Expected reporting interval</span><input name="reporting_interval_seconds" type="number" min="30" max="86400" value="300" required></label><button class="button button-dark field-wide" type="submit">Provision sensor</button></form></section></div>
+  <div class="modal-backdrop" id="invite-modal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title"><button class="modal-close" type="button" data-close-modal aria-label="Close">×</button><p class="eyebrow">HOUSEHOLD ACCESS</p><h2 id="invite-modal-title">Invite a member</h2><p class="muted">Creates a single-use invitation that expires after seven days.</p><form class="form-grid modal-form" id="invite-form"><label class="field field-wide"><span class="field-label">Email address</span><input name="email" type="email" placeholder="name@example.com" required></label><button class="button button-dark field-wide" type="submit">Create invitation</button></form><div class="invite-code-box" id="invite-code-box" hidden></div></section></div>
 </body>
 </html>
