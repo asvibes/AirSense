@@ -146,6 +146,53 @@ List registered Flask routes:
 python -m flask --app "app.main:create_app()" routes
 ```
 
+## Project status
+
+**Overall completion: about 57% of the PRD** (reviewed 28 October 2026).
+
+| Area | Weight | Completion | Contribution |
+|---|---|---|---|
+| Must-have features F1-F7 | 70% | ~75% | ~52.5% |
+| Should-have features F8-F9 | 10% | ~22% | ~2% |
+| Could and Stretch features F10-F14 | 10% | 0% | 0% |
+| Delivery items (live HTTPS URL, security headers, Power BI report) | 10% | ~25% | ~2.5% |
+| **Total** | 100% | | **~57%** |
+
+These percentages are estimates from reading the code and running the test suite (28 tests, all passing).
+
+### Status table
+
+| # | Feature | Priority | Done | Status | What works | What is missing |
+|---|---|---|---|---|---|---|
+| F1 | Auth and roles | Must | ~85% | Mostly done | Register, login, logout, create home, single-use invite codes, Owner and Member roles, CSRF protection, rate-limited login, access-control tests | Passwords use scrypt, the PRD asks for bcrypt or Argon2id; access tests do not yet cover every route |
+| F2 | Sensor provisioning | Must | ~70% | Mostly done | Owner provisions a sensor for a room, one-time device key, only a peppered hash stored, rotate key, revoke sensor | QR pairing, whole-house (unassigned) sensors, moving a sensor between rooms |
+| F3 | Ingestion and monitoring | Must | ~75% | Mostly done | Device-key authenticated endpoint, validation, duplicate rejection through a unique constraint, rejections logged, last-seen tracking for freshness | "Reading too old" check, separate rejection counter, test that a forced failure saves nothing |
+| F4 | Dashboard | Must | ~60% | Partly done | Room cards with latest values and open alerts, tabs, source labels, pause control, heatmap view, dark theme | Verified 15-30 second polling, trend arrows, freshness on every card, 360 px phone-width check |
+| F5 | Status and alerts | Must | ~90% | Nearly done | High, sustained Elevated and Rapid rise alerts, one open alert per room, metric and level, acknowledge with who and when, all-clear after a quiet period, about 18 lifecycle tests | Projected trend on all-clear, wording audit for "safe" and "dangerous", certified-alarm notice on CO and NO2 screens |
+| F6 | History | Must | ~70% | Mostly done | Date, room and metric filters, indexed time queries, 90-day coverage heatmap, CSV export | CSV is streamed directly, not saved to private Blob Storage with a signed link |
+| F7 | Audit logging | Must | ~75% | Mostly done | Owner-only activity log for logins, invitations, rooms, sensors, thresholds and ingestion; Members get 403 | Database trigger for threshold changes (only in the Azure SQL scripts, not the running app) |
+| F8 | Demo panel | Should | ~25% | Started | Simulated-reading endpoint that drives alert scenarios | Simulator scenarios, DALTON replay, demo panel page |
+| F9 | Room photos | Should | ~20% | Started | Ventilation sources can be ticked per room | Photo upload |
+| F10 | Email alerts | Could | 0% | Not started | | |
+| F11 | Critical Alarm Mode | Could | 0% | Not started | | |
+| F12 | Safety plan | Could | 0% | Not started | | |
+| F13 | Automatic photo suggestions | Could | 0% | Not started | | |
+| F14 | Live AirGradient source | Stretch | 0% | Not started | | |
+
+**Must-have summary:** all 7 are started. F5 is nearly done, F1, F2, F3, F6 and F7 are mostly done, and F4 is partly done. A pair needs 5 working end to end; F5, F1, F3, F7 and F2 are the closest.
+
+### Delivery checklist (security check, 3 November)
+
+| Item | Status |
+|---|---|
+| Repository with CI | Done (unit tests, Alembic migration and route listing) |
+| Deployment config | `render.yaml` written; live HTTPS URL not confirmed |
+| Security checklist document | Written; needs final review against the deployed app |
+| Security headers (CSP, HSTS, X-Frame-Options) | Not done |
+| DALTON data import | Not done |
+| Power BI analytics report | Not done |
+| PWA manifest and service worker | Not done |
+
 ## Project Constraints and Limitations
 
 * AirSense is a ventilation-support demo, not a medical or diagnostic system.
