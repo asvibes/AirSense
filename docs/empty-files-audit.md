@@ -2,12 +2,11 @@
 
 ## Current inventory
 
-This inventory was checked against tracked files on the `divija` branch after merge commit `ac1ddd0`. **32 tracked files are currently zero bytes.** Files not listed below are not zero-byte tracked placeholders. Recount before relying on this snapshot after future merges or file changes.
+This inventory was checked against tracked files on the `divija` branch. **31 tracked files are currently zero bytes.** Files not listed below are not zero-byte tracked placeholders. Recount before relying on this snapshot after future merges or file changes.
 
 ### Backend placeholders
 
 - `app/routers/uploads.py`
-- `app/services/alerts/wording.py`
 - `app/services/blob_storage.py`
 - `app/services/email.py`
 - `app/sources/airgradient.py`
