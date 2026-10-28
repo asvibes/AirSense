@@ -162,6 +162,7 @@ def process_reading(
     measured_at: datetime,
     defaults: dict,
     max_future_seconds: int = 60,
+    sensor_id: str | None = None,
 ) -> dict:
     if not math.isfinite(value) or value < 0:
         raise InvalidReading("Reading value must be a finite non-negative number.")
@@ -204,7 +205,8 @@ def process_reading(
         raise InvalidReading("Reading timestamp cannot be in the future.")
 
     try:
-        with session.begin():
+        transaction = session.begin_nested() if session.in_transaction() else session.begin()
+        with transaction:
             home, room, metric = _ensure_scope(
                 session, home_id, home_name, room_name.strip(), metric_code.upper(), unit
             )
@@ -268,6 +270,7 @@ def process_reading(
             reading = Reading(
                 home_id=home.id,
                 room_id=room.id,
+                sensor_id=sensor_id,
                 metric_code=metric.code,
                 value=value,
                 source=source,
@@ -402,7 +405,8 @@ def configure_policy(
     if values["rapid_rise_per_minute"] <= 0:
         raise InvalidReading("rapid_rise_per_minute must be positive.")
 
-    with session.begin():
+    transaction = session.begin_nested() if session.in_transaction() else session.begin()
+    with transaction:
         home, room, metric = _ensure_scope(
             session, home_id, home_name, room_name.strip(), metric_code.upper(), unit
         )
@@ -504,7 +508,8 @@ def acknowledge_alert(
     if not acknowledged_by.strip() or len(acknowledged_by.strip()) > 120:
         raise ValueError("acknowledged_by must contain 1 to 120 characters.")
 
-    with session.begin():
+    transaction = session.begin_nested() if session.in_transaction() else session.begin()
+    with transaction:
         alert = session.scalar(
             select(Alert).where(Alert.id == alert_id).with_for_update()
         )

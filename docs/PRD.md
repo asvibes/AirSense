@@ -1,23 +1,32 @@
 # AirSense product scope status
 
-The attached AirSense PRD (`AirSense PRD.docx`, dated October 26, 2026) is the authoritative product specification. This repository document tracks the scope implemented in the current branch; it is not a replacement for the complete PRD.
+The attached AirSense PRD (`AirSense PRD.docx`, dated October 26, 2026) is the authoritative product specification. This document tracks the Must-have scope implemented in the current branch; it is not a replacement for the complete PRD.
 
-## Implemented vertical slice
+## Implemented Must-have flows
 
-| PRD requirement | Current behavior |
+| Requirement | Current behavior |
 | --- | --- |
-| FR-5.1 High | Opens an alert immediately at or above the configured high threshold. |
-| FR-5.1 Elevated | Requires consecutive readings at or above the elevated threshold for the configured duration; long data gaps restart the timer. |
-| FR-5.1 Rapid rise | Compares consecutive readings and opens an alert when the configured rate per minute is reached. |
-| FR-5.2 Duplicate prevention | Partial unique index scopes open alerts to home, room, metric, and level. |
-| FR-5.3 Acknowledgement | Stores display name and timestamp; repeated acknowledgement preserves the first actor/time. |
-| FR-5.4 All-clear | Clears only after subsequent samples stay below that alert's captured threshold for its configured duration. Missing samples and long gaps restart the timer. |
-| FR-5.5 Wording | Uses “above the guideline level used by AirSense”; includes the certified carbon-monoxide-alarm disclaimer. |
+| Registration and login | Accounts use validated email addresses and scrypt-hashed passwords. Successful registration creates an owner account and its first home. |
+| Household access | Home membership is checked on home-scoped routes. Owners can invite members by single-use token; invited users must sign in with the invited email. Members can view the home's members and readings. |
+| Sensor setup | Owners provision sensors for rooms, receive a one-time device key, rotate keys, and revoke sensors. Only a peppered key hash is stored. |
+| Reading ingestion | Device-key-authenticated sensor readings and signed-in simulator readings are validated and sent through the alert processing path. Sensor last-seen data drives freshness state. |
+| Room dashboard | The authenticated dashboard loads the selected home's rooms, latest readings, open alerts, and sensor freshness from the backend. Room ventilation notes are persisted. |
+| Thresholds | Owners can update per-room CO₂ threshold settings in a single validated batch. Members may view settings. Default values remain illustrative, not health guidance. |
+| History and export | Home-scoped history supports date, room, metric, CSV export, daily average bars, and a 90-day reading-coverage heatmap. |
+| Audit history | Owner-only activity lists recorded home events, including account, room, invitation, threshold, sensor, and ingestion actions. Device keys and passwords are not recorded. |
+| Alert lifecycle | High, sustained elevated, rapid-rise, acknowledgement, duplicate suppression, and all-clear behavior are persisted through the existing alert pipeline. |
 
-Threshold policies are stored per home, room, and metric. Demo defaults are illustrative and are not represented as published health guidance. The database migration is in `migrations/versions/20261027_0001_alert_lifecycle.py`; the SQLite and PostgreSQL schema share SQLAlchemy metadata.
+The dashboard frontend is served by Flask with vanilla JavaScript and uses same-origin authenticated APIs. Mutating account/home requests require a CSRF token. The frontend no longer relies on local mock collections for these views.
 
-## Not yet implemented
+## Out of scope or remaining limitations
 
-The attached PRD's other Must-have features—registration, login, household roles and invitations, sensor provisioning and device-key authentication, unified dataset/simulator ingestion, room dashboard and freshness, historical charts/CSV/heatmap, and owner-only audit logging—are not included in this alert slice. Should/Could/Stretch features (demo replay, email, critical alarm mode, room photos, live sensors) are also out of scope. The placeholder files for those features remain unimplemented; do not treat their presence as a completed implementation.
+* DALTON dataset import and replay are not configured. No DALTON records are generated or shown.
+* Email delivery is not configured; invitations must be copied and shared manually.
+* Automatic vendor integrations, live sensor discovery, and push/WebSocket updates are not implemented.
+* The rate limiter is process-local and must be replaced with shared storage for multi-worker deployments.
+* Threshold defaults do not have persisted authoritative citations. Confirm units, sensor range, and external guidance before any use beyond a demonstration.
+* Additional Should/Could/Stretch features (critical alarm mode, room photos, and broader device integrations) remain out of scope.
 
-Until user accounts and home-level authorization are delivered, the demo relies on a shared optional bearer token to guard application routes in a hosted configuration. Acknowledgement names are caller-supplied display labels rather than verified account identities. Do not use the demo with personal household data.
+Alembic migrations manage the shared SQLite/PostgreSQL schema in `migrations/versions/`. The empty files in older `database/` and `app/templates/` folders are legacy placeholders, not migrations or active application surfaces.
+
+AirSense supports ventilation decisions; it is not a medical or safety device and does not replace a certified carbon monoxide alarm.

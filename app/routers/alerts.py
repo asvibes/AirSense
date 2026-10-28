@@ -10,11 +10,23 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     url_for,
 )
 from werkzeug.exceptions import BadRequest
+from sqlalchemy import func, select
 
 from app.db import get_session
+from app.models.alert import Alert
+from app.models.home import Home
+from app.models.room import Room
+from app.security.sessions import (
+    current_user,
+    list_user_homes,
+    require_home_role,
+    require_user,
+)
+from app.services.audit import record_event
 from app.repositories.alerts import (
     AlertNotFound,
     InvalidAlertTransition,
@@ -36,6 +48,7 @@ def require_api_token():
         not current_app.config["REQUIRE_API_TOKEN"]
         or request.endpoint
         in {"health", "static", "alerts.index", "alerts.alerts_page"}
+        or session.get("user_id")
     ):
         return None
     expected = current_app.config["API_TOKEN"]
@@ -44,9 +57,7 @@ def require_api_token():
         return jsonify(error="Requests are disabled until AIRSENSE_API_TOKEN is configured."), 503
     if len(expected) < 32:
         return jsonify(error="AIRSENSE_API_TOKEN must contain at least 32 characters."), 503
-    if not hmac.compare_digest(
-        supplied.encode("utf-8"), f"Bearer {expected}".encode("utf-8")
-    ):
+    if not hmac.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8")):
         return jsonify(error="A valid bearer token is required."), 401
     return None
 
@@ -57,7 +68,15 @@ def index():
 
 
 @alerts.get("/alerts")
+@require_user(api=False)
 def alerts_page():
+    user = current_user()
+    home_rows = list_user_homes(user.id)
+    if not home_rows:
+        return redirect(url_for("auth.login_page"))
+    requested_home = request.args.get("home_id") or session.get("home_id")
+    selected = next((home for home in home_rows if home["id"] == requested_home), home_rows[0])
+    session["home_id"] = selected["id"]
     return render_template(
         "alerts.html",
         error=request.args.get("error"),
@@ -65,13 +84,27 @@ def alerts_page():
         high_threshold=current_app.config["HIGH_THRESHOLD"],
         elevated_threshold=current_app.config["ELEVATED_THRESHOLD"],
         api_token_required=current_app.config["REQUIRE_API_TOKEN"],
+        current_user=user,
+        homes=home_rows,
+        active_home=selected,
+        csrf_token=_csrf_token(),
     )
 
 
+def _csrf_token() -> str:
+    from app.security.sessions import csrf_token
+
+    return csrf_token()
+
+
 @alerts.get("/api/dashboard")
+@require_user()
 def api_dashboard():
     try:
-        home_id = _text(request.args, "home_id", "demo-home", 64)
+        home_id = request.args.get("home_id") or session.get("home_id")
+        if not isinstance(home_id, str) or not home_id:
+            return jsonify(error="Select a home first."), 400
+        require_home_role(home_id, "owner", "member")
     except ValueError as error:
         return _request_error(str(error), 400)
     session = get_session()
@@ -83,14 +116,33 @@ def api_dashboard():
 
 
 @alerts.get("/api/alerts")
+@require_user()
 def api_alerts():
-    return jsonify(alerts=list_alerts(get_session(), request.args.get("home_id")))
+    home_id = request.args.get("home_id") or session.get("home_id")
+    if not home_id:
+        return jsonify(error="Select a home first."), 400
+    require_home_role(home_id, "owner", "member")
+    return jsonify(alerts=list_alerts(get_session(), home_id))
 
 
 @alerts.post("/api/policies")
+@require_user()
 def update_policy():
     try:
         payload = _request_payload()
+        home_id = payload.get("home_id") or session.get("home_id")
+        if not isinstance(home_id, str) or not home_id:
+            raise ValueError("Select a home first.")
+        require_home_role(home_id, "owner")
+        room_name = _required_text(payload, "room", 100)
+        room = get_session().scalar(
+            select(Room).where(
+                Room.home_id == home_id,
+                func.lower(Room.name) == room_name.casefold(),
+            )
+        )
+        if room is None:
+            return _request_error("Room was not found in this home.", 404)
         values = {
             "high_threshold": _number(payload, "high_threshold"),
             "elevated_threshold": _number(payload, "elevated_threshold"),
@@ -107,13 +159,23 @@ def update_policy():
         }
         policy = configure_policy(
             get_session(),
-            home_id=_text(payload, "home_id", "demo-home", 64),
-            home_name=_text(payload, "home_name", "Demo Home", 120),
-            room_name=_required_text(payload, "room", 100),
+            home_id=home_id,
+            home_name="",
+            room_name=room.name,
             metric_code=_text(payload, "metric", "CO2", 32),
             unit=_text(payload, "unit", "ppm", 24),
             values=values,
         )
+        record_event(
+            get_session(),
+            home_id=home_id,
+            actor_user_id=current_user().id,
+            event_type="threshold.updated",
+            entity_type="threshold",
+            entity_id=f"{room.id}:{policy['metric']}",
+            details=values,
+        )
+        get_session().commit()
     except (TypeError, ValueError) as error:
         return _request_error(str(error), 400)
     return jsonify(policy=policy)
@@ -121,22 +183,47 @@ def update_policy():
 
 @alerts.post("/api/readings")
 @alerts.post("/readings")
+@require_user()
 def submit_reading():
     try:
         payload = _request_payload()
+        home_id = payload.get("home_id") or session.get("home_id")
+        if not isinstance(home_id, str) or not home_id:
+            raise ValueError("Select a home first.")
+        require_home_role(home_id, "owner", "member")
+        home = get_session().get(Home, home_id)
+        room_name = _required_text(payload, "room", 100)
+        room = get_session().scalar(
+            select(Room).where(
+                Room.home_id == home_id,
+                func.lower(Room.name) == room_name.casefold(),
+            )
+        )
+        if home is None or room is None:
+            return _request_error("Home or room was not found.", 404)
         reading = process_reading(
             get_session(),
-            home_id=_text(payload, "home_id", "demo-home", 64),
-            home_name=_text(payload, "home_name", "Demo Home", 120),
-            room_name=_required_text(payload, "room", 100),
+            home_id=home_id,
+            home_name=home.name,
+            room_name=room.name,
             metric_code=_text(payload, "metric", "CO2", 32),
             unit=_text(payload, "unit", "ppm", 24),
             value=_number(payload, "value", payload.get("co2_ppm")),
-            source=_text(payload, "source", "simulated", 24),
+            source="simulated",
             measured_at=_timestamp(payload.get("measured_at")),
             defaults=_policy_defaults(),
             max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
         )
+        record_event(
+            get_session(),
+            home_id=home_id,
+            actor_user_id=current_user().id,
+            event_type="reading.ingested",
+            entity_type="reading",
+            entity_id=str(reading["reading_id"]),
+            details={"source": "simulated", "metric": reading["metric"]},
+        )
+        get_session().commit()
     except (TypeError, ValueError) as error:
         return _request_error(str(error), 400)
 
@@ -154,11 +241,25 @@ def submit_reading():
 
 @alerts.post("/api/alerts/<int:alert_id>/acknowledge")
 @alerts.post("/alerts/<int:alert_id>/acknowledge")
+@require_user()
 def acknowledge(alert_id: int):
     try:
-        payload = _request_payload()
-        acknowledged_by = _required_text(payload, "acknowledged_by", 120)
-        alert = acknowledge_alert(get_session(), alert_id, acknowledged_by)
+        _request_payload()
+        alert_row = get_session().get(Alert, alert_id)
+        if alert_row is None:
+            raise AlertNotFound(f"Alert {alert_id} was not found.")
+        require_home_role(alert_row.home_id, "owner", "member")
+        actor = current_user()
+        alert = acknowledge_alert(get_session(), alert_id, actor.display_name)
+        record_event(
+            get_session(),
+            home_id=alert_row.home_id,
+            actor_user_id=actor.id,
+            event_type="alert.acknowledged",
+            entity_type="alert",
+            entity_id=str(alert_id),
+        )
+        get_session().commit()
     except InvalidAlertTransition as error:
         return _request_error(str(error), 409)
     except AlertNotFound as error:
@@ -263,13 +364,4 @@ def _wants_json() -> bool:
 def _request_error(message: str, status: int):
     if _wants_json():
         return jsonify(error=message), status
-    return (
-        render_template(
-            "alerts.html",
-            alerts=list_alerts(get_session()),
-            error=message,
-            high_threshold=current_app.config["HIGH_THRESHOLD"],
-            elevated_threshold=current_app.config["ELEVATED_THRESHOLD"],
-        ),
-        status,
-    )
+    return redirect(url_for("alerts.alerts_page", error=message), code=303)

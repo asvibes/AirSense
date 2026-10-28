@@ -17,6 +17,13 @@ def _database_url() -> str:
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "local-development-key-change-me")
+    APP_ENV = os.environ.get("APP_ENV", "development")
+    DEVICE_KEY_PEPPER = os.environ.get("AIRSENSE_DEVICE_KEY_PEPPER", "")
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    PERMANENT_SESSION_LIFETIME = 60 * 60 * 24 * 14
+    MAX_CONTENT_LENGTH = 2 * 1024 * 1024
     DATABASE_URL = _database_url()
     HIGH_THRESHOLD = float(os.environ.get("AIRSENSE_HIGH_THRESHOLD", "1500"))
     ELEVATED_THRESHOLD = float(os.environ.get("AIRSENSE_ELEVATED_THRESHOLD", "1000"))

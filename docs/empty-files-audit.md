@@ -4,9 +4,11 @@
 
 The current branch descends from `bbf7ad6` (`Added files empty`), which added the repository's placeholder files with zero-byte blobs. The earlier tracked history contains no recoverable application implementation. Commit `7366b0c` contains the first alert slice from the previous work; that code was preserved and then extended. No prior implementation was overwritten during this task.
 
-## Current inventory
+## Baseline empty-file inventory (historical)
 
-The following **83 tracked files were still zero bytes after the alert work**. They are listed explicitly to distinguish unfinished scope from code that is implemented. The alert application, its models, repository, routes, migration, UI, and lifecycle tests are no longer empty.
+This inventory records the repository state when the audit was created: the following **83 tracked files were zero bytes at that time**. It is not a current-file-status report. Subsequent implementation has filled the account, home, sensor, audit, ingestion, history, threshold, dashboard, and authentication surfaces for the Must-have scope. The alert application, its models, repository, routes, migration, UI, and lifecycle tests are also implemented.
+
+The remaining entries below are retained as a historical list of the original placeholders. Some have since been filled; others remain optional/legacy work and are not part of the current application path. Use the current PRD status and source tree—not this baseline list—to assess implementation status.
 
 ### Models
 

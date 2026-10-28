@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create account | AirSense</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <a class="brand" href="{{ url_for('auth.login_page') }}"><span class="brand-mark">A</span><span>airsense</span></a>
+    <p class="eyebrow">GET STARTED</p>
+    <h1>Create your account</h1>
+    <p class="page-subtitle">Your first home will be created as part of setup.</p>
+    {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="{{ url_for('auth.register') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label class="field">Your name<input name="display_name" autocomplete="name" required maxlength="120"></label>
+      <label class="field">Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+      <label class="field">Password<input name="password" type="password" autocomplete="new-password" minlength="12" required maxlength="256"><span class="field-help">Use at least 12 characters, including a letter and a number.</span></label>
+      <button class="button button-dark" type="submit">Create account</button>
+    </form>
+    <p class="auth-switch">Already registered? <a href="{{ url_for('auth.login_page') }}">Sign in</a></p>
+  </main>
+</body>
+</html>
