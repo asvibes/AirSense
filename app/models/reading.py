@@ -28,6 +28,9 @@ class Reading(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     home_id: Mapped[str] = mapped_column(ForeignKey("homes.id"), nullable=False)
     room_id: Mapped[str] = mapped_column(ForeignKey("rooms.id"), nullable=False)
+    sensor_id: Mapped[str | None] = mapped_column(
+        ForeignKey("sensors.id", name="fk_air_readings_sensor_id_sensors")
+    )
     metric_code: Mapped[str] = mapped_column(
         String(32), ForeignKey("metrics.code"), nullable=False
     )

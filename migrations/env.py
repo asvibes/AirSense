@@ -6,7 +6,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import make_url
 
-from app.models import alert, home, metric, reading, room, threshold
+from app.models import alert, audit, home, metric, reading, room, sensor, threshold, user
 from app.models.base import Base
 
 

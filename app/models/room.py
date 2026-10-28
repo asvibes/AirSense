@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Index, String, UniqueConstraint, func, text
+from sqlalchemy import JSON, ForeignKey, Index, String, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -19,4 +19,10 @@ class Room(Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     home_id: Mapped[str] = mapped_column(ForeignKey("homes.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    ventilation: Mapped[str] = mapped_column(
+        String(80), nullable=False, default="Not specified", server_default="Not specified"
+    )
+    ventilation_sources: Mapped[list[str]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     home: Mapped["Home"] = relationship(back_populates="rooms")

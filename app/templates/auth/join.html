@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join a home | AirSense</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <a class="brand" href="{{ url_for('alerts.alerts_page') }}"><span class="brand-mark">A</span><span>airsense</span></a>
+    <p class="eyebrow">HOUSEHOLD INVITATION</p>
+    <h1>Join a home</h1>
+    <p class="page-subtitle">Accept the one-time invitation using the invited email account.</p>
+    <form id="accept-invitation-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label class="field">Invitation code<input id="invitation-token" name="token" value="{{ token }}" required autocomplete="off"></label>
+      <button class="button button-dark" type="submit">Accept invitation</button>
+      <p class="notice notice-error" id="invitation-error" hidden role="alert"></p>
+      <p class="notice notice-success" id="invitation-success" hidden role="status"></p>
+    </form>
+  </main>
+  <script>
+    document.getElementById("accept-invitation-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const error = document.getElementById("invitation-error");
+      const success = document.getElementById("invitation-success");
+      error.hidden = true;
+      success.hidden = true;
+      try {
+        const response = await fetch("{{ url_for('homes.accept_invitation') }}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": document.querySelector('input[name="csrf_token"]').value
+          },
+          body: JSON.stringify({ token: document.getElementById("invitation-token").value })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Unable to accept invitation.");
+        success.textContent = "Invitation accepted. Redirecting to the home dashboard.";
+        success.hidden = false;
+        window.location.assign("{{ url_for('alerts.alerts_page') }}?home_id=" + encodeURIComponent(result.home_id));
+      } catch (reason) {
+        error.textContent = reason.message;
+        error.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>

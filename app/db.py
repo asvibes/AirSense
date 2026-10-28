@@ -7,8 +7,9 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
-from app.models import alert, home, metric, reading, room, threshold
+from app.models import alert, audit, home, metric, reading, room, sensor, threshold, user
 from app.models.base import Base
+from app.models.metric import Metric
 
 
 def _engine() -> Engine:
@@ -45,3 +46,7 @@ def init_db(app) -> None:
     if app.config.get("AUTO_CREATE_SCHEMA"):
         with app.app_context():
             Base.metadata.create_all(engine)
+            with Session(engine) as session:
+                if session.get(Metric, "CO2") is None:
+                    session.add(Metric(code="CO2", name="Carbon dioxide", unit="ppm"))
+                    session.commit()

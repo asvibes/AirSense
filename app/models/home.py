@@ -10,3 +10,6 @@ class Home(Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     rooms: Mapped[list["Room"]] = relationship(back_populates="home")
+    memberships: Mapped[list["HomeMembership"]] = relationship(
+        back_populates="home", cascade="all, delete-orphan"
+    )
