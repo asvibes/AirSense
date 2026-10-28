@@ -69,6 +69,8 @@ When `REQUIRE_API_TOKEN=true`, API requests require `Authorization: Bearer <AIRS
 
 AirSense makes no medical or diagnostic claims and does not replace a certified carbon monoxide alarm. CO and NO₂ are advisory metrics; their entry screens are not enabled in this demo.
 
+The separate Azure SQL target-schema scripts and their apply order are documented in [database/README.md](./database/README.md). They are not wired into the current Flask app's Alembic migrations.
+
 ## Current scope and limitations
 
 The current frontend is a standalone prototype and is not connected to the backend. Its sample interactions are not persisted. DALTON data import/replay, account and household authorization, real sensor provisioning/ingestion, authoritative threshold references, and persisted audit history remain future work. The backend alert API remains available but is not consumed by this frontend. Do not use this preview with personal household data.
