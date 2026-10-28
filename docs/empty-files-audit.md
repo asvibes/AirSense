@@ -2,7 +2,7 @@
 
 ## Current inventory
 
-This inventory was checked against tracked files on the `divija` branch. **31 tracked files are currently zero bytes.** Files not listed below are not zero-byte tracked placeholders. Recount before relying on this snapshot after future merges or file changes.
+This inventory was checked against tracked files on the `divija` branch. **30 tracked files are currently zero bytes.** Files not listed below are not zero-byte tracked placeholders. Recount before relying on this snapshot after future merges or file changes.
 
 ### Backend placeholders
 
@@ -11,7 +11,6 @@ This inventory was checked against tracked files on the `divija` branch. **31 tr
 - `app/services/email.py`
 - `app/sources/airgradient.py`
 - `app/sources/dalton_replay.py`
-- `app/sources/simulator.py`
 
 ### Frontend assets and templates
 
