@@ -50,4 +50,4 @@ The submission should include a reviewed ER diagram and schema/query scripts dem
 - A transaction that stores a valid reading and any corresponding alert atomically.
 - Transaction rollback tests proving invalid or failed alert creation does not leave partial state.
 
-Azure SQL is the proposed hosted relational service. The current local prototype uses SQLAlchemy and SQLite by default; do not describe the target schema as deployed until deployment and verification are complete.
+The proposed Azure SQL scripts are in [`database/migrations/`](../database/migrations/) with their execution notes in [`database/README.md`](../database/README.md). They are a separate target schema and are not applied by the app. The current local prototype uses SQLAlchemy and SQLite by default; do not describe the target schema as deployed until deployment and verification are complete.

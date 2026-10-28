@@ -65,6 +65,28 @@ The legacy `POST /api/readings` and `POST /api/policies` endpoints remain availa
 
 ## Security and product limits
 
+<<<<<<< HEAD
+* `POST /api/alerts/{id}/acknowledge` accepts `{"acknowledged_by":"Member name"}`.
+
+When `REQUIRE_API_TOKEN=true`, API requests require `Authorization: Bearer <AIRSENSE_API_TOKEN>`. The dashboard itself remains available as a shell so a user can enter the deployment token; the browser holds it in tab-scoped session storage. This token is a shared deployment guard, not an account or household permission.
+
+## Subject constraints and implementation status
+
+* **System Design:** One Flask application, REST endpoints, and 20-second polling; no websockets or microservices. Replay and simulated readings use the same alert evaluation path.
+* **RDBMS:** Readings and alerts use relational SQLAlchemy models. Duplicate room/metric/timestamp readings are rejected, open-alert uniqueness is enforced in the database, and reading/alert updates are transactional.
+* **DP-900:** Readings retain metric, unit, source, and timestamp. The current dashboard supports CO₂/ppm only. The backend does not yet persist citations for the illustrative default thresholds.
+* **Cloud Security:** A shared bearer token can guard API routes, but user accounts, home-membership authorization, and per-device keys are not implemented. Do not enter private household data. Use HTTPS before any hosted use.
+
+AirSense makes no medical or diagnostic claims and does not replace a certified carbon monoxide alarm. CO and NO₂ are advisory metrics; their entry screens are not enabled in this demo.
+
+The separate Azure SQL target-schema scripts and their apply order are documented in [database/README.md](./database/README.md). They are not wired into the current Flask app's Alembic migrations.
+
+## Current scope and limitations
+
+The current frontend is a standalone prototype and is not connected to the backend. Its sample interactions are not persisted. DALTON data import/replay, account and household authorization, real sensor provisioning/ingestion, authoritative threshold references, and persisted audit history remain future work. The backend alert API remains available but is not consumed by this frontend. Do not use this preview with personal household data.
+
+Alert thresholds shown by default are illustrative configuration values, not published health or safety guidelines. Record a guideline source for each threshold and verify the metric units and sensor range before any non-demo use.
+=======
 * Passwords are validated and hashed with scrypt. Invitations are stored by token hash and limited to the invited email.
 * Household membership is checked on every home-scoped request. Owners manage rooms, sensors, thresholds, and invitations; members can view home data and submit simulator readings.
 * Device keys are randomly generated, peppered, and stored only as hashes. Treat the one-time provisioning/rotation response as a secret.
@@ -72,3 +94,4 @@ The legacy `POST /api/readings` and `POST /api/policies` endpoints remain availa
 * The rate limiter is in-memory and does not coordinate across workers.
 * Threshold defaults are illustrative and have no stored authoritative citations. CO/NO₂ advisory displays do not replace certified carbon-monoxide alarms or other safety equipment.
 * DALTON replay, email delivery, automatic sensor adapters, and live vendor integrations are not configured.
+>>>>>>> origin/shreya

@@ -19,6 +19,7 @@ from app.services.alerts.all_clear import (
     all_clear_progress,
 )
 from app.services.alerts.rules import evaluate_reading
+from app.services.alerts.wording import build_alert_detail
 
 
 class AlertNotFound(LookupError):
@@ -138,10 +139,16 @@ def _open_alert(
         threshold_unit=f"{metric.unit}/min" if level == AlertLevel.RAPID_RISE.value else metric.unit,
         clear_duration_seconds=policy.all_clear_duration_seconds,
         created_at=measured_at,
-        detail=(
-            "The reading is above the guideline level used by AirSense."
-            if level != AlertLevel.RAPID_RISE.value
-            else "The reading increased rapidly compared with the previous sample."
+        detail=build_alert_detail(
+            level=level,
+            metric_name=metric.name,
+            value=trigger_value,
+            threshold=threshold,
+            unit=(
+                f"{metric.unit}/min"
+                if level == AlertLevel.RAPID_RISE.value
+                else metric.unit
+            ),
         ),
     )
     session.add(alert)
