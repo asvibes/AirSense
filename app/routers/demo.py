@@ -1,13 +1,11 @@
-from datetime import datetime, timezone
-
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
 
 from app.db import get_session
 from app.models.room import Room
-from app.repositories.alerts import process_reading
 from app.security.sessions import current_user, require_home_role, require_user
-from app.services.audit import record_event
+from app.services.ingestion.ingest import ingest_reading
+from app.sources.simulator import build_simulated_reading
 
 
 demo = Blueprint("demo", __name__)
@@ -25,47 +23,28 @@ def submit_demo_reading(home_id: str):
     if room is None:
         return jsonify(error="room_id was not found in this home."), 404
     try:
-        result = process_reading(
+        simulated_reading = build_simulated_reading(
+            room=room.name,
+            scenario=payload.get("scenario"),
+            value=payload.get("value", payload.get("co2_ppm")),
+            metric=payload.get("metric", "CO2"),
+            unit=payload.get("unit", "ppm"),
+            measured_at=payload.get("measured_at"),
+        )
+        result = ingest_reading(
             get_session(),
             home_id=home_id,
             home_name="",
-            room_name=room.name,
-            metric_code=payload.get("metric", "CO2"),
-            unit=payload.get("unit", "ppm"),
-            value=_number(payload.get("value")),
+            payload=simulated_reading,
             source="simulated",
-            measured_at=datetime.now(timezone.utc),
             defaults=_policy_defaults(),
             max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
+            actor_user_id=current_user().id,
         )
     except ValueError as error:
         get_session().rollback()
         return jsonify(error=str(error)), 400
-    record_event(
-        get_session(),
-        home_id=home_id,
-        actor_user_id=current_user().id,
-        event_type="demo.reading_submitted",
-        entity_type="reading",
-        entity_id=str(result["reading_id"]),
-        details={"room": room.name, "metric": result["metric"]},
-    )
-    get_session().commit()
     return jsonify(result), 201
-
-
-def _number(value) -> float:
-    import math
-
-    if isinstance(value, bool):
-        raise ValueError("value must be a finite non-negative number.")
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError) as error:
-        raise ValueError("value must be a finite non-negative number.") from error
-    if not math.isfinite(parsed) or parsed < 0:
-        raise ValueError("value must be a finite non-negative number.")
-    return parsed
 
 
 def _policy_defaults() -> dict:

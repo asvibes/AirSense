@@ -651,11 +651,11 @@
   async function runScenario(scenario) {
     const room = rooms.find(item => item.name.toLowerCase() === "bedroom") || rooms[0];
     if (!room) throw new Error("Add a room before submitting a simulated reading.");
-    const values = { high: 1800, elevated: 1250, rapid: 1600, clear: 600 };
-    if (!(scenario in values)) throw new Error("Unknown simulator scenario.");
+    const scenarios = new Set(["high", "elevated", "rapid", "clear"]);
+    if (!scenarios.has(scenario)) throw new Error("Unknown simulator scenario.");
     await api(`/api/homes/${encodeURIComponent(config.homeId)}/demo/readings`, {
       method: "POST",
-      body: JSON.stringify({ room_id: room.id, metric: "CO2", unit: "ppm", value: values[scenario] })
+      body: JSON.stringify({ room_id: room.id, scenario, metric: "CO2", unit: "ppm" })
     });
     await loadHome();
     showView("alerts");
