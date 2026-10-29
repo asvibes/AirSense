@@ -502,7 +502,7 @@
     if (savedTheme === "dark") $("#theme-toggle").click();
 
     document.addEventListener("click", event => {
-      const target = event.target.closest("[data-nav], [data-open-modal], [data-close-modal], [data-filter], [data-alert-filter], [data-metric], [data-remove-member], [data-scenario], [data-rotate-sensor], [data-revoke-sensor], #mobile-menu, #banner-dismiss");
+      const target = event.target.closest("[data-nav], [data-open-modal], [data-close-modal], [data-filter], [data-alert-filter], [data-metric], [data-remove-member], [data-scenario], [data-rotate-sensor], [data-revoke-sensor], #run-custom-reading, #run-dalton-replay, #mobile-menu, #banner-dismiss");
       if (!target) return;
       if (target.dataset.nav) showView(target.dataset.nav);
       if (target.dataset.openModal) openModal(target.dataset.openModal);

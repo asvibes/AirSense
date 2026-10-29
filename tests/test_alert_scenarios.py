@@ -1,3 +1,4 @@
+import re
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -252,6 +253,29 @@ class AlertLifecycleTests(AirSenseTestCase):
         script = self.client.get("/static/js/dashboard.js")
         self.assertEqual(script.status_code, 200)
         self.assertIn(b"fetch(", script.data)
+        script_text = script.get_data(as_text=True)
+        click_listener = re.search(
+            r'document\.addEventListener\("click", event => \{\s*'
+            r'const target = event\.target\.closest\("([^"]+)"\);',
+            script_text,
+        )
+        self.assertIsNotNone(click_listener)
+        selectors = click_listener.group(1).split(", ")
+        self.assertIn("#run-dalton-replay", selectors)
+        self.assertIn("#run-custom-reading", selectors)
+        self.assertIn(
+            'if (target.id === "run-dalton-replay") runAction(runDaltonReplay);',
+            script_text,
+        )
+        self.assertIn(
+            'if (target.id === "run-custom-reading") runAction(runCustomReading);',
+            script_text,
+        )
+        template = Path(__file__).resolve().parents[1] / "app" / "templates" / "alerts.html"
+        self.assertRegex(
+            template.read_text(encoding="utf-8"),
+            r'id="dalton-csv-file" type="file" accept="[^"]*\.txt',
+        )
         script.close()
         self.assertEqual(self.client.get("/api/health").json, {"status": "ok"})
 
