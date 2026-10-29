@@ -10,6 +10,7 @@ The attached AirSense PRD (`AirSense PRD.docx`, dated October 26, 2026) is the a
 | Household access | Home membership is checked on home-scoped routes. Owners can invite members by single-use token; invited users must sign in with the invited email. Members can view the home's members and readings. |
 | Sensor setup | Owners provision sensors for rooms, receive a one-time device key, rotate keys, and revoke sensors. Only a peppered key hash is stored. |
 | Reading ingestion | Device-key-authenticated sensor readings and signed-in simulator readings are validated and sent through the alert processing path. Sensor last-seen data drives freshness state. |
+| Demo lab | Choose a room, submit a custom CO₂ value or alert scenario, and upload up to 1,000 valid CO₂ rows from a processed DALTON CSV through the same alert pipeline. |
 | Room dashboard | The authenticated dashboard loads the selected home's rooms, latest readings, open alerts, and sensor freshness from the backend. Room ventilation notes are persisted. |
 | Thresholds | Owners can update per-room CO₂ threshold settings in a single validated batch. Members may view settings. Default values remain illustrative, not health guidance. |
 | History and export | Home-scoped history supports date, room, metric, CSV export, daily average bars, and a 90-day reading-coverage heatmap. |
@@ -20,7 +21,7 @@ The dashboard frontend is served by Flask with vanilla JavaScript and uses same-
 
 ## Out of scope or remaining limitations
 
-* DALTON dataset import and replay are not configured. No DALTON records are generated or shown.
+* DALTON source data is not bundled. Replay requires a user-provided processed CSV and is clearly labeled as recorded data, not a live sensor reading.
 * Email delivery is not configured; invitations must be copied and shared manually.
 * Automatic vendor integrations, live sensor discovery, and push/WebSocket updates are not implemented.
 * The rate limiter is process-local and must be replaced with shared storage for multi-worker deployments.

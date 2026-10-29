@@ -11,7 +11,7 @@ from app.sources.dalton_replay import load_dalton_csv
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Preview or replay a DALTON CSV as AirSense readings.")
+    parser = argparse.ArgumentParser(description="Preview valid DALTON CSV rows as AirSense readings.")
     parser.add_argument("--csv", required=True, help="Path to a DALTON processed CSV file.")
     parser.add_argument("--room", default=None, help="Optional room name to attach to all rows.")
     parser.add_argument("--limit", type=int, default=10, help="Maximum number of valid CO₂ records to return.")

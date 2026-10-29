@@ -44,10 +44,17 @@
   };
   const latestReading = (room, metric = "CO2") =>
     room.readings.find(reading => reading.metric === metric) || null;
+  const sourceLabel = source => ({
+    dataset: "Recorded · DALTON replay",
+    simulated: "Simulated data",
+    device: "Live sensor"
+  })[source] || "Source unavailable";
 
   async function api(path, options = {}) {
     const headers = new Headers(options.headers || {});
-    if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+    if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
     if (options.method && !["GET", "HEAD"].includes(options.method.toUpperCase())) {
       headers.set("X-CSRF-Token", config.csrfToken);
     }
@@ -115,7 +122,7 @@
     const readingRows = room.readings.length
       ? room.readings.map(reading => {
         const metric = metrics[reading.metric] || { label: reading.metric_name || reading.metric, unit: reading.unit };
-        return `<div class="reading-line"><span class="reading-name">${escapeHtml(metric.label)}</span><strong class="reading-value">${escapeHtml(format(reading.value, reading.metric === "temperature" ? 1 : 0))}<span class="reading-unit">${escapeHtml(reading.unit)}</span></strong></div>`;
+        return `<div class="reading-line"><span class="reading-name">${escapeHtml(metric.label)}</span><strong class="reading-value">${escapeHtml(format(reading.value, reading.metric === "temperature" ? 1 : 0))}<span class="reading-unit">${escapeHtml(reading.unit)}</span></strong><span class="source-pill">${escapeHtml(sourceLabel(reading.source))}</span></div>`;
       }).join("")
       : '<p class="empty-state">No readings received yet.</p>';
     const lastReading = room.readings.slice().sort((a, b) => new Date(b.measured_at) - new Date(a.measured_at))[0];
@@ -138,6 +145,19 @@
       button.classList.toggle("selected", button.dataset.filter === roomFilter);
     });
     const roomOptions = rooms.map(room => `<option value="${escapeHtml(room.id)}">${escapeHtml(room.name)}</option>`).join("");
+    const demoRoom = $("#demo-room-select");
+    const selectedDemoRoom = demoRoom.value;
+    demoRoom.innerHTML = roomOptions || '<option value="">Add a room first</option>';
+    if (rooms.some(room => room.id === selectedDemoRoom)) {
+      demoRoom.value = selectedDemoRoom;
+    } else {
+      const defaultRoom = rooms.find(room => room.name.toLowerCase() === "bedroom") || rooms[0];
+      demoRoom.value = defaultRoom ? defaultRoom.id : "";
+    }
+    demoRoom.disabled = rooms.length === 0;
+    $$("#view-demo [data-scenario], #run-custom-reading, #run-dalton-replay").forEach(button => {
+      button.disabled = rooms.length === 0;
+    });
     const historyRoom = $("#history-room");
     const previousRoom = historyRoom.value;
     historyRoom.innerHTML = roomOptions || '<option value="">No rooms</option>';
@@ -517,6 +537,7 @@
         });
       }
       if (target.dataset.scenario) runAction(() => runScenario(target.dataset.scenario));
+      if (target.id === "run-custom-reading") runAction(runCustomReading);
       if (target.id === "run-dalton-replay") runAction(runDaltonReplay);
       if (target.id === "mobile-menu") {
         const isOpen = $(".sidebar").classList.toggle("mobile-open");
@@ -650,7 +671,7 @@
   }
 
   async function runScenario(scenario) {
-    const room = rooms.find(item => item.name.toLowerCase() === "bedroom") || rooms[0];
+    const room = rooms.find(item => item.id === $("#demo-room-select").value);
     if (!room) throw new Error("Add a room before submitting a simulated reading.");
     const scenarios = new Set(["high", "elevated", "rapid", "clear"]);
     if (!scenarios.has(scenario)) throw new Error("Unknown simulator scenario.");
@@ -663,19 +684,54 @@
     showMessage("Simulated reading sent through the server alert pipeline.");
   }
 
-  async function runDaltonReplay() {
-    const room = rooms.find(item => item.name.toLowerCase() === "bedroom") || rooms[0];
-    if (!room) throw new Error("Add a room before replaying DALTON data.");
-    const csvPath = $("#dalton-csv-path").value.trim();
-    if (!csvPath) throw new Error("Enter a path to a DALTON CSV file before replaying.");
-    const limit = Number($("#dalton-limit").value || 250);
-    const result = await api(`/api/homes/${encodeURIComponent(config.homeId)}/demo/replay`, {
+  async function runCustomReading() {
+    const room = rooms.find(item => item.id === $("#demo-room-select").value);
+    if (!room) throw new Error("Add a room before submitting a simulated reading.");
+    const valueInput = $("#demo-reading-value");
+    if (valueInput.value.trim() === "" || !Number.isFinite(Number(valueInput.value))) {
+      throw new Error("Enter a valid CO2 value.");
+    }
+    await api(`/api/homes/${encodeURIComponent(config.homeId)}/demo/readings`, {
       method: "POST",
-      body: JSON.stringify({ room_id: room.id, csv_path: csvPath, limit, valid_co2_only: true })
+      body: JSON.stringify({
+        room_id: room.id,
+        value: Number(valueInput.value),
+        metric: "CO2",
+        unit: "ppm"
+      })
     });
     await loadHome();
     showView("alerts");
-    showMessage(`Imported ${result.imported} DALTON reading${result.imported === 1 ? "" : "s"} from ${result.source_file}.`);
+    showMessage("Simulated reading sent through the server alert pipeline.");
+  }
+
+  async function runDaltonReplay() {
+    const room = rooms.find(item => item.id === $("#demo-room-select").value);
+    if (!room) throw new Error("Add a room before replaying DALTON data.");
+    const csvFile = $("#dalton-csv-file").files[0];
+    if (!csvFile) throw new Error("Choose a DALTON CSV file before replaying.");
+    if (csvFile.size > 16 * 1024 * 1024) {
+      throw new Error("Choose a DALTON CSV smaller than 16 MB.");
+    }
+    const limit = Number($("#dalton-limit").value || 250);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+      throw new Error("Choose a sample limit between 1 and 1000.");
+    }
+    const data = new FormData();
+    data.set("room_id", room.id);
+    data.set("limit", String(limit));
+    data.set("shift_timestamps", String($("#dalton-shift-timestamps").checked));
+    data.set("csv_file", csvFile);
+    const result = await api(`/api/homes/${encodeURIComponent(config.homeId)}/demo/replay`, {
+      method: "POST",
+      body: data
+    });
+    await loadHome();
+    showView("alerts");
+    const timestampMessage = result.timestamps_shifted
+      ? " Timeline shifted so the newest sample appears recent."
+      : " Original dataset timestamps kept.";
+    showMessage(`Imported ${result.imported} DALTON reading${result.imported === 1 ? "" : "s"} from ${result.source_file}.${timestampMessage}`);
   }
 
   async function init() {

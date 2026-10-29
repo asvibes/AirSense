@@ -1,5 +1,10 @@
+import csv
+from datetime import datetime, timezone
+from io import StringIO
+
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
+from werkzeug.utils import secure_filename
 
 from app.db import get_session
 from app.models.room import Room
@@ -16,7 +21,11 @@ demo = Blueprint("demo", __name__)
 @require_user()
 def submit_demo_reading(home_id: str):
     require_home_role(home_id, "owner", "member")
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if payload is None:
+        payload = request.form
+    if not hasattr(payload, "get"):
+        return jsonify(error="Reading body must be a JSON object."), 400
     room_id = payload.get("room_id")
     room = get_session().scalar(
         select(Room).where(Room.id == room_id, Room.home_id == home_id)
@@ -52,7 +61,11 @@ def submit_demo_reading(home_id: str):
 @require_user()
 def submit_dalton_replay(home_id: str):
     require_home_role(home_id, "owner", "member")
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if payload is None:
+        payload = request.form
+    if not hasattr(payload, "get"):
+        return jsonify(error="Replay request must be an object or multipart form."), 400
     room_id = payload.get("room_id")
     room = get_session().scalar(
         select(Room).where(Room.id == room_id, Room.home_id == home_id)
@@ -60,24 +73,45 @@ def submit_dalton_replay(home_id: str):
     if room is None:
         return jsonify(error="room_id was not found in this home."), 404
 
-    csv_path = payload.get("csv_path") or payload.get("path")
-    if not isinstance(csv_path, str) or not csv_path.strip():
-        return jsonify(error="csv_path must be a file path to a DALTON CSV."), 400
+    csv_file = request.files.get("csv_file")
+    if csv_file is None or not csv_file.filename:
+        return jsonify(error="Choose a DALTON CSV file to replay."), 400
 
     try:
-        limit = payload.get("limit")
-        if limit is None:
-            limit = 250
-        if not isinstance(limit, int) or limit < 1:
-            raise ValueError("limit must be a positive integer.")
+        raw_limit = payload.get("limit", "250")
+        if isinstance(raw_limit, bool):
+            raise ValueError("limit must be a whole number between 1 and 1000.")
+        limit = int(raw_limit)
+        if str(raw_limit).strip() != str(limit) or not 1 <= limit <= 1000:
+            raise ValueError("limit must be a whole number between 1 and 1000.")
+
+        csv_content = csv_file.read().decode("utf-8-sig")
         rows = load_dalton_csv(
-            csv_path,
-            room_name=payload.get("room_name") or room.name,
+            StringIO(csv_content),
+            room_name=room.name,
             limit=limit,
-            valid_co2_only=bool(payload.get("valid_co2_only", True)),
+            valid_co2_only=True,
         )
-    except (FileNotFoundError, OSError, ValueError) as error:
+    except (OSError, TypeError, UnicodeDecodeError, ValueError, csv.Error) as error:
         return jsonify(error=str(error)), 400
+
+    if not rows:
+        return jsonify(error="The CSV contains no valid CO2 readings to replay."), 400
+
+    shift_timestamps = payload.get("shift_timestamps", "true")
+    if isinstance(shift_timestamps, str):
+        if shift_timestamps.strip().lower() not in {"true", "false", "1", "0"}:
+            return jsonify(error="shift_timestamps must be true or false."), 400
+        shift_timestamps = shift_timestamps.strip().lower() in {"true", "1"}
+    elif not isinstance(shift_timestamps, bool):
+        return jsonify(error="shift_timestamps must be true or false."), 400
+
+    if shift_timestamps:
+        latest_timestamp = datetime.fromisoformat(rows[-1]["measured_at"])
+        offset = datetime.now(timezone.utc) - latest_timestamp
+        for row in rows:
+            measured_at = datetime.fromisoformat(row["measured_at"])
+            row["measured_at"] = (measured_at + offset).isoformat()
 
     session = get_session()
     created = []
@@ -103,8 +137,9 @@ def submit_dalton_replay(home_id: str):
     return jsonify(
         {
             "source": "dalton_replay",
-            "source_file": csv_path,
+            "source_file": secure_filename(csv_file.filename) or "uploaded.csv",
             "imported": len(created),
+            "timestamps_shifted": shift_timestamps,
             "room_id": room.id,
             "room": room.name,
             "created": created,

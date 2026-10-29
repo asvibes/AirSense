@@ -396,6 +396,17 @@ td small { margin-top: 4px; color: var(--muted); font-size: 9px; }
 .inline-input { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 9px; }
 .inline-input input { width: 64px; height: 34px; }
 .scenario-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.demo-controls { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-top: 18px; padding: 18px; }
+.demo-controls > .field { width: min(100%, 300px); }
+.manual-reading { display: flex; align-items: end; gap: 10px; }
+.manual-reading .field { width: 180px; }
+.replay-content { flex: 1; min-width: 0; }
+.replay-file-field { max-width: 640px; margin-top: 14px; }
+.replay-options { display: flex; align-items: end; gap: 18px; margin-top: 10px; }
+.replay-options > .field { width: 190px; }
+.checkbox-field { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.checkbox-field input { width: 16px; height: 16px; }
+.replay-content a { color: var(--green-dark); text-decoration: underline; }
 .scenario-card { position: relative; min-height: 205px; padding: 19px; }
 .scenario-number { position: absolute; top: 17px; right: 17px; color: #d2ded4; font-size: 19px; font-weight: 800; }
 .scenario-card h2 { margin-bottom: 8px; font-size: 16px; }
@@ -474,7 +485,8 @@ td small { margin-top: 4px; color: var(--muted); font-size: 9px; }
   .bar-room, .bar-value { font-size: 9px; }
   .compact-room-grid, .full-room-grid, .scenario-grid, .settings-grid { grid-template-columns: 1fr; }
   .compact-room-grid .room-card:nth-child(n+3) { display: block; }
-  .filter-row, .table-toolbar, .lower-panel, .invite-preview, .replay-panel { align-items: flex-start; flex-direction: column; }
+  .filter-row, .table-toolbar, .lower-panel, .invite-preview, .replay-panel, .demo-controls, .manual-reading, .replay-options { align-items: flex-start; flex-direction: column; }
+  .manual-reading .field, .replay-options > .field, .demo-controls > .field { width: 100%; }
   .search-field { width: 100%; }
   .alert-stats { gap: 7px; }
   .alert-stats .summary-card { min-height: 90px; padding: 11px; }

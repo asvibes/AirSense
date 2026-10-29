@@ -1,29 +1,23 @@
 # DALTON dataset and replay notes
 
-## Status
+## Status and workflow
 
-DALTON import/replay is not connected in the current prototype. The frontend preview uses browser-local illustrative sample data and does not consume DALTON records. The backend accepts its documented reading sources, but the dataset adapter and import workflow are not implemented. See the [README](../Readme.md) and [implementation status](./PRD.md).
+The Demo Lab supports both synthetic scenarios and replay of user-provided processed DALTON CSV files. DALTON samples are validated and sent through the same server-side ingestion and alert pipeline as simulator readings. Imported readings use the `dataset` source and are labeled as recorded DALTON data in the dashboard.
 
-## Planned integration boundary
+The repository does not bundle DALTON data. Obtain a permitted processed CSV from the [DALTON dataset repository](https://github.com/prasenjit52282/dalton-dataset), then upload it from the Demo Lab. CSV-delimited `.txt` files are supported too. The current request upload limit is 16 MB, and a replay imports up to 1,000 valid CO₂ samples.
 
-If DALTON data is used for development or evaluation:
+Expected columns:
 
-- Confirm the dataset's provenance, licence/terms, schema, units, timestamp conventions, and permitted use before importing.
-- Keep the source dataset unchanged; perform mapping/cleaning in a reproducible preparation step.
-- Map fields to the canonical reading shape: source identifier, room/sensor mapping, metric, value, unit, measurement timestamp, receipt/import timestamp, and source label.
-- Validate ranges, missing values, timezone interpretation, duplicates, and ordering before ingestion.
-- Preserve provenance so imported/replayed records are distinguishable from live device readings and synthetic demo values.
-- Do not imply a replayed value is a real-time physical measurement.
+- `ts`: source timestamp; values without a timezone are interpreted as UTC.
+- `CO2`: CO₂ concentration in ppm.
+- `Valid_CO2`: validity flag; only valid rows are imported.
+- `Loc` and other DALTON columns may be present but are not required for the reading mapping.
 
-## Replay behavior to define before implementation
+Rows with missing or malformed timestamps, nonpositive CO₂ values (including zero sentinels), or invalid `Valid_CO2` flags are skipped. Rows are replayed chronologically. By default, timestamps are shifted together so the newest sample is current while sample spacing is preserved. Uncheck timestamp shifting to preserve source times.
 
-- Input file format and schema version.
-- Mapping from dataset subjects/locations to demo rooms/sensors without exposing personal data.
-- Whether source timestamps are preserved or shifted during replay.
-- Handling for malformed rows, duplicates, and unsupported metrics.
-- Replay speed, pause/reset behavior, and deterministic test fixtures.
-- Clear UI/report label for replayed data, including an obvious demo indication.
+## Data handling
 
-## Privacy and reproducibility
-
-Do not commit restricted or personal datasets. Keep credentials and private source data outside the repository. Document any transformation scripts, mapping configuration, and test fixtures; use small synthetic fixtures for automated tests. The placeholder `tools/dalton_prep.py` and mapping file are not evidence that a functioning import pipeline exists.
+- Confirm the dataset's provenance, licence/terms, and permitted use before importing.
+- Do not commit restricted or personal dataset files. Use the small synthetic CSV fixtures in automated tests.
+- Imported values are recorded data, not live physical measurements; the dashboard labels them accordingly.
+- `tools/dalton_prep.py` previews payloads locally and does not ingest them into the app.

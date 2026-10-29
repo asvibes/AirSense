@@ -115,7 +115,7 @@
             <div class="history-chart-heading"><div><span class="card-label" id="history-series-title">Room · CO₂</span><strong class="history-current" id="history-current-value">— <small>ppm</small></strong></div><span class="muted">Daily averages · hover a bar for its date</span></div><div class="history-chart-wrap"><svg id="history-chart" viewBox="0 0 1000 320" role="img" aria-label="Daily stored readings"></svg></div><div class="chart-axis" id="history-axis"></div><div class="chart-caption">Coverage is calculated from readings stored for this home. Missing data is shown as a gap, never as zero.</div>
           </section>
           <section class="panel heatmap-panel"><div class="section-heading"><div><p class="eyebrow">DATA AVAILABILITY</p><h2>Reading coverage</h2><p class="section-subtitle">Each square represents one day in the selected room’s history.</p></div><div class="heatmap-legend"><span>Less</span><i></i><i></i><i></i><i></i><span>More</span></div></div><div class="heatmap-calendar"><div class="heatmap-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div class="heatmap-dates"><div class="heatmap-months" id="heatmap-months" aria-hidden="true"></div><div class="heatmap-grid" id="heatmap-grid" role="group" aria-label="Data availability by date"></div></div></div></section>
-          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Only readings recorded for this home are shown. DALTON replay is not connected in this build.</span></div>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Recorded DALTON readings are labeled separately from simulator values and live sensor data.</span></div>
         </section>
 
         <section class="view" id="view-thresholds" data-view="thresholds">
@@ -139,15 +139,37 @@
         </section>
 
         <section class="view" id="view-demo" data-view="demo">
-          <div class="page-heading"><div><p class="eyebrow">TRY THE EXPERIENCE</p><h1>Simulator</h1><p class="page-subtitle">Submit sample readings through the same server-side alert pipeline.</p></div><span class="source-pill source-simulated">Simulated data</span></div>
-          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Simulator readings are labeled and saved to this home. DALTON replay is not connected.</span></div>
+          <div class="page-heading"><div><p class="eyebrow">TRY THE EXPERIENCE</p><h1>Simulator &amp; DALTON replay</h1><p class="page-subtitle">Send simulated readings or replay recorded DALTON CO₂ data through the same alert pipeline.</p></div><span class="source-pill source-simulated">Demo data</span></div>
+          <div class="info-banner"><span class="banner-icon" aria-hidden="true">i</span><span>Demo data is saved to this home and clearly labeled. Replay uses historical CO₂ samples; it is not a live sensor reading.</span></div>
+          <section class="panel demo-controls">
+            <label class="field"><span class="field-label">Send readings to</span><select id="demo-room-select" aria-label="Room for simulator and DALTON replay"></select></label>
+            <div class="manual-reading">
+              <label class="field" for="demo-reading-value"><span class="field-label">Custom CO₂ value</span><input id="demo-reading-value" type="number" min="0" step="any" placeholder="e.g. 850"></label>
+              <button class="button button-outline" id="run-custom-reading" type="button">Send custom reading</button>
+            </div>
+          </section>
           <div class="scenario-grid">
             <article class="panel scenario-card"><span class="scenario-number">01</span><p class="eyebrow">IMMEDIATE ALERT</p><h2>High reading</h2><p>Show how an immediate high sample appears on the room and alert screens.</p><button class="button button-dark" type="button" data-scenario="high">Run scenario <span aria-hidden="true">→</span></button></article>
             <article class="panel scenario-card"><span class="scenario-number">02</span><p class="eyebrow">ELEVATED SAMPLE</p><h2>Submit an elevated value</h2><p>Uses the sustained-duration rule; one sample does not immediately open an elevated alert.</p><button class="button button-outline" type="button" data-scenario="elevated">Send reading <span aria-hidden="true">→</span></button></article>
             <article class="panel scenario-card"><span class="scenario-number">03</span><p class="eyebrow">RATE CHECK</p><h2>Rapid rise</h2><p>A rapid-rise alert depends on the previous timely reading and this home’s configured rate threshold.</p><button class="button button-outline" type="button" data-scenario="rapid">Send reading <span aria-hidden="true">→</span></button></article>
             <article class="panel scenario-card"><span class="scenario-number">04</span><p class="eyebrow">BELOW THRESHOLD</p><h2>All-clear check</h2><p>Open alerts clear only after the configured duration is met by subsequent readings.</p><button class="button button-outline" type="button" data-scenario="clear">Send reading <span aria-hidden="true">→</span></button></article>
           </div>
-          <section class="panel replay-panel"><div class="replay-icon" aria-hidden="true">↻</div><div><p class="eyebrow">REAL DATA</p><h2>DALTON recorded data replay</h2><p class="muted">Use a processed DALTON CSV to replay CO₂ readings through the same ingestion path and label them as recorded data.</p><label class="field" style="margin-top: 12px; max-width: 640px;"><span class="field-label">CSV path</span><input id="dalton-csv-path" type="text" placeholder="C:/path/to/Processed/A1/2023_06_10/101_Study_Desk.csv"></label><label class="field" style="margin-top: 8px; max-width: 180px;"><span class="field-label">Sample limit</span><input id="dalton-limit" type="number" min="1" max="10000" value="250"></label></div><button class="button button-dark" id="run-dalton-replay" type="button">Replay DALTON data</button></section>
+          <section class="panel replay-panel">
+            <div class="replay-icon" aria-hidden="true">↻</div>
+            <div class="replay-content">
+              <p class="eyebrow">RECORDED DATA</p>
+              <h2>Replay a DALTON processed CSV</h2>
+              <p class="muted">Choose a processed CSV containing <code>ts</code>, <code>CO2</code>, and <code>Valid_CO2</code>. Only valid CO₂ rows are imported.</p>
+              <p class="field-help"><a href="https://github.com/prasenjit52282/dalton-dataset" target="_blank" rel="noopener noreferrer">Open the DALTON dataset repository</a>. CSV files must be smaller than 16 MB.</p>
+              <label class="field replay-file-field"><span class="field-label">DALTON CSV file</span><input id="dalton-csv-file" type="file" accept=".csv,.txt,text/csv,text/plain" required></label>
+              <div class="replay-options">
+                <label class="field"><span class="field-label">Maximum valid samples</span><input id="dalton-limit" type="number" min="1" max="1000" value="250"></label>
+                <label class="checkbox-field"><input id="dalton-shift-timestamps" type="checkbox" checked><span>Shift timestamps so the newest sample appears recent</span></label>
+              </div>
+              <p class="field-help">Timestamp shifting preserves the spacing between samples. Uncheck it to keep the original dataset timestamps.</p>
+            </div>
+            <button class="button button-dark" id="run-dalton-replay" type="button">Replay DALTON data</button>
+          </section>
         </section>
         <footer class="global-footer"><span>AirSense · ventilation support</span><span>Data syncs securely from the selected home</span></footer>
       </div>

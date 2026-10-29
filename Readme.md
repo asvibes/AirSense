@@ -60,13 +60,14 @@ Features include:
 * **History and export:** View history charts, a 90-day coverage heatmap, and export readings as CSV.
 * **Household management:** Owners can invite members and review activity history.
 * **Simulation:** Submit simulated readings to the server-side alert pipeline.
+* **DALTON replay:** Upload a processed DALTON CSV and replay valid CO₂ samples through that same alert pipeline. Samples are labeled as recorded data; timestamps can be shifted for a current demo.
 * **Appearance:** Persist the light/dark theme preference.
 
 The browser interface uses plain HTML, CSS, and vanilla JavaScript. No separate frontend build or third-party browser package is required.
 
 Invitation links are single-use and expire after seven days. Email delivery is not configured, so invitation links must be shared manually.
 
-DALTON files are not included or replayed.
+DALTON source data is not bundled. In the Demo Lab, upload a processed CSV (up to 16 MB) containing `ts`, `CO2`, and `Valid_CO2`. The app imports valid CO₂ rows only, up to 1,000 per replay. The default timestamp shift makes the newest sample recent while preserving the spacing between samples; turn it off to retain original timestamps. See [DALTON replay notes](docs/dalton-notes.md).
 
 ## API Overview
 
@@ -171,7 +172,7 @@ These percentages are estimates from reading the code and running the test suite
 | F5 | Status and alerts | Must | ~90% | Nearly done | High, sustained Elevated and Rapid rise alerts, one open alert per room, metric and level, acknowledge with who and when, all-clear after a quiet period, about 18 lifecycle tests | Projected trend on all-clear, wording audit for "safe" and "dangerous", certified-alarm notice on CO and NO2 screens |
 | F6 | History | Must | ~70% | Mostly done | Date, room and metric filters, indexed time queries, 90-day coverage heatmap, CSV export | CSV is streamed directly, not saved to private Blob Storage with a signed link |
 | F7 | Audit logging | Must | ~75% | Mostly done | Owner-only activity log for logins, invitations, rooms, sensors, thresholds and ingestion; Members get 403 | Database trigger for threshold changes (only in the Azure SQL scripts, not the running app) |
-| F8 | Demo panel | Should | ~25% | Started | Simulated-reading endpoint that drives alert scenarios | Simulator scenarios, DALTON replay, demo panel page |
+| F8 | Demo panel | Should | ~90% | Mostly done | Configurable room, custom CO₂ values, alert scenarios, and DALTON CSV replay | Paced playback controls |
 | F9 | Room photos | Should | ~20% | Started | Ventilation sources can be ticked per room | Photo upload |
 | F10 | Email alerts | Could | 0% | Not started | | |
 | F11 | Critical Alarm Mode | Could | 0% | Not started | | |
@@ -189,7 +190,7 @@ These percentages are estimates from reading the code and running the test suite
 | Deployment config | `render.yaml` written; live HTTPS URL not confirmed |
 | Security checklist document | Written; needs final review against the deployed app |
 | Security headers (CSP, HSTS, X-Frame-Options) | Not done |
-| DALTON data import | Not done |
+| DALTON data import | Processed CSV upload and replay implemented; source dataset is not bundled |
 | Power BI analytics report | Not done |
 | PWA manifest and service worker | Not done |
 
@@ -201,5 +202,5 @@ These percentages are estimates from reading the code and running the test suite
 * The current dashboard supports CO₂ in ppm. Verify metric units and sensor ranges before any non-demo use.
 * The application does not replace a certified carbon monoxide alarm or other safety equipment.
 * Thresholds do not currently have stored authoritative citations.
-* DALTON replay, email delivery, automatic sensor adapters, and live vendor integrations are not configured.
+* DALTON replay requires the user to provide a processed CSV; email delivery, automatic sensor adapters, and live vendor integrations are not configured.
 * The rate limiter is process-local and is not suitable for coordinating multiple workers.
