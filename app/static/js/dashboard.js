@@ -517,6 +517,7 @@
         });
       }
       if (target.dataset.scenario) runAction(() => runScenario(target.dataset.scenario));
+      if (target.id === "run-dalton-replay") runAction(runDaltonReplay);
       if (target.id === "mobile-menu") {
         const isOpen = $(".sidebar").classList.toggle("mobile-open");
         target.setAttribute("aria-expanded", String(isOpen));
@@ -660,6 +661,21 @@
     await loadHome();
     showView("alerts");
     showMessage("Simulated reading sent through the server alert pipeline.");
+  }
+
+  async function runDaltonReplay() {
+    const room = rooms.find(item => item.name.toLowerCase() === "bedroom") || rooms[0];
+    if (!room) throw new Error("Add a room before replaying DALTON data.");
+    const csvPath = $("#dalton-csv-path").value.trim();
+    if (!csvPath) throw new Error("Enter a path to a DALTON CSV file before replaying.");
+    const limit = Number($("#dalton-limit").value || 250);
+    const result = await api(`/api/homes/${encodeURIComponent(config.homeId)}/demo/replay`, {
+      method: "POST",
+      body: JSON.stringify({ room_id: room.id, csv_path: csvPath, limit, valid_co2_only: true })
+    });
+    await loadHome();
+    showView("alerts");
+    showMessage(`Imported ${result.imported} DALTON reading${result.imported === 1 ? "" : "s"} from ${result.source_file}.`);
   }
 
   async function init() {

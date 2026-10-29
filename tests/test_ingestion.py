@@ -29,6 +29,34 @@ class IngestionTests(AirSenseTestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_room_accepts_a_trimmed_custom_ventilation_source(self):
+        response = self.request_json(
+            "POST",
+            f"/api/homes/{self.home_id}/rooms",
+            {
+                "name": "Garden room",
+                "ventilation_sources": ["Window", "Other:  Balcony door  "],
+            },
+        )
+        self.assertEqual(response.status_code, 201, response.get_json())
+        self.assertEqual(
+            response.get_json()["room"]["ventilation_sources"],
+            ["Window", "Other: Balcony door"],
+        )
+
+    def test_custom_ventilation_source_must_be_described_and_bounded(self):
+        for index, source in enumerate(["Other:   ", f"Other: {'x' * 61}"]):
+            with self.subTest(source=source):
+                response = self.request_json(
+                    "POST",
+                    f"/api/homes/{self.home_id}/rooms",
+                    {
+                        "name": f"Invalid source room {index}",
+                        "ventilation_sources": [source],
+                    },
+                )
+                self.assertEqual(response.status_code, 400)
+
     def test_provisioned_sensor_ingests_and_exposes_history(self):
         room = self.create_room()
         provisioned = self.request_json(

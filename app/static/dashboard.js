@@ -545,11 +545,28 @@
     if (input) input.focus();
   }
 
+  function syncCustomVentilationField() {
+    const checkbox = $('#room-form input[value="Other"]');
+    const wrapper = $("#custom-ventilation-wrap");
+    const input = $('#room-form input[name="custom_ventilation_source"]');
+    if (!checkbox || !wrapper || !input) return;
+    const isVisible = checkbox.checked;
+    wrapper.hidden = !isVisible;
+    input.required = isVisible;
+    checkbox.setAttribute("aria-expanded", String(isVisible));
+    if (!isVisible) input.value = "";
+  }
+
   async function createRoom(form) {
     const formData = new FormData(form);
+    const selectedSources = formData.getAll("ventilation_sources");
+    const customSource = String(formData.get("custom_ventilation_source") || "").trim();
+    if (selectedSources.includes("Other") && !customSource) {
+      throw new Error("Write in the custom ventilation source.");
+    }
     const data = {
       name: formData.get("name"),
-      ventilation_sources: formData.getAll("ventilation_sources")
+      ventilation_sources: selectedSources.map(source => source === "Other" ? `Other: ${customSource}` : source)
     };
     if (!data.ventilation_sources.length) {
       throw new Error("Choose at least one ventilation source.");
@@ -559,6 +576,7 @@
       body: JSON.stringify(data)
     });
     form.reset();
+    syncCustomVentilationField();
     form.closest(".modal-backdrop").hidden = true;
     await loadHome();
     showMessage("Room added.");
@@ -735,6 +753,8 @@
         }
       });
     });
+    $('#room-form input[value="Other"]').addEventListener("change", syncCustomVentilationField);
+    syncCustomVentilationField();
     $("#sensor-search").addEventListener("input", event => renderSensors(event.target.value));
     $("#history-room").addEventListener("change", loadHistory);
     $("#history-metric").addEventListener("change", loadHistory);

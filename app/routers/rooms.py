@@ -21,6 +21,37 @@ VENTILATION_SOURCES = {
     "Kitchen chimney",
     "Not specified",
 }
+OTHER_SOURCE_PREFIX = "Other: "
+
+
+def _normalize_ventilation_sources(sources):
+    if not isinstance(sources, list) or not sources:
+        return None
+    normalized = []
+    other_count = 0
+    for source in sources:
+        if not isinstance(source, str):
+            return None
+        source = source.strip()
+        if source in VENTILATION_SOURCES:
+            normalized.append(source)
+        elif source.startswith("Other:"):
+            description = source[len("Other:"):].strip()
+            if not description or len(description) > 60:
+                return None
+            normalized.append(f"{OTHER_SOURCE_PREFIX}{description}")
+            other_count += 1
+        else:
+            return None
+    if (
+        len(normalized) > len(VENTILATION_SOURCES)
+        or len(set(normalized)) != len(normalized)
+        or other_count > 1
+        or ("Not specified" in normalized and len(normalized) > 1)
+        or len(", ".join(normalized)) > 80
+    ):
+        return None
+    return normalized
 
 
 @rooms.get("/api/homes/<home_id>/rooms")
@@ -102,21 +133,12 @@ def create_room(home_id: str):
     if ventilation_sources is None:
         legacy_value = payload.get("ventilation", "Not specified")
         ventilation_sources = [legacy_value] if isinstance(legacy_value, str) else legacy_value
+    ventilation_sources = _normalize_ventilation_sources(ventilation_sources)
     if not isinstance(name, str) or not name.strip() or len(name.strip()) > 100:
         return jsonify(error="name must contain 1 to 100 characters."), 400
-    if (
-        not isinstance(ventilation_sources, list)
-        or not ventilation_sources
-        or len(ventilation_sources) > len(VENTILATION_SOURCES)
-        or any(
-            not isinstance(source, str) or source not in VENTILATION_SOURCES
-            for source in ventilation_sources
-        )
-        or len(set(ventilation_sources)) != len(ventilation_sources)
-        or ("Not specified" in ventilation_sources and len(ventilation_sources) > 1)
-    ):
+    if ventilation_sources is None:
         return jsonify(
-            error="Choose one or more valid ventilation sources. “Not specified” must be selected by itself."
+            error="Choose valid ventilation sources. “Not specified” must be selected by itself, and custom sources need a description."
         ), 400
     db = get_session()
     exists = db.scalar(
