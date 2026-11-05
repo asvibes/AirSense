@@ -8,6 +8,14 @@ def safe_csv_cell(value):
     if not isinstance(value, str):
         return value
 
+    # Remove unsupported control characters, but preserve tabs and newlines.
+    value = "".join(
+        character
+        for character in value
+        if unicodedata.category(character) != "Cc"
+        or character in "\t\n\r"
+    )
+
     first_significant = next(
         (
             character
@@ -17,6 +25,8 @@ def safe_csv_cell(value):
         ),
         "",
     )
+
     if first_significant in _FORMULA_PREFIXES:
         return "'" + value
+
     return value

@@ -118,10 +118,15 @@ def submit_dalton_replay(home_id: str):
         return jsonify(error="shift_timestamps must be true or false."), 400
 
     if shift_timestamps:
-        latest_timestamp = datetime.fromisoformat(rows[-1]["measured_at"])
+        latest_timestamp = datetime.fromisoformat(
+            rows[-1]["measured_at"].replace("Z", "+00:00")
+        )
         offset = datetime.now(timezone.utc) - latest_timestamp
+
         for row in rows:
-            measured_at = datetime.fromisoformat(row["measured_at"])
+            measured_at = datetime.fromisoformat(
+                row["measured_at"].replace("Z", "+00:00")
+            )
             row["measured_at"] = format_utc(measured_at + offset)
 
     session = get_session()

@@ -24,7 +24,7 @@ class SafeCsvCellTests(unittest.TestCase):
             "\ufeff+1+1",
         ):
             with self.subTest(value=value):
-                self.assertEqual(safe_csv_cell(value), "'" + value)
+                self.assertEqual(safe_csv_cell(value), "'" + value.replace("\x00", ""))
 
     def test_ordinary_text_and_non_text_values_are_unchanged(self):
         for value in ("Bedroom", " ppm", "2026-11-05T00:00:00Z", 1400.0, None):
@@ -94,5 +94,5 @@ class CsvExportSafetyTests(AirSenseTestCase):
             with self.subTest(name=name):
                 self.assertEqual(
                     by_room_value[f"{800 + index}.0"]["room"],
-                    "'" + name,
+                    "'" + name.replace("\x00", ""),
                 )

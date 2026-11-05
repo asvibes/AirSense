@@ -55,7 +55,7 @@ def export_history(home_id: str):
     except ValueError as error:
         return jsonify(error=str(error)), 400
     output = io.StringIO(newline="")
-    writer = csv.writer(output)
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL, escapechar="\\")
     writer.writerow(
         ["measured_at", "received_at", "room", "metric", "value", "unit", "source"]
     )
