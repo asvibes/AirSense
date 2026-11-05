@@ -2,3 +2,33 @@ __pycache__/
 *.py[cod]
 .venv/
 instance/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.flaskenv
+.envrc
+*.local
+*.secret
+*.secrets
+*.credentials
+*.credentials.*
+secrets/
+.secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local databases and generated logs
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.log
