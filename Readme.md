@@ -69,17 +69,13 @@ Features include:
 * **Threshold configuration:** Persist per-room CO₂ threshold settings.
 * **History and export:** View history charts, a 90-day coverage heatmap, and export readings as CSV.
 * **Household management:** Owners can invite members and review activity history.
-* **Room photos:** Authenticated home members can upload, view, and delete private JPEG, PNG, or WebP room photos (maximum 5 MB each).
 * **Simulation:** Submit simulated readings to the server-side alert pipeline.
 * **DALTON replay:** Upload a processed DALTON CSV and replay valid CO₂ samples through that same alert pipeline. Samples are labeled as recorded data; timestamps can be shifted for a current demo.
-* **AirGradient:** Provisioned devices can push their `rco2` CO₂ value to the existing device-authenticated reading endpoint.
 * **Appearance:** Persist the light/dark theme preference.
 
 The browser interface uses plain HTML, CSS, and vanilla JavaScript. No separate frontend build or third-party browser package is required.
 
-Invitation links are single-use and expire after seven days. Email is never sent; invitation details are logged only when `APP_ENV=development`, and the link must be shared manually.
-
-Room photos are stored outside Flask's public static directory under `instance\private_uploads` by default. Set `AIRSENSE_PRIVATE_UPLOAD_FOLDER` to a private persistent directory in deployments where the application filesystem is ephemeral. Photo routes verify home membership and that the room belongs to the requested home.
+Invitation links are single-use and expire after seven days. Email delivery is not configured, so invitation links must be shared manually.
 
 DALTON source data is not bundled. In the Demo Lab, upload a processed CSV (up to 16 MB) containing `ts`, `CO2`, and `Valid_CO2`. The app imports valid CO₂ rows only, up to 1,000 per replay. The default timestamp shift makes the newest sample recent while preserving the spacing between samples; turn it off to retain original timestamps. See [DALTON replay notes](docs/dalton-notes.md).
 
@@ -88,46 +84,7 @@ DALTON source data is not bundled. In the Demo Lab, upload a processed CSV (up t
 Account and home API routes use the signed-in session. Authenticated `POST`, `PUT`, `PATCH`, and `DELETE` requests require the `X-CSRF-Token` header. The dashboard obtains the token from the server-rendered page.
 
 Device ingestion uses the `X-Device-Key` header for sensor authentication.
-AirGradient device push payloads containing `rco2` are normalized to CO₂ ppm and use this same authenticated route, validation, rejection, and reading-processing path.
 
-
-| Endpoint                                                   | Purpose                                                           |
-| ---------------------------------------------------------- | ----------------------------------------------------------------- |
-| `GET /api/health`                                          | Check application and database availability.                      |
-| `GET /api/me`                                              | Return the signed-in account and its homes.                       |
-| `POST /api/auth/register`                                  | Register an account.                                              |
-| `POST /api/auth/login`                                     | Sign in.                                                          |
-| `POST /api/auth/logout`                                    | Sign out.                                                         |
-| `GET /api/homes`                                           | List homes available to the signed-in account.                    |
-| `POST /api/homes`                                          | Create a home.                                                    |
-| `POST /api/active-home`                                    | Select the active home.                                           |
-| `GET /api/homes/{home_id}/rooms`                           | List rooms in a home.                                             |
-| `POST /api/homes/{home_id}/rooms`                          | Create a room.                                                    |
-| `GET /api/homes/{home_id}/sensors`                         | List sensors in a home.                                           |
-| `POST /api/homes/{home_id}/sensors`                        | Provision a sensor and return its one-time device key.            |
-| `POST /api/homes/{home_id}/sensors/{sensor_id}/rotate-key` | Rotate a sensor's device key.                                     |
-| `POST /api/homes/{home_id}/sensors/{sensor_id}/revoke`     | Revoke a sensor.                                                  |
-| `POST /api/sensors/{sensor_id}/readings`                   | Submit validated sensor readings using `X-Device-Key`.            |
-| `POST /api/homes/{home_id}/rooms/{room_id}/photos`          | Upload a private JPEG, PNG, or WebP room photo as multipart `photo`. |
-| `GET /api/homes/{home_id}/rooms/{room_id}/photos/{filename}`| Retrieve an authorized room photo.                                 |
-| `DELETE /api/homes/{home_id}/rooms/{room_id}/photos/{filename}` | Delete an authorized room photo.                                |
-| `POST /api/homes/{home_id}/demo/readings`                  | Submit simulated readings through the server-side alert pipeline. |
-| `GET /api/homes/{home_id}/dashboard`                       | Retrieve dashboard data for a home.                               |
-| `GET /api/homes/{home_id}/rooms`                           | Retrieve room data.                                               |
-| `GET /api/homes/{home_id}/sensors`                         | Retrieve sensor data.                                             |
-| `GET /api/homes/{home_id}/thresholds`                      | Retrieve threshold settings.                                      |
-| `PUT /api/homes/{home_id}/thresholds`                      | Save validated room threshold settings as a batch.                |
-| `GET /api/homes/{home_id}/history`                         | Retrieve stored readings, with optional filters.                  |
-| `GET /api/homes/{home_id}/history.csv`                     | Export reading history as CSV.                                    |
-| `POST /api/alerts/{alert_id}/acknowledge`                  | Acknowledge an alert as the signed-in user.                       |
-| `GET /api/homes/{home_id}/members`                         | List household members.                                           |
-| `POST /api/invitations/accept`                             | Accept an invitation using its single-use token.                  |
-| `GET /api/homes/{home_id}/activity`                        | Retrieve activity history for home owners.                        |
-
-Owners create invitations through `/invitations`. The invited account accepts the invitation using `POST /api/invitations/accept`.
-
-The legacy `POST /api/readings` and `POST /api/policies` endpoints remain available for authenticated browser/API compatibility. The optional `REQUIRE_API_TOKEN` setting adds a bearer-token gate to legacy alert routes; it does not replace account authentication or household authorization.
-=======
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/health` | Check application/database availability; no account session required. |
@@ -152,7 +109,6 @@ The legacy `POST /api/readings` and `POST /api/policies` endpoints remain availa
 
 Authenticated mutating routes use session authentication and CSRF protection. Device ingestion is authenticated separately with the sensor key. `REQUIRE_API_TOKEN` is an optional additional gate in the legacy alerts blueprint; it does not replace session, membership, or device authentication and is not a global API gate.
 
-
 ## Security
 
 * **Password storage:** Passwords are validated and hashed using scrypt.
@@ -176,14 +132,7 @@ Separate, one-time Azure SQL target-schema scripts and their application order a
 Run the integration tests:
 
 ```powershell
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-```
-
-Create a demo home for an existing account (after applying migrations):
-
-```powershell
-python tools/seed_demo_home.py --email owner@example.com
+python -m unittest discover -s tests -v
 ```
 
 Apply migrations:
