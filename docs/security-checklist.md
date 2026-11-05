@@ -1,56 +1,54 @@
 # AirSense security checklist
 
-Use this checklist for implementation and deployment review. A checked item should be backed by test or deployment evidence; this document is a plan, not evidence that a control is already deployed. Current limitations are summarized in [implementation status](./PRD.md).
+This checklist separates controls present in the local application from controls that require deployment evidence. A code-level control is not proof of secure production configuration. Coverage is selective and does not establish every checklist item.
 
-## Identity and authorization
+## Implemented locally (code evidence; tests cover selected paths)
 
-- [ ] Hash passwords with a password-specific algorithm (for example Argon2id, bcrypt, or a vetted framework helper); never log or store plaintext passwords.
-- [ ] Use secure login/logout behavior, session/token expiry, and appropriate cookie protections if cookie sessions are used.
-- [ ] Enforce role checks and room/facility membership on every protected server route.
-- [ ] Deny by default; test cross-room and cross-role access attempts.
-- [ ] Authenticate each sensor/gateway independently; support revocation and credential rotation.
-- [ ] Do not use a shared unrestricted device-ingestion credential.
+- [x] Passwords are validated and hashed using Werkzeug's scrypt password-hashing implementation; plaintext passwords are not stored.
+- [x] Flask session cookies are configured HttpOnly and SameSite; session lifetime is configured. Secure-cookie mode is enabled for production configuration.
+- [x] Session-authenticated mutations require CSRF validation.
+- [x] Home-scoped routes enforce membership and owner/member permissions server-side. Selected access-control tests cover unauthenticated access, home isolation, and member restrictions.
+- [x] Each provisioned sensor has a separate random device key; only a peppered hash is stored. Owners can rotate keys and revoke sensors. The one-time key response is secret.
+- [x] Reading payloads are validated for expected structure, metric/unit syntax, finite non-negative value, timestamp format/timezone, future timestamps, sensor identity, and room match. Database uniqueness prevents duplicate home/room/metric/timestamp readings.
+- [x] ORM expressions are used by application database queries. Dashboard-rendered values are HTML-escaped by the frontend helper.
+- [x] History queries require home membership, use a time range, and cap results. CSV export is home-authorized and streamed; it is not stored in Blob Storage.
+- [x] CSV export prefixes text cells whose first non-whitespace/control character is a spreadsheet formula marker with a text apostrophe; numeric readings, timestamps, headers, and ordinary text remain unchanged.
+- [x] Audit details for implemented events avoid storing passwords, invitation tokens, or raw device keys. Tests check selected audit cases.
+- [x] Rejected readings after authenticated device validation or authenticated simulator/DALTON ingestion are recorded as `reading.rejected` with only a fixed reason code and source; raw payloads and credentials are excluded. DALTON batch rollback is followed by one rejection event, not partial reading/alert events.
+- [x] Failed device authentication for an existing sensor is recorded as `sensor.authentication_failed` in that sensor's home, with no supplied credential in the event. Unknown sensor IDs have no home-scoped event because there is no trustworthy home context.
+- [x] Known-account login failures, successful login, and logout are audited against the user's home memberships. Unknown-account login failures and unauthenticated/invalid requests without a trusted home context do not create household audit events.
+- [ ] Rejections before a reading reaches shared ingestion (for example malformed simulator requests, missing/invalid DALTON files, invalid CSV rows filtered during parsing, unknown rooms, and rate-limited requests) are not recorded as household audit events. Operational security monitoring for those request-level failures is not implemented.
 
-## Transport, configuration, and infrastructure
+## Incomplete or unverified locally
 
-- [ ] Require HTTPS for deployed frontend and API traffic.
-- [ ] Keep database credentials, signing keys, and device credentials in deployment secrets or protected configuration.
-- [ ] Keep `.env` files and all real credentials out of version control; commit only placeholders in `.env.example`.
-- [ ] Use least-privilege database identities and restrict database network access to required application sources.
-- [ ] Keep Blob Storage containers private and grant scoped, time-limited access only when needed.
-- [ ] Configure secure response headers and review CORS policy for the deployed origins.
+- [ ] Implement and audit the PRD's facility-manager/administrator roles and role-change action. Current roles are home-scoped `owner` and `member`.
+- [ ] Add/verify an end-to-end browser flow for login, dashboard, and role-gated actions. The current suite tests backend/API/service behavior, not browser E2E.
+- [ ] Extend rollback tests to cover forced database failures across individual ingestion paths. DALTON replay tests already force a later-row validation failure and verify no partial readings, alerts, or ingestion/alert audit events remain.
+- [ ] Verify metric-specific value ranges; the general reading validator accepts any finite non-negative number, rather than enforcing a universal CO₂ range in the database.
+- [ ] Decide and document retention, account deletion, audit retention, backup/recovery, and incident-response policy.
+- [ ] Run dependency vulnerability and secret scanning in CI and record results. No result is claimed here.
+- [ ] Complete a project-specific threat model and data-classification note. The prompts below are not themselves a completed threat model.
 
-## Input, database, and application behavior
+## Deployment controls (future/unverified)
 
-- [ ] Validate request shape, allowed fields, types, sizes, identifiers, metric/unit, ppm range, and timezone-aware timestamps.
-- [ ] Reject malformed, stale, future-dated, duplicate, or unauthorized readings according to documented rules.
-- [ ] Use parameterized queries or ORM expressions; never build SQL from untrusted input.
-- [ ] Escape untrusted output and avoid unsafe HTML rendering.
-- [ ] Apply request/body limits and rate limits appropriate to user and device endpoints.
-- [ ] Use transactions for reading/alert writes and verify rollback behavior.
-- [ ] Keep historical queries bounded and protect file/report downloads with authorization.
-
-## Audit, privacy, and operations
-
-- [ ] Record authentication outcomes, role changes, sensor provisioning/revocation, threshold updates, and administrative actions.
-- [ ] Do not log passwords, tokens, device secrets, or other raw credentials.
-- [ ] Limit collected personal information to what the service needs; avoid personal health data.
-- [ ] Define retention and access rules for readings, alerts, and audit events.
-- [ ] Label simulated data in storage and all relevant UI/report views.
-- [ ] Scan dependencies and repository content for known vulnerabilities and accidentally committed secrets.
-- [ ] Prepare backup/recovery and incident response steps appropriate to deployment.
+- [ ] Require and verify HTTPS for deployed frontend and API traffic.
+- [ ] Store signing, database, and device secrets in protected deployment configuration; verify there are no real credentials in the Git index.
+- [ ] Use a least-privilege hosted database identity and restrict database network access to required application sources.
+- [ ] Keep any Blob Storage container private and grant scoped/time-limited access. Blob integration is not implemented.
+- [ ] Configure and verify security response headers (including CSP, HSTS, and frame/content-type protections) and review CORS. No active security-header middleware/configuration is present in the repository.
+- [ ] Verify the production host's session-cookie, proxy, rate-limiting, request-size, backup, and recovery settings.
+- [ ] If hosted PostgreSQL or Azure SQL is selected, run compatibility and migration checks against that actual backend. No PostgreSQL or cloud integration test has passed as part of the current evidence.
+- [ ] If Power BI is delivered, use a controlled/read-only data connection and verify report access and data handling.
 
 ## Threat-model prompts
 
-Document assets, actors, entry points, trust boundaries, abuse cases, mitigations, and residual risks. At minimum consider:
+The following are prompts for the threat-model deliverable, not completed findings:
 
-- A user attempting to read or alter another room's data.
-- A stolen/replayed device credential or fabricated sensor reading.
-- Malformed timestamps, extreme values, duplicate submissions, and request flooding.
-- Database or storage credentials exposed through source control, logs, or public containers.
-- Unauthorized acknowledgement, threshold changes, role changes, or audit-log access.
-- Users mistaking simulated readings or threshold labels for medical/safety advice.
+- A user attempts to read or alter another home's data, change a role, or acknowledge an alert without permission.
+- A stolen/replayed device key or fabricated sensor submits readings.
+- Malformed timestamps, extreme values, duplicate submissions, or request flooding affect processing.
+- Database/storage credentials are exposed through source control, logs, or public containers.
+- A user mistakes simulated readings or threshold labels for medical/safety advice.
+- Backups, audit records, or user information are retained longer or exposed more broadly than intended.
 
-## Current implementation caveat
-
-The prototype has an optional shared bearer-token guard, not full user accounts, room-level authorization, or per-device keys. Treat it as a demo only and do not enter private household data. See the [README](../Readme.md) and [implementation status](./PRD.md).
+Document assets, actors, entry points, trust boundaries, abuse cases, mitigations, and residual risks before marking the threat-model requirement complete. AirSense is a ventilation-support demo, not a medical or safety device; it does not replace a certified carbon monoxide alarm.

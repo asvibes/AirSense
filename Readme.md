@@ -35,15 +35,25 @@ Open `http://127.0.0.1:5000/register` to create the first account and home. The 
 
 The default database is SQLite at `instance\airsense.sqlite3`. Set `DATABASE_URL` to use another supported SQLAlchemy database URL.
 
-`AUTO_CREATE_SCHEMA` defaults to `true` for local development. Production deployments should apply Alembic migrations.
+`AUTO_CREATE_SCHEMA` defaults to `false`; apply Alembic migrations before starting the application. SQLAlchemy's `create_all()` can create missing tables, but it does not migrate existing tables. Set `AUTO_CREATE_SCHEMA=true` only for disposable databases such as isolated tests.
+
+The application does not automatically load `.env.example`. In PowerShell, set required environment variables in the current shell before starting Flask, or configure them in your development environment:
+
+```powershell
+$env:DATABASE_URL = "sqlite:///instance/airsense.sqlite3"
+$env:SECRET_KEY = "<private random value>"
+$env:AIRSENSE_DEVICE_KEY_PEPPER = "<private random value>"
+```
+
+Keep real values in an ignored local `.env` or protected environment settings, never in source control. Before running migrations against a database that contains data, stop the application and make a separate verified backup of the database file. Do not use `AUTO_CREATE_SCHEMA` to update an existing schema.
 
 ### Production configuration
 
 Set `SECRET_KEY` and `AIRSENSE_DEVICE_KEY_PEPPER` to strong, private values before production use. Production mode refuses to start without them.
 
-Sessions use HttpOnly, SameSite cookies, and mutation requests require a CSRF token. The included rate limiter is process-local; use a shared limiter before running multiple workers.
+Sessions use HttpOnly, SameSite cookies, and mutation requests require a CSRF token. Home-scoped routes enforce owner/member membership. Device ingestion uses per-sensor keys whose peppered hashes are stored in the database. The included rate limiter is process-local; use a shared limiter before running multiple workers.
 
-Use HTTPS before deploying the application publicly.
+HTTPS, security headers, production database network restrictions, and cloud secret configuration are not established by the local application and must be configured and verified before public deployment.
 
 ## Dashboard
 
@@ -52,7 +62,7 @@ The responsive frontend is served from `/alerts` after sign-in. It loads rooms, 
 Features include:
 
 * **Overview:** Summary cards and a latest-reading bar chart for metrics recorded in the selected home.
-* **Room management:** Manage rooms and multiple ventilation sources per room.
+* **Room management:** Owners can create rooms and edit room names and multiple ventilation sources per room. Room deletion is not implemented.
 * **Sensor management:** Owner-managed sensor provisioning, key rotation, and revocation. A provisioned key is shown once; only its hash is stored.
 * **Sensor ingestion:** Submit device readings using per-sensor keys through the same alert evaluation path used by simulator readings.
 * **Alert management:** View alert history and acknowledge alerts while authenticated.
@@ -75,39 +85,29 @@ Account and home API routes use the signed-in session. Authenticated `POST`, `PU
 
 Device ingestion uses the `X-Device-Key` header for sensor authentication.
 
-| Endpoint                                                   | Purpose                                                           |
-| ---------------------------------------------------------- | ----------------------------------------------------------------- |
-| `GET /api/health`                                          | Check application and database availability.                      |
-| `GET /api/me`                                              | Return the signed-in account and its homes.                       |
-| `POST /api/auth/register`                                  | Register an account.                                              |
-| `POST /api/auth/login`                                     | Sign in.                                                          |
-| `POST /api/auth/logout`                                    | Sign out.                                                         |
-| `GET /api/homes`                                           | List homes available to the signed-in account.                    |
-| `POST /api/homes`                                          | Create a home.                                                    |
-| `POST /api/active-home`                                    | Select the active home.                                           |
-| `GET /api/homes/{home_id}/rooms`                           | List rooms in a home.                                             |
-| `POST /api/homes/{home_id}/rooms`                          | Create a room.                                                    |
-| `GET /api/homes/{home_id}/sensors`                         | List sensors in a home.                                           |
-| `POST /api/homes/{home_id}/sensors`                        | Provision a sensor and return its one-time device key.            |
-| `POST /api/homes/{home_id}/sensors/{sensor_id}/rotate-key` | Rotate a sensor's device key.                                     |
-| `POST /api/homes/{home_id}/sensors/{sensor_id}/revoke`     | Revoke a sensor.                                                  |
-| `POST /api/sensors/{sensor_id}/readings`                   | Submit validated sensor readings using `X-Device-Key`.            |
-| `POST /api/homes/{home_id}/demo/readings`                  | Submit simulated readings through the server-side alert pipeline. |
-| `GET /api/homes/{home_id}/dashboard`                       | Retrieve dashboard data for a home.                               |
-| `GET /api/homes/{home_id}/rooms`                           | Retrieve room data.                                               |
-| `GET /api/homes/{home_id}/sensors`                         | Retrieve sensor data.                                             |
-| `GET /api/homes/{home_id}/thresholds`                      | Retrieve threshold settings.                                      |
-| `PUT /api/homes/{home_id}/thresholds`                      | Save validated room threshold settings as a batch.                |
-| `GET /api/homes/{home_id}/history`                         | Retrieve stored readings, with optional filters.                  |
-| `GET /api/homes/{home_id}/history.csv`                     | Export reading history as CSV.                                    |
-| `POST /api/alerts/{alert_id}/acknowledge`                  | Acknowledge an alert as the signed-in user.                       |
-| `GET /api/homes/{home_id}/members`                         | List household members.                                           |
-| `POST /api/invitations/accept`                             | Accept an invitation using its single-use token.                  |
-| `GET /api/homes/{home_id}/activity`                        | Retrieve activity history for home owners.                        |
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | Check application/database availability; no account session required. |
+| `GET /api/me` | Return the signed-in account, CSRF token, and homes. |
+| `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout` | Register, sign in, and sign out. |
+| `GET /api/homes`, `POST /api/homes` | List or create homes for the signed-in user. |
+| `POST /api/active-home` | Select a home in the session. |
+| `GET /api/homes/{home_id}/dashboard` | Get current dashboard readings and alerts. |
+| `GET /api/homes/{home_id}/rooms`, `POST /api/homes/{home_id}/rooms` | List or create rooms. |
+| `PATCH /api/homes/{home_id}/rooms/{room_id}` | Update a room name and/or ventilation sources; owner only. Room deletion is not implemented. |
+| `GET /api/homes/{home_id}/sensors`, `POST /api/homes/{home_id}/sensors` | List or provision sensors; provisioning returns a one-time device key. |
+| `POST /api/homes/{home_id}/sensors/{sensor_id}/rotate-key`, `POST /api/homes/{home_id}/sensors/{sensor_id}/revoke` | Rotate a sensor key or revoke the sensor. |
+| `POST /api/sensors/{sensor_id}/readings` | Submit a validated reading using `X-Device-Key`. |
+| `POST /api/homes/{home_id}/demo/readings`, `POST /api/homes/{home_id}/demo/replay` | Submit simulator readings or replay a processed DALTON CSV. |
+| `GET /api/homes/{home_id}/thresholds`, `PUT /api/homes/{home_id}/thresholds` | Read or batch-update room CO₂ thresholds. |
+| `PUT /api/homes/{home_id}/thresholds/{room_id}/{metric_code}` | Update one room/metric threshold. |
+| `GET /api/homes/{home_id}/history`, `GET /api/homes/{home_id}/history.csv` | Get filtered history or export it as CSV. |
+| `GET /api/homes/{home_id}/members`, `POST /api/homes/{home_id}/invitations` | List members or create a single-use invitation. |
+| `POST /api/invitations/accept`, `DELETE /api/homes/{home_id}/members/{user_id}` | Accept an invitation or remove a non-owner member. |
+| `GET /api/homes/{home_id}/activity` | Read the home activity log (owner only). |
+| `GET /api/dashboard?home_id=...`, `GET /api/alerts?home_id=...`, `POST /api/policies`, `POST /api/readings`, `POST /api/alerts/{alert_id}/acknowledge` | Legacy authenticated dashboard/alert routes retained for compatibility. |
 
-Owners create invitations through `/invitations`. The invited account accepts the invitation using `POST /api/invitations/accept`.
-
-The legacy `POST /api/readings` and `POST /api/policies` endpoints remain available for authenticated browser/API compatibility. The optional `REQUIRE_API_TOKEN` setting adds a bearer-token gate to legacy alert routes; it does not replace account authentication or household authorization.
+Authenticated mutating routes use session authentication and CSRF protection. Device ingestion is authenticated separately with the sensor key. `REQUIRE_API_TOKEN` is an optional additional gate in the legacy alerts blueprint; it does not replace session, membership, or device authentication and is not a global API gate.
 
 ## Security
 
@@ -121,11 +121,11 @@ The legacy `POST /api/readings` and `POST /api/policies` endpoints remain availa
 
 ## Database
 
-The application uses SQLAlchemy models and Alembic migrations.
+The application uses SQLAlchemy models and Alembic migrations. The current local SQLite database is at revision `20261105_0004`, which adds nullable `air_readings.received_at`. The active schema contains 11 application tables plus Alembic's version table. Fresh migration-to-head and ORM metadata comparison, upgrade from the prior revision, and downgrade/re-upgrade are tested with temporary databases; no production database is used for these tests.
 
-Readings and alerts use relational models. Duplicate room/metric/timestamp readings are rejected, open-alert uniqueness is enforced in the database, and reading/alert updates are transactional.
+Readings and alerts use relational models. Duplicate home/room/metric/timestamp readings are rejected, open-alert uniqueness is enforced in the database, and reading/alert updates are transactional. Foreign keys ensure individual referenced records exist, but the active schema does not enforce same-home consistency between a row's `home_id`, `room_id`, and optional sensor through composite constraints. Current local records passed integrity and foreign-key checks, and read-only same-home relationship checks found no mismatches.
 
-Separate Azure SQL target-schema scripts and their application order are documented in [`database/README.md`](./database/README.md). These scripts are not currently wired into the Flask application's Alembic migrations.
+Separate, one-time Azure SQL target-schema scripts and their application order are documented in [`database/README.md`](./database/README.md). They define a different schema—including global roles, composite same-home relationships, temporal threshold provenance, additional reading/alert constraints, activity logs, views, and triggers—and are not wired into the Flask application's Alembic migrations. Do not execute them against the local SQLite database.
 
 ## Testing and Verification
 
@@ -141,58 +141,29 @@ Apply migrations:
 python -m alembic upgrade head
 ```
 
+Back up any populated database before applying migrations. The migration command targets the `DATABASE_URL` environment variable when set, otherwise the URL in `alembic.ini`; verify the target first. The latest full local test run passed **77 tests and 64 subtests**. That is backend/unit/API/database test evidence, not browser E2E, PostgreSQL, or cloud deployment evidence.
+
 List registered Flask routes:
 
 ```powershell
 python -m flask --app "app.main:create_app()" routes
 ```
 
-## Project status
+## Project status and known gaps
 
-**Overall completion: about 57% of the PRD** (reviewed 28 October 2026).
+The latest known backend test baseline is **77 tests and 64 subtests passed**. No percentage-complete score is reported because PRD scope and delivery criteria have not been independently weighted or fully verified.
 
-| Area | Weight | Completion | Contribution |
-|---|---|---|---|
-| Must-have features F1-F7 | 70% | ~75% | ~52.5% |
-| Should-have features F8-F9 | 10% | ~22% | ~2% |
-| Could and Stretch features F10-F14 | 10% | 0% | 0% |
-| Delivery items (live HTTPS URL, security headers, Power BI report) | 10% | ~25% | ~2.5% |
-| **Total** | 100% | | **~57%** |
+| Area | Local implementation status | Remaining or unverified |
+|---|---|---|
+| Authentication and authorization | Session auth, scrypt password hashes, CSRF, per-home owner/member checks; selected access-control tests. | PRD facility-manager/admin roles and role-change flow are absent; browser E2E not verified. |
+| Rooms and sensors | Room creation/listing/editing; sensor provision/rotate/revoke; freshness and device-key ingestion. | Room deletion and sensor move/edit are absent. |
+| Readings, thresholds, alerts | Validated simulator/device/DALTON flows, server-generated UTC `received_at`, threshold evaluation, duplicate suppression, acknowledgement/all-clear, and selected audit events. | Threshold source citations are not stored. Existing readings retain `received_at = NULL` because historical receipt times are unknown. |
+| History and dashboard | Same-origin UI API calls, polling, history filters, charts, heatmap, CSV. | UI behavior has no automated browser E2E evidence. |
+| Audit/security | Login/logout (known account), threshold, sensor, membership, reading, and alert events; credentials are not intentionally included. | No role changes; unknown-account failed logins have no home-scoped audit record. Full threat-model/security evidence remains incomplete. |
+| Analytics and files | Local dashboard reporting and CSV streaming. | Power BI report is a zero-byte placeholder; Blob Storage is not integrated. |
+| Cloud/deployment | Render configuration exists as a deployment template. | No verified live deployment, HTTPS/security headers, Azure SQL/Blob configuration, firewall evidence, or cloud test result is claimed. |
 
-These percentages are estimates from reading the code and running the test suite (28 tests, all passing).
-
-### Status table
-
-| # | Feature | Priority | Done | Status | What works | What is missing |
-|---|---|---|---|---|---|---|
-| F1 | Auth and roles | Must | ~85% | Mostly done | Register, login, logout, create home, single-use invite codes, Owner and Member roles, CSRF protection, rate-limited login, access-control tests | Passwords use scrypt, the PRD asks for bcrypt or Argon2id; access tests do not yet cover every route |
-| F2 | Sensor provisioning | Must | ~70% | Mostly done | Owner provisions a sensor for a room, one-time device key, only a peppered hash stored, rotate key, revoke sensor | QR pairing, whole-house (unassigned) sensors, moving a sensor between rooms |
-| F3 | Ingestion and monitoring | Must | ~75% | Mostly done | Device-key authenticated endpoint, validation, duplicate rejection through a unique constraint, rejections logged, last-seen tracking for freshness | "Reading too old" check, separate rejection counter, test that a forced failure saves nothing |
-| F4 | Dashboard | Must | ~60% | Partly done | Room cards with latest values and open alerts, tabs, source labels, pause control, heatmap view, dark theme | Verified 15-30 second polling, trend arrows, freshness on every card, 360 px phone-width check |
-| F5 | Status and alerts | Must | ~90% | Nearly done | High, sustained Elevated and Rapid rise alerts, one open alert per room, metric and level, acknowledge with who and when, all-clear after a quiet period, about 18 lifecycle tests | Projected trend on all-clear, wording audit for "safe" and "dangerous", certified-alarm notice on CO and NO2 screens |
-| F6 | History | Must | ~70% | Mostly done | Date, room and metric filters, indexed time queries, 90-day coverage heatmap, CSV export | CSV is streamed directly, not saved to private Blob Storage with a signed link |
-| F7 | Audit logging | Must | ~75% | Mostly done | Owner-only activity log for logins, invitations, rooms, sensors, thresholds and ingestion; Members get 403 | Database trigger for threshold changes (only in the Azure SQL scripts, not the running app) |
-| F8 | Demo panel | Should | ~90% | Mostly done | Configurable room, custom CO₂ values, alert scenarios, and DALTON CSV replay | Paced playback controls |
-| F9 | Room photos | Should | ~20% | Started | Ventilation sources can be ticked per room | Photo upload |
-| F10 | Email alerts | Could | 0% | Not started | | |
-| F11 | Critical Alarm Mode | Could | 0% | Not started | | |
-| F12 | Safety plan | Could | 0% | Not started | | |
-| F13 | Automatic photo suggestions | Could | 0% | Not started | | |
-| F14 | Live AirGradient source | Stretch | 0% | Not started | | |
-
-**Must-have summary:** all 7 are started. F5 is nearly done, F1, F2, F3, F6 and F7 are mostly done, and F4 is partly done. A pair needs 5 working end to end; F5, F1, F3, F7 and F2 are the closest.
-
-### Delivery checklist (security check, 3 November)
-
-| Item | Status |
-|---|---|
-| Repository with CI | Done (unit tests, Alembic migration and route listing) |
-| Deployment config | `render.yaml` written; live HTTPS URL not confirmed |
-| Security checklist document | Written; needs final review against the deployed app |
-| Security headers (CSP, HSTS, X-Frame-Options) | Not done |
-| DALTON data import | Processed CSV upload and replay implemented; source dataset is not bundled |
-| Power BI analytics report | Not done |
-| PWA manifest and service worker | Not done |
+The application currently implements home-scoped `owner` and `member` roles—not the full proposed standard-user/facility-manager/administrator model. See [docs/PRD.md](docs/PRD.md) for the local implementation summary and [docs/product-requirements.md](docs/product-requirements.md) for target requirements.
 
 ## Project Constraints and Limitations
 
