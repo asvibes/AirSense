@@ -126,7 +126,10 @@
       }).join("")
       : '<p class="empty-state">No readings received yet.</p>';
     const lastReading = room.readings.slice().sort((a, b) => new Date(b.measured_at) - new Date(a.measured_at))[0];
-    return `<article class="room-card"><div class="room-card-header"><div><h3 class="room-name">${escapeHtml(room.name)}</h3><p class="room-meta">${escapeHtml(ventilation)}</p></div><span class="status-pill status-${statusClass(state)}">${escapeHtml(statusText(state))}</span></div><div class="reading-list">${readingRows}</div><div class="reading-details"><span class="source-pill">${room.sensors.length} sensor${room.sensors.length === 1 ? "" : "s"}</span><span class="reading-age">${lastReading ? `Updated ${escapeHtml(dateTime(lastReading.measured_at))}` : "Awaiting first reading"}</span></div></article>`;
+    const editAction = config.role === "owner"
+      ? `<div class="room-actions"><button class="text-button" type="button" data-edit-room="${escapeHtml(room.id)}">Edit room</button></div>`
+      : "";
+    return `<article class="room-card"><div class="room-card-header"><div><h3 class="room-name">${escapeHtml(room.name)}</h3><p class="room-meta">${escapeHtml(ventilation)}</p></div><span class="status-pill status-${statusClass(state)}">${escapeHtml(statusText(state))}</span></div><div class="reading-list">${readingRows}</div><div class="reading-details"><span class="source-pill">${room.sensors.length} sensor${room.sensors.length === 1 ? "" : "s"}</span><span class="reading-age">${lastReading ? `Updated ${escapeHtml(dateTime(lastReading.measured_at))}` : "Awaiting first reading"}</span></div>${editAction}</article>`;
   }
 
   function renderRooms() {
@@ -437,23 +440,100 @@
     if (input) input.focus();
   }
 
-  async function createRoom(form) {
+  function syncCustomVentilationField() {
+    const customOption = $('#room-form input[value="Other"]');
+    const wrapper = $("#custom-ventilation-wrap");
+    const input = $('#room-form input[name="custom_ventilation_source"]');
+    const visible = customOption.checked;
+    wrapper.hidden = !visible;
+    input.required = visible;
+    if (!visible) input.value = "";
+  }
+
+  function resetRoomForm() {
+    const form = $("#room-form");
+    form.dataset.roomId = "";
+    form.reset();
+    $("#room-modal-title").textContent = "Add a room";
+    $("#room-form button[type=submit]").textContent = "Add room";
+    syncCustomVentilationField();
+  }
+
+  function editRoom(roomId) {
+    if (config.role !== "owner") return;
+    const room = rooms.find(item => item.id === roomId);
+    if (!room) {
+      showMessage("Room not found. Refresh the dashboard and try again.", "error");
+      return;
+    }
+
+    const form = $("#room-form");
+    form.dataset.roomId = room.id;
+    form.elements.namedItem("name").value = room.name;
+    const sources = room.ventilation_sources || [room.ventilation || "Not specified"];
+    const customSource = sources.find(source => source.startsWith("Other:"));
+    $$("#room-form input[name=ventilation_sources]").forEach(input => {
+      input.checked = input.value === "Other"
+        ? Boolean(customSource)
+        : sources.includes(input.value);
+    });
+    form.elements.namedItem("custom_ventilation_source").value = customSource
+      ? customSource.slice("Other:".length).trim()
+      : "";
+    $("#room-modal-title").textContent = "Edit room";
+    $("#room-form button[type=submit]").textContent = "Save changes";
+    syncCustomVentilationField();
+    openModal("room-modal");
+  }
+
+  function roomFormData(form) {
     const formData = new FormData(form);
-    const data = {
-      name: formData.get("name"),
-      ventilation_sources: formData.getAll("ventilation_sources")
-    };
-    if (!data.ventilation_sources.length) {
+    const selectedSources = formData.getAll("ventilation_sources");
+    const customSource = String(formData.get("custom_ventilation_source") || "").trim();
+    if (selectedSources.includes("Other") && !customSource) {
+      throw new Error("Describe the custom ventilation source.");
+    }
+    const ventilationSources = selectedSources.map(source =>
+      source === "Other" ? `Other: ${customSource}` : source
+    );
+    if (!ventilationSources.length) {
       throw new Error("Choose at least one ventilation source.");
     }
+    return {
+      name: formData.get("name"),
+      ventilation_sources: ventilationSources
+    };
+  }
+
+  async function createRoom(form) {
+    const data = roomFormData(form);
     await api(`/api/homes/${encodeURIComponent(config.homeId)}/rooms`, {
       method: "POST",
       body: JSON.stringify(data)
     });
-    form.reset();
+    resetRoomForm();
     form.closest(".modal-backdrop").hidden = true;
     await loadHome();
     showMessage("Room added.");
+  }
+
+  async function updateRoom(form) {
+    const roomId = form.dataset.roomId;
+    if (!roomId || config.role !== "owner") {
+      throw new Error("You do not have permission to edit this room.");
+    }
+    await api(
+      `/api/homes/${encodeURIComponent(config.homeId)}/rooms/${encodeURIComponent(roomId)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(roomFormData(form))
+      }
+    );
+    form.closest(".modal-backdrop").hidden = true;
+    resetRoomForm();
+    await loadHome();
+    await loadHistory();
+    showMessage("Room updated.");
   }
 
   async function provisionSensor(form) {
@@ -502,10 +582,14 @@
     if (savedTheme === "dark") $("#theme-toggle").click();
 
     document.addEventListener("click", event => {
-      const target = event.target.closest("[data-nav], [data-open-modal], [data-close-modal], [data-filter], [data-alert-filter], [data-metric], [data-remove-member], [data-scenario], [data-rotate-sensor], [data-revoke-sensor], #run-custom-reading, #run-dalton-replay, #mobile-menu, #banner-dismiss");
+      const target = event.target.closest("[data-nav], [data-open-modal], [data-close-modal], [data-filter], [data-alert-filter], [data-metric], [data-remove-member], [data-edit-room], [data-scenario], [data-rotate-sensor], [data-revoke-sensor], #run-custom-reading, #run-dalton-replay, #mobile-menu, #banner-dismiss");
       if (!target) return;
       if (target.dataset.nav) showView(target.dataset.nav);
-      if (target.dataset.openModal) openModal(target.dataset.openModal);
+      if (target.dataset.openModal) {
+        if (target.dataset.openModal === "room-modal") resetRoomForm();
+        openModal(target.dataset.openModal);
+      }
+      if (target.dataset.editRoom) editRoom(target.dataset.editRoom);
       if (target.hasAttribute("data-close-modal")) target.closest(".modal-backdrop").hidden = true;
       if (target.dataset.filter) {
         roomFilter = target.dataset.filter;
@@ -550,7 +634,7 @@
       const form = event.target;
       if (form.id === "room-form") {
         event.preventDefault();
-        runAction(() => createRoom(form));
+        runAction(() => form.dataset.roomId ? updateRoom(form) : createRoom(form));
       } else if (form.id === "sensor-form") {
         event.preventDefault();
         runAction(() => provisionSensor(form));
@@ -583,15 +667,15 @@
     });
     $$("#room-form input[name=ventilation_sources]").forEach(input => {
       input.addEventListener("change", () => {
-        if (!input.checked) return;
         const notSpecified = $('#room-form input[value="Not specified"]');
-        if (input.value === "Not specified") {
+        if (input.checked && input.value === "Not specified") {
           $$("#room-form input[name=ventilation_sources]").forEach(option => {
             if (option !== input) option.checked = false;
           });
-        } else if (notSpecified) {
+        } else if (input.checked && notSpecified) {
           notSpecified.checked = false;
         }
+        syncCustomVentilationField();
       });
     });
     $("#sensor-search").addEventListener("input", event => renderSensors(event.target.value));

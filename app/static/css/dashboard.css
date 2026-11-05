@@ -159,6 +159,7 @@ input:focus, select:focus, button:focus-visible {
 .room-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 17px; }
 .room-name { margin: 0; font-size: 16px; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .room-meta { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+.room-actions { margin-top: 10px; }
 .status-pill, .source-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 4px 9px; border-radius: 20px; font-size: 10px; font-weight: 750; white-space: nowrap; }
 .status-none { color: #436251; background: #edf4ef; }
 .status-high, .status-elevated { color: #87451c; background: #fff0df; }

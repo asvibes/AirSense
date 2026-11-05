@@ -63,6 +63,159 @@ class IngestionTests(AirSenseTestCase):
                 )
                 self.assertEqual(response.status_code, 400)
 
+    def test_room_update_changes_name_sources_and_records_audit_event(self):
+        room = self.create_room("Study", ["Window"])
+
+        response = self.request_json(
+            "PATCH",
+            f"/api/homes/{self.home_id}/rooms/{room['id']}",
+            {
+                "name": "Reading room",
+                "ventilation_sources": ["Window", "Other: Balcony door"],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200, response.get_json())
+        self.assertEqual(
+            response.get_json()["room"],
+            {
+                "id": room["id"],
+                "name": "Reading room",
+                "ventilation": "Window, Other: Balcony door",
+                "ventilation_sources": ["Window", "Other: Balcony door"],
+            },
+        )
+        listed = self.client.get(
+            f"/api/homes/{self.home_id}/rooms"
+        ).get_json()["rooms"]
+        self.assertEqual(listed[0]["name"], "Reading room")
+        self.assertEqual(
+            listed[0]["ventilation_sources"], ["Window", "Other: Balcony door"]
+        )
+
+        events = self.client.get(
+            f"/api/homes/{self.home_id}/activity"
+        ).get_json()["events"]
+        update_event = next(
+            event for event in events if event["event_type"] == "room.updated"
+        )
+        self.assertEqual(update_event["entity_id"], room["id"])
+        self.assertEqual(
+            update_event["details"],
+            {"changed_fields": ["name", "ventilation_sources"]},
+        )
+
+    def test_room_update_preserves_fields_omitted_from_partial_updates(self):
+        room = self.create_room("Study", ["Window"])
+
+        renamed = self.request_json(
+            "PATCH",
+            f"/api/homes/{self.home_id}/rooms/{room['id']}",
+            {"name": "Quiet study"},
+        )
+        self.assertEqual(renamed.status_code, 200, renamed.get_json())
+        self.assertEqual(renamed.get_json()["room"]["name"], "Quiet study")
+        self.assertEqual(
+            renamed.get_json()["room"]["ventilation_sources"], ["Window"]
+        )
+
+        sources_updated = self.request_json(
+            "PATCH",
+            f"/api/homes/{self.home_id}/rooms/{room['id']}",
+            {"ventilation_sources": ["Exhaust fan"]},
+        )
+        self.assertEqual(
+            sources_updated.status_code, 200, sources_updated.get_json()
+        )
+        self.assertEqual(sources_updated.get_json()["room"]["name"], "Quiet study")
+        self.assertEqual(
+            sources_updated.get_json()["room"]["ventilation_sources"],
+            ["Exhaust fan"],
+        )
+
+    def test_room_update_rejects_empty_or_invalid_fields(self):
+        room = self.create_room("Study", ["Window"])
+        invalid_payloads = (
+            {},
+            {"name": ""},
+            {"name": "   "},
+            {"name": "x" * 101},
+            {"name": 123},
+            {"ventilation_sources": []},
+            {"ventilation_sources": ["Window", "Not specified"]},
+            {"ventilation_sources": ["Other:   "]},
+        )
+
+        for payload in invalid_payloads:
+            with self.subTest(payload=payload):
+                response = self.request_json(
+                    "PATCH",
+                    f"/api/homes/{self.home_id}/rooms/{room['id']}",
+                    payload,
+                )
+                self.assertEqual(response.status_code, 400, response.get_json())
+
+        current = self.client.get(
+            f"/api/homes/{self.home_id}/rooms"
+        ).get_json()["rooms"][0]
+        self.assertEqual(current["name"], "Study")
+        self.assertEqual(current["ventilation_sources"], ["Window"])
+
+    def test_room_update_returns_not_found_for_missing_room(self):
+        response = self.request_json(
+            "PATCH",
+            f"/api/homes/{self.home_id}/rooms/missing-room",
+            {"name": "New name"},
+        )
+        self.assertEqual(response.status_code, 404, response.get_json())
+
+    def test_room_update_requires_owner_membership_and_scopes_room_to_home(self):
+        room = self.create_room("Private room", ["Window"])
+        other_client, other_account, other_csrf = self.register_client(
+            "other-home@example.test", "Other Home Owner"
+        )
+        other_home_id = other_account["home"]["id"]
+        other_room_response = other_client.post(
+            f"/api/homes/{other_home_id}/rooms",
+            json={
+                "name": "Other home's room",
+                "ventilation_sources": ["Exhaust fan"],
+            },
+            headers={"X-CSRF-Token": other_csrf},
+        )
+        self.assertEqual(
+            other_room_response.status_code, 201, other_room_response.get_json()
+        )
+        other_room = other_room_response.get_json()["room"]
+
+        anonymous = self.app.test_client()
+        self.assertEqual(
+            anonymous.patch(
+                f"/api/homes/{self.home_id}/rooms/{room['id']}",
+                json={"name": "Unauthorized"},
+            ).status_code,
+            401,
+        )
+
+        no_membership = other_client.patch(
+            f"/api/homes/{self.home_id}/rooms/{room['id']}",
+            json={"name": "Unauthorized"},
+            headers={"X-CSRF-Token": other_csrf},
+        )
+        self.assertEqual(no_membership.status_code, 404)
+
+        wrong_home = self.request_json(
+            "PATCH",
+            f"/api/homes/{self.home_id}/rooms/{other_room['id']}",
+            {"name": "Cross-home update"},
+        )
+        self.assertEqual(wrong_home.status_code, 404)
+
+        unchanged = other_client.get(
+            f"/api/homes/{other_home_id}/rooms"
+        ).get_json()["rooms"]
+        self.assertEqual(unchanged[0]["name"], "Other home's room")
+
     def test_provisioned_sensor_ingests_and_exposes_history(self):
         room = self.create_room()
         provisioned = self.request_json(
