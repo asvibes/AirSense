@@ -5,11 +5,13 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, Response, jsonify, request
 from sqlalchemy import select
 
+from app.csv_safety import safe_csv_cell
 from app.db import get_session
 from app.models.metric import Metric
 from app.models.reading import Reading
 from app.models.room import Room
 from app.security.sessions import require_home_role, require_user
+from app.timestamps import format_utc, normalize_utc
 
 
 history = Blueprint("history", __name__)
@@ -35,11 +37,12 @@ def readings_history(home_id: str):
                 "value": reading.value,
                 "unit": unit,
                 "source": reading.source,
-                "measured_at": _utc(reading.measured_at).isoformat().replace("+00:00", "Z"),
+                "measured_at": format_utc(reading.measured_at),
+                "received_at": format_utc(reading.received_at),
             }
             for reading, room_name, metric_name, unit in rows
         ],
-        range={"from": start.isoformat(), "to": end.isoformat()},
+        range={"from": format_utc(start), "to": format_utc(end)},
     )
 
 
@@ -53,19 +56,23 @@ def export_history(home_id: str):
         return jsonify(error=str(error)), 400
     output = io.StringIO(newline="")
     writer = csv.writer(output)
-    writer.writerow(["measured_at", "room", "metric", "value", "unit", "source"])
+    writer.writerow(
+        ["measured_at", "received_at", "room", "metric", "value", "unit", "source"]
+    )
     for reading, room_name, metric_name, unit in _query(
         home_id, room_id, metric_code, start, end, min(limit, 10000)
     ):
         writer.writerow(
-            [
-                _utc(reading.measured_at).isoformat().replace("+00:00", "Z"),
+            safe_csv_cell(value)
+            for value in (
+                format_utc(reading.measured_at),
+                format_utc(reading.received_at) or "",
                 room_name,
                 reading.metric_code,
                 reading.value,
                 unit,
                 reading.source,
-            ]
+            )
         )
     return Response(
         output.getvalue(),
@@ -124,8 +131,4 @@ def _date(value: str) -> datetime:
         raise ValueError("Dates must use ISO-8601 timestamps.") from error
     if parsed.tzinfo is None:
         raise ValueError("Date filters must include a timezone.")
-    return parsed.astimezone(timezone.utc)
-
-
-def _utc(value: datetime) -> datetime:
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+    return normalize_utc(parsed)
