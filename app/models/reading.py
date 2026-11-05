@@ -37,3 +37,6 @@ class Reading(Base):
     value: Mapped[float] = mapped_column(Float, nullable=False)
     source: Mapped[str] = mapped_column(String(24), nullable=False)
     measured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    received_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

@@ -7,11 +7,13 @@ from flask import Blueprint, jsonify, render_template, request
 from sqlalchemy import select
 
 from app.db import get_session
+from app.json_request import require_json_object
 from app.models.home import Home
 from app.models.user import HomeInvitation, HomeMembership, User
 from app.schemas.auth import AuthInputError, validate_email
 from app.security.sessions import current_user, list_user_homes, require_home_role, require_user
 from app.services.audit import record_event
+from app.timestamps import format_utc
 
 
 homes = Blueprint("homes", __name__)
@@ -36,7 +38,7 @@ def list_homes():
 @homes.post("/api/homes")
 @require_user()
 def create_home():
-    payload = request.get_json(silent=True) or {}
+    payload = require_json_object()
     name = payload.get("name")
     if not isinstance(name, str) or not name.strip() or len(name.strip()) > 120:
         return jsonify(error="name must contain 1 to 120 characters."), 400
@@ -46,6 +48,7 @@ def create_home():
     db.add_all(
         [home, HomeMembership(home_id=home.id, user_id=user.id, role="owner")]
     )
+    db.flush()
     record_event(
         db,
         home_id=home.id,
@@ -61,7 +64,7 @@ def create_home():
 @homes.post("/api/active-home")
 @require_user()
 def choose_home():
-    payload = request.get_json(silent=True) or {}
+    payload = require_json_object()
     home_id = payload.get("home_id")
     if not isinstance(home_id, str):
         return jsonify(error="home_id is required."), 400
@@ -90,7 +93,7 @@ def list_members(home_id: str):
                 "email": row.email,
                 "display_name": row.display_name,
                 "role": row.role,
-                "joined_at": row.joined_at.isoformat(),
+                "joined_at": format_utc(row.joined_at),
             }
             for row in rows
         ]
@@ -101,7 +104,7 @@ def list_members(home_id: str):
 @require_user()
 def invite_member(home_id: str):
     require_home_role(home_id, "owner")
-    payload = request.get_json(silent=True) or {}
+    payload = require_json_object()
     try:
         email = validate_email(payload.get("email"))
     except AuthInputError as error:
@@ -133,7 +136,11 @@ def invite_member(home_id: str):
         event_type="member.invited",
         entity_type="invitation",
         entity_id=invitation.id,
-        details={"email": email, "expires_at": invitation.expires_at.isoformat()},
+        details={
+            "email": email,
+            "role": invitation.role,
+            "expires_at": format_utc(invitation.expires_at),
+        },
     )
     db.commit()
     return jsonify(
@@ -141,7 +148,7 @@ def invite_member(home_id: str):
             "id": invitation.id,
             "email": email,
             "role": invitation.role,
-            "expires_at": invitation.expires_at.isoformat(),
+            "expires_at": format_utc(invitation.expires_at),
             "token": invitation_token,
             "delivery": "Copy this one-time code to the invited person. Email delivery is not configured.",
         }
@@ -151,7 +158,7 @@ def invite_member(home_id: str):
 @homes.post("/api/invitations/accept")
 @require_user()
 def accept_invitation():
-    payload = request.get_json(silent=True) or {}
+    payload = require_json_object()
     token = payload.get("token")
     if not isinstance(token, str) or not token or len(token) > 200:
         return jsonify(error="A valid invitation token is required."), 400
@@ -187,6 +194,7 @@ def accept_invitation():
         event_type="member.joined",
         entity_type="user",
         entity_id=user.id,
+        details={"role": invitation.role},
     )
     db.commit()
     return jsonify(home_id=invitation.home_id, role=invitation.role)
@@ -212,6 +220,7 @@ def remove_member(home_id: str, user_id: str):
         event_type="member.removed",
         entity_type="user",
         entity_id=user_id,
+        details={"role": membership.role},
     )
     db.commit()
     return jsonify(status="removed")

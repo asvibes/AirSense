@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TextIO
 
+from app.timestamps import format_utc
+
 
 def _coerce_bool(raw_value: object) -> bool:
     if raw_value is None:
@@ -72,7 +74,7 @@ def _read_dalton_csv(
                 "metric": "CO2",
                 "unit": "ppm",
                 "value": value,
-                "measured_at": measured_at.isoformat(),
+                "measured_at": format_utc(measured_at),
             }
         )
         if limit is not None and len(rows) >= limit:

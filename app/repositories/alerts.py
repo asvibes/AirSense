@@ -20,6 +20,8 @@ from app.services.alerts.all_clear import (
 )
 from app.services.alerts.rules import evaluate_reading
 from app.services.alerts.wording import build_alert_detail
+from app.services.audit import record_event
+from app.timestamps import format_utc, normalize_utc
 
 
 class AlertNotFound(LookupError):
@@ -28,12 +30,6 @@ class AlertNotFound(LookupError):
 
 class InvalidReading(ValueError):
     pass
-
-
-def _utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
 
 
 def _room_id(home_id: str, room_name: str) -> str:
@@ -167,9 +163,11 @@ def process_reading(
     value: float,
     source: str,
     measured_at: datetime,
+    received_at: datetime,
     defaults: dict,
     max_future_seconds: int = 60,
     sensor_id: str | None = None,
+    actor_user_id: str | None = None,
 ) -> dict:
     if not math.isfinite(value) or value < 0:
         raise InvalidReading("Reading value must be a finite non-negative number.")
@@ -206,7 +204,7 @@ def process_reading(
     ):
         raise InvalidReading("Alert durations must be positive whole seconds.")
 
-    measured_at = _utc(measured_at)
+    measured_at = normalize_utc(measured_at)
     now = datetime.now(timezone.utc)
     if measured_at > now + timedelta(seconds=max_future_seconds):
         raise InvalidReading("Reading timestamp cannot be in the future.")
@@ -230,11 +228,11 @@ def process_reading(
                 .order_by(Reading.measured_at.desc(), Reading.id.desc())
                 .limit(1)
             )
-            if previous is not None and measured_at <= _utc(previous.measured_at):
+            if previous is not None and measured_at <= normalize_utc(previous.measured_at):
                 raise InvalidReading("Reading must be newer than the last reading for this room and metric.")
 
             elapsed = (
-                (measured_at - _utc(previous.measured_at)).total_seconds()
+                (measured_at - normalize_utc(previous.measured_at)).total_seconds()
                 if previous is not None
                 else None
             )
@@ -259,13 +257,13 @@ def process_reading(
                 policy,
                 elevated_sustained=(
                     policy.elevated_since is not None
-                    and (measured_at - _utc(policy.elevated_since)).total_seconds()
+                    and (measured_at - normalize_utc(policy.elevated_since)).total_seconds()
                     >= policy.elevated_duration_seconds
                 ),
             )
             if (
                 policy.elevated_since is not None
-                and (measured_at - _utc(policy.elevated_since)).total_seconds()
+                and (measured_at - normalize_utc(policy.elevated_since)).total_seconds()
                 >= policy.elevated_duration_seconds
                 and value < policy.high_threshold
             ):
@@ -282,6 +280,7 @@ def process_reading(
                 value=value,
                 source=source,
                 measured_at=measured_at,
+                received_at=received_at,
             )
             session.add(reading)
 
@@ -319,18 +318,35 @@ def process_reading(
                     )
                     open_by_level[level] = alert
                     created.append(alert)
+                    record_event(
+                        session,
+                        home_id=home.id,
+                        actor_user_id=actor_user_id,
+                        event_type="alert.created",
+                        entity_type="alert",
+                        entity_id=str(alert.id),
+                        details={
+                            "level": alert.level,
+                            "metric": metric.code,
+                            "status": alert.status,
+                            "trigger_value": alert.trigger_value,
+                            "threshold_value": alert.threshold_value,
+                        },
+                    )
 
             for alert in open_alerts:
                 applicable_value = _level_value(
                     alert.level, value, evaluation.rapid_rise_per_minute
                 )
                 alert.latest_value = applicable_value
-                prior_reading_at = _utc(previous.measured_at) if previous else None
+                prior_reading_at = (
+                    normalize_utc(previous.measured_at) if previous else None
+                )
                 below_since, all_clear = all_clear_progress(
                     value=applicable_value,
                     threshold=alert.threshold_value,
                     below_since=(
-                        _utc(alert.below_threshold_since)
+                        normalize_utc(alert.below_threshold_since)
                         if alert.below_threshold_since
                         else None
                     ),
@@ -344,6 +360,19 @@ def process_reading(
                     alert.status = AlertStatus.ALL_CLEAR.value
                     alert.all_clear_at = measured_at
                     cleared.append(alert)
+                    record_event(
+                        session,
+                        home_id=home.id,
+                        actor_user_id=actor_user_id,
+                        event_type="alert.all_clear",
+                        entity_type="alert",
+                        entity_id=str(alert.id),
+                        details={
+                            "level": alert.level,
+                            "metric": metric.code,
+                            "status": alert.status,
+                        },
+                    )
 
             session.flush()
 
@@ -355,7 +384,8 @@ def process_reading(
                 "value": value,
                 "unit": metric.unit,
                 "source": source,
-                "measured_at": measured_at.isoformat().replace("+00:00", "Z"),
+                "measured_at": format_utc(measured_at),
+                "received_at": format_utc(received_at),
                 "rapid_rise_per_minute": evaluation.rapid_rise_per_minute,
                 "created": [alert.to_dict(room.name, metric.name) for alert in created],
                 "cleared": [alert.to_dict(room.name, metric.name) for alert in cleared],
@@ -365,7 +395,8 @@ def process_reading(
                 ],
         }
     except IntegrityError:
-        session.rollback()
+        if transaction.is_active:
+            transaction.rollback()
         raise
 
 
@@ -487,9 +518,8 @@ def list_latest_readings(session: Session, home_id: str) -> list[dict]:
                 "value": reading.value,
                 "unit": unit,
                 "source": reading.source,
-                "measured_at": _utc(reading.measured_at)
-                .isoformat()
-                .replace("+00:00", "Z"),
+                "measured_at": format_utc(reading.measured_at),
+                "received_at": format_utc(reading.received_at),
                 "previous_value": None,
                 "trend": "unavailable",
                 "change": None,
@@ -510,7 +540,11 @@ def list_latest_readings(session: Session, home_id: str) -> list[dict]:
 
 
 def acknowledge_alert(
-    session: Session, alert_id: int, acknowledged_by: str
+    session: Session,
+    alert_id: int,
+    acknowledged_by: str,
+    *,
+    actor_user_id: str | None = None,
 ) -> dict:
     if not acknowledged_by.strip() or len(acknowledged_by.strip()) > 120:
         raise ValueError("acknowledged_by must contain 1 to 120 characters.")
@@ -526,6 +560,18 @@ def acknowledge_alert(
         if alert.acknowledged_at is None:
             alert.acknowledged_by = acknowledged_by.strip()
             alert.acknowledged_at = datetime.now(timezone.utc)
+            record_event(
+                session,
+                home_id=alert.home_id,
+                actor_user_id=actor_user_id,
+                event_type="alert.acknowledged",
+                entity_type="alert",
+                entity_id=str(alert.id),
+                details={
+                    "level": alert.level,
+                    "status": alert.status,
+                },
+            )
         room = session.get(Room, alert.room_id)
         metric = session.get(Metric, alert.metric_code)
         session.flush()

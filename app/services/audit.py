@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.audit import AuditLog
+from app.timestamps import format_utc
 
 
 def record_event(
@@ -45,7 +46,7 @@ def list_events(session: Session, home_id: str, *, limit: int = 100) -> list[dic
             "entity_type": event.entity_type,
             "entity_id": event.entity_id,
             "details": json.loads(event.details_json),
-            "created_at": event.created_at.isoformat(),
+            "created_at": format_utc(event.created_at),
         }
         for event in rows
     ]

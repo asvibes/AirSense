@@ -11,6 +11,7 @@ from app.models.threshold import ThresholdPolicy
 from app.security.sessions import current_user, require_home_role, require_user
 from app.services.audit import record_event
 from app.services.freshness import sensor_freshness
+from app.timestamps import format_utc
 
 
 rooms = Blueprint("rooms", __name__)
@@ -93,7 +94,8 @@ def list_rooms(home_id: str):
                         "value": reading.value,
                         "unit": _metric_unit(db, reading.metric_code),
                         "source": reading.source,
-                        "measured_at": reading.measured_at.isoformat(),
+                        "measured_at": format_utc(reading.measured_at),
+                        "received_at": format_utc(reading.received_at),
                     }
                     for reading in latest_by_metric.values()
                 ],

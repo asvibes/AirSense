@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import (
@@ -15,6 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
+from app.timestamps import format_utc
 
 
 class AlertLevel(str, Enum):
@@ -100,17 +101,11 @@ class Alert(Base):
             "latest_value": self.latest_value,
             "threshold_unit": self.threshold_unit,
             "clear_duration_seconds": self.clear_duration_seconds,
-            "created_at": _iso(self.created_at),
-            "acknowledged_at": _iso(self.acknowledged_at),
+            "created_at": format_utc(self.created_at),
+            "acknowledged_at": format_utc(self.acknowledged_at)
+            if self.acknowledged_at
+            else None,
             "acknowledged_by": self.acknowledged_by,
-            "all_clear_at": _iso(self.all_clear_at),
+            "all_clear_at": format_utc(self.all_clear_at) if self.all_clear_at else None,
             "detail": self.detail,
         }
-
-
-def _iso(value: datetime | None) -> str | None:
-    if value is None:
-        return None
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")

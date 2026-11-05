@@ -66,6 +66,7 @@ class AlertLifecycleTests(AirSenseTestCase):
         second = self.record(1700, seconds=30)
 
         self.assertEqual(first.status_code, 201)
+        self.assertTrue(first.json["received_at"].endswith("Z"))
         self.assertEqual(
             [alert["level"] for alert in first.json["created"]], ["high"]
         )

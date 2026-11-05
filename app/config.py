@@ -40,6 +40,6 @@ class Config:
         os.environ.get("AIRSENSE_MAX_READING_GAP_SECONDS", "120")
     )
     MAX_FUTURE_SECONDS = int(os.environ.get("AIRSENSE_MAX_FUTURE_SECONDS", "60"))
-    AUTO_CREATE_SCHEMA = os.environ.get("AUTO_CREATE_SCHEMA", "true").lower() == "true"
+    AUTO_CREATE_SCHEMA = os.environ.get("AUTO_CREATE_SCHEMA", "false").lower() == "true"
     API_TOKEN = os.environ.get("AIRSENSE_API_TOKEN", "")
     REQUIRE_API_TOKEN = os.environ.get("REQUIRE_API_TOKEN", "false").lower() == "true"
