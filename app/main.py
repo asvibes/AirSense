@@ -18,6 +18,7 @@ from app.routers.rooms import rooms
 from app.routers.sensor_readings import sensor_readings
 from app.routers.sensors import sensors
 from app.routers.thresholds import thresholds
+from app.routers.uploads import uploads
 from app.security.rate_limit import InMemoryRateLimiter
 
 
@@ -46,6 +47,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         audit,
         demo,
         alerts,
+        uploads,
     ):
         app.register_blueprint(blueprint)
 
