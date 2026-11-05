@@ -192,7 +192,7 @@ footer a:hover{text-decoration:underline}
           <canvas id="tech-text-canvas" aria-hidden="true"></canvas>
         </h1>
         <p class="sub">AirSense turns indoor CO₂ readings into room trends and advisory alerts, so your household knows when to open a window. Simple for families, built carefully for reviewers.</p>
-        <a class="split-flap-cta" href="/register" aria-label="Get Started">
+        <a class="split-flap-cta" href="{{ url_for('auth.login_page') }}" aria-label="Get Started">
           <span class="split-flap-cta__sr">Get Started</span>
           <span class="split-flap-text split-flap-text--minimal" data-split-flap aria-hidden="true"><span class="split-flap-fallback">GET STARTED</span></span>
         </a>
@@ -550,7 +550,7 @@ window.addEventListener('pointermove',onPointerMove,{passive:true});window.addEv
 window.addEventListener('pointerup',onPointerUp,{passive:true});window.addEventListener('pointercancel',onPointerUp,{passive:true});
 document.documentElement.addEventListener('pointerleave',onLeave);document.addEventListener('visibilitychange',onVisibility);canvas.addEventListener('webglcontextlost',onLost);
 resize();wake();
-window.addEventListener('pagehide',function(){
+window.addEventListener('pagehide',function(event){if(event.persisted)return;
   disposed=true;cancelAnimationFrame(raf);resizeObserver.disconnect();intersection.disconnect();
   window.removeEventListener('pointermove',onPointerMove);window.removeEventListener('pointerdown',onPointerDown);
   window.removeEventListener('pointerup',onPointerUp);window.removeEventListener('pointercancel',onPointerUp);
@@ -661,7 +661,7 @@ if(!reduced){
   if('IntersectionObserver' in window){introObserver=new IntersectionObserver(function(entries){if(entries.some(function(entry){return entry.isIntersecting;})){introObserver.disconnect();startAutoSweep();}},{threshold:.25});introObserver.observe(container);}
   else startAutoSweep();
 }
-window.addEventListener('pagehide',function(){alive=false;cancelAnimationFrame(raf);resizeObserver.disconnect();introObserver&&introObserver.disconnect();canvas.removeEventListener('pointermove',onMove);canvas.removeEventListener('pointerdown',onDown);canvas.removeEventListener('pointerup',onUp);canvas.removeEventListener('pointercancel',onUp);canvas.removeEventListener('pointerleave',onLeave);},{once:true});
+window.addEventListener('pagehide',function(event){if(event.persisted)return;alive=false;cancelAnimationFrame(raf);resizeObserver.disconnect();introObserver&&introObserver.disconnect();canvas.removeEventListener('pointermove',onMove);canvas.removeEventListener('pointerdown',onDown);canvas.removeEventListener('pointerup',onUp);canvas.removeEventListener('pointercancel',onUp);canvas.removeEventListener('pointerleave',onLeave);},{once:true});
 })();
 
 </script>
@@ -713,7 +713,7 @@ var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduc
 if(reduced){textNode.textContent=text[0];cursor.classList.add('text-type__cursor--hidden');}
 else schedule(step,0);
 window.addEventListener('resize',updateCursor,{passive:true});
-window.addEventListener('pagehide',function(){alive=false;clearTimeout(timer);window.removeEventListener('resize',updateCursor);},{once:true});
+window.addEventListener('pagehide',function(event){if(event.persisted)return;alive=false;clearTimeout(timer);window.removeEventListener('resize',updateCursor);},{once:true});
 })();
 
 </script>
@@ -730,7 +730,7 @@ function move(event){var box=root.getBoundingClientRect();state.tx=event.clientX
 function leave(){state.target=0;wake();}
 root.addEventListener('pointermove',move,{passive:true});root.addEventListener('pointerdown',move,{passive:true});root.addEventListener('pointerleave',leave,{passive:true});root.addEventListener('pointercancel',leave,{passive:true});
 var observer=new ResizeObserver(place);observer.observe(root);place();
-window.addEventListener('pagehide',function(){cancelAnimationFrame(raf);observer.disconnect();root.removeEventListener('pointermove',move);root.removeEventListener('pointerdown',move);root.removeEventListener('pointerleave',leave);root.removeEventListener('pointercancel',leave);},{once:true});
+window.addEventListener('pagehide',function(event){if(event.persisted)return;cancelAnimationFrame(raf);observer.disconnect();root.removeEventListener('pointermove',move);root.removeEventListener('pointerdown',move);root.removeEventListener('pointerleave',leave);root.removeEventListener('pointercancel',leave);},{once:true});
 })();
 </script>
 <script>
@@ -766,7 +766,7 @@ if('IntersectionObserver' in window){
 }else{state.visible=true;}
 paint();wake();
 function cleanup(){alive=false;cancelAnimationFrame(raf);if(observer)observer.disconnect();}
-window.addEventListener('pagehide',cleanup,{once:true});
+window.addEventListener('pagehide',function(event){if(event.persisted)return;cleanup();},{once:true});
 })();
 </script>
 <script>
@@ -817,7 +817,7 @@ measure();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(meas
 var observer=null;
 if('IntersectionObserver' in window){observer=new IntersectionObserver(function(entries){visible=entries.some(function(entry){return entry.isIntersecting;});if(visible)wake();else if(raf){cancelAnimationFrame(raf);raf=0;last=0;}});observer.observe(root);}
 if(!reduced)wake();
-window.addEventListener('pagehide',function(){alive=false;cancelAnimationFrame(raf);if(observer)observer.disconnect();root.removeEventListener('pointerenter',enter);root.removeEventListener('pointerleave',leave);},{once:true});
+window.addEventListener('pagehide',function(event){if(event.persisted)return;alive=false;cancelAnimationFrame(raf);if(observer)observer.disconnect();root.removeEventListener('pointerenter',enter);root.removeEventListener('pointerleave',leave);},{once:true});
 })();
 </script>
 <script>
@@ -860,7 +860,7 @@ function makeState(root){
   states.push(st);
 }
 rows.forEach(makeState);
-window.addEventListener('pagehide',function(){states.forEach(function(st){cancelAnimationFrame(st.raf);st.root.removeEventListener('pointerenter',st.move);st.root.removeEventListener('pointermove',st.move);st.root.removeEventListener('pointerleave',st.leave);});},{once:true});
+window.addEventListener('pagehide',function(event){if(event.persisted)return;states.forEach(function(st){cancelAnimationFrame(st.raf);st.root.removeEventListener('pointerenter',st.move);st.root.removeEventListener('pointermove',st.move);st.root.removeEventListener('pointerleave',st.leave);});},{once:true});
 })();
 </script>
 <script>
@@ -935,7 +935,24 @@ root.textContent='';
 for(var j=0;j<width;j++)createTile();
 if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){for(var k=0;k<width;k++)paintTile(k,phrase[k],phrase[k],false);}
 else if(intro)animateIntro(phrase);else{for(var j2=0;j2<width;j2++)paintTile(j2,phrase[j2],phrase[j2],false);}
-window.addEventListener('pagehide',function(){cancelled=true;cancelAnimationFrame(raf);},{once:true});
+window.addEventListener('pagehide',function(event){if(event.persisted)return;cancelled=true;cancelAnimationFrame(raf);},{once:true});
+})();
+</script>
+<script>
+(function(){
+'use strict';
+function onPageShow(event){
+  if(!event.persisted)return;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    window.dispatchEvent(new Event('resize'));
+    var trigger=window.ScrollTrigger;
+    if(!trigger&&window.gsap&&window.gsap.core&&typeof window.gsap.core.globals==='function'){
+      var globals=window.gsap.core.globals();trigger=globals&&globals.ScrollTrigger;
+    }
+    if(trigger&&typeof trigger.refresh==='function')trigger.refresh(true);
+  });});
+}
+window.addEventListener('pageshow',onPageShow);
 })();
 </script>
 </body>

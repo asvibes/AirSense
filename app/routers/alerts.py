@@ -62,9 +62,7 @@ def require_api_token():
     return None
 
 
-@alerts.get("/")
-def index():
-    return redirect(url_for("alerts.alerts_page"))
+
 
 
 @alerts.get("/alerts")

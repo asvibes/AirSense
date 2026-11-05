@@ -60,4 +60,9 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         get_session().execute(text("SELECT 1"))
         return {"status": "ok"}
 
+    @app.get("/")
+    def landing():
+        from flask import render_template
+        return render_template("landing.html")
+
     return app
