@@ -59,13 +59,17 @@ Features include:
 * **Threshold configuration:** Persist per-room CO₂ threshold settings.
 * **History and export:** View history charts, a 90-day coverage heatmap, and export readings as CSV.
 * **Household management:** Owners can invite members and review activity history.
+* **Room photos:** Authenticated home members can upload, view, and delete private JPEG, PNG, or WebP room photos (maximum 5 MB each).
 * **Simulation:** Submit simulated readings to the server-side alert pipeline.
 * **DALTON replay:** Upload a processed DALTON CSV and replay valid CO₂ samples through that same alert pipeline. Samples are labeled as recorded data; timestamps can be shifted for a current demo.
+* **AirGradient:** Provisioned devices can push their `rco2` CO₂ value to the existing device-authenticated reading endpoint.
 * **Appearance:** Persist the light/dark theme preference.
 
 The browser interface uses plain HTML, CSS, and vanilla JavaScript. No separate frontend build or third-party browser package is required.
 
-Invitation links are single-use and expire after seven days. Email delivery is not configured, so invitation links must be shared manually.
+Invitation links are single-use and expire after seven days. Email is never sent; invitation details are logged only when `APP_ENV=development`, and the link must be shared manually.
+
+Room photos are stored outside Flask's public static directory under `instance\private_uploads` by default. Set `AIRSENSE_PRIVATE_UPLOAD_FOLDER` to a private persistent directory in deployments where the application filesystem is ephemeral. Photo routes verify home membership and that the room belongs to the requested home.
 
 DALTON source data is not bundled. In the Demo Lab, upload a processed CSV (up to 16 MB) containing `ts`, `CO2`, and `Valid_CO2`. The app imports valid CO₂ rows only, up to 1,000 per replay. The default timestamp shift makes the newest sample recent while preserving the spacing between samples; turn it off to retain original timestamps. See [DALTON replay notes](docs/dalton-notes.md).
 
@@ -74,6 +78,7 @@ DALTON source data is not bundled. In the Demo Lab, upload a processed CSV (up t
 Account and home API routes use the signed-in session. Authenticated `POST`, `PUT`, `PATCH`, and `DELETE` requests require the `X-CSRF-Token` header. The dashboard obtains the token from the server-rendered page.
 
 Device ingestion uses the `X-Device-Key` header for sensor authentication.
+AirGradient device push payloads containing `rco2` are normalized to CO₂ ppm and use this same authenticated route, validation, rejection, and reading-processing path.
 
 | Endpoint                                                   | Purpose                                                           |
 | ---------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -92,6 +97,9 @@ Device ingestion uses the `X-Device-Key` header for sensor authentication.
 | `POST /api/homes/{home_id}/sensors/{sensor_id}/rotate-key` | Rotate a sensor's device key.                                     |
 | `POST /api/homes/{home_id}/sensors/{sensor_id}/revoke`     | Revoke a sensor.                                                  |
 | `POST /api/sensors/{sensor_id}/readings`                   | Submit validated sensor readings using `X-Device-Key`.            |
+| `POST /api/homes/{home_id}/rooms/{room_id}/photos`          | Upload a private JPEG, PNG, or WebP room photo as multipart `photo`. |
+| `GET /api/homes/{home_id}/rooms/{room_id}/photos/{filename}`| Retrieve an authorized room photo.                                 |
+| `DELETE /api/homes/{home_id}/rooms/{room_id}/photos/{filename}` | Delete an authorized room photo.                                |
 | `POST /api/homes/{home_id}/demo/readings`                  | Submit simulated readings through the server-side alert pipeline. |
 | `GET /api/homes/{home_id}/dashboard`                       | Retrieve dashboard data for a home.                               |
 | `GET /api/homes/{home_id}/rooms`                           | Retrieve room data.                                               |
@@ -132,7 +140,14 @@ Separate Azure SQL target-schema scripts and their application order are documen
 Run the integration tests:
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+Create a demo home for an existing account (after applying migrations):
+
+```powershell
+python tools/seed_demo_home.py --email owner@example.com
 ```
 
 Apply migrations:

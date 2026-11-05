@@ -3,7 +3,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request, url_for
 from sqlalchemy import select
 
 from app.db import get_session
@@ -12,6 +12,7 @@ from app.models.user import HomeInvitation, HomeMembership, User
 from app.schemas.auth import AuthInputError, validate_email
 from app.security.sessions import current_user, list_user_homes, require_home_role, require_user
 from app.services.audit import record_event
+from app.services.email import send_invitation_email
 
 
 homes = Blueprint("homes", __name__)
@@ -136,6 +137,11 @@ def invite_member(home_id: str):
         details={"email": email, "expires_at": invitation.expires_at.isoformat()},
     )
     db.commit()
+    send_invitation_email(
+        recipient=email,
+        invitation_url=url_for("homes.invitation_page", token=invitation_token),
+        expires_at=invitation.expires_at,
+    )
     return jsonify(
         invitation={
             "id": invitation.id,
@@ -143,7 +149,10 @@ def invite_member(home_id: str):
             "role": invitation.role,
             "expires_at": invitation.expires_at.isoformat(),
             "token": invitation_token,
-            "delivery": "Copy this one-time code to the invited person. Email delivery is not configured.",
+            "delivery": (
+                "No email is sent. The invitation is logged only in development; "
+                "copy the one-time code to the invited person."
+            ),
         }
     ), 201
 

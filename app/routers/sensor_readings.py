@@ -8,6 +8,10 @@ from app.security.device_keys import verify_device_key
 from app.services.ingestion.ingest import ingest_reading
 from app.services.ingestion.rejections import record_rejection
 from app.services.ingestion.validate import ReadingValidationError, validate_reading
+from app.sources.airgradient import (
+    is_airgradient_payload,
+    normalize_airgradient_payload,
+)
 
 
 sensor_readings = Blueprint("sensor_readings", __name__)
@@ -35,6 +39,11 @@ def ingest_sensor_reading(sensor_id: str):
         return jsonify(error="A valid active sensor key is required."), 401
     payload = request.get_json(silent=True)
     try:
+        if is_airgradient_payload(payload):
+            payload = normalize_airgradient_payload(
+                payload,
+                room_name=sensor.room.name,
+            )
         reading = validate_reading(payload)
         if reading["room"] != sensor.room.name:
             raise ReadingValidationError("Reading room does not match the provisioned sensor room.")
