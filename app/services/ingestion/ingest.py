@@ -18,7 +18,9 @@ def ingest_reading(
     max_future_seconds: int,
     actor_user_id: str | None,
     sensor_id: str | None = None,
+    commit: bool = True,
 ) -> dict:
+    received_at = datetime.now(timezone.utc)
     reading = validate_reading(payload)
     result = process_reading(
         session,
@@ -30,9 +32,11 @@ def ingest_reading(
         value=reading["value"],
         source=source,
         measured_at=reading["measured_at"],
+        received_at=received_at,
         defaults=defaults,
         max_future_seconds=max_future_seconds,
         sensor_id=sensor_id,
+        actor_user_id=actor_user_id,
     )
     if sensor_id:
         from app.models.sensor import Sensor
@@ -49,5 +53,6 @@ def ingest_reading(
         entity_id=str(result["reading_id"]),
         details={"source": source, "metric": reading["metric"]},
     )
-    session.commit()
+    if commit:
+        session.commit()
     return result

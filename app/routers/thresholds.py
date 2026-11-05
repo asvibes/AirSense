@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
 
 from app.db import get_session
+from app.json_request import require_json_object
 from app.models.metric import Metric
 from app.models.room import Room
 from app.models.threshold import ThresholdPolicy
@@ -116,7 +117,7 @@ def update_thresholds(home_id: str):
 @require_user()
 def update_threshold(home_id: str, room_id: str, metric_code: str):
     require_home_role(home_id, "owner")
-    payload = request.get_json(silent=True) or {}
+    payload = require_json_object()
     try:
         values = {
             "high_threshold": _number(payload, "high_threshold"),

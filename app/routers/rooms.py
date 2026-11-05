@@ -2,6 +2,7 @@ import uuid
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.db import get_session
 from app.models.reading import Reading
@@ -11,6 +12,7 @@ from app.models.threshold import ThresholdPolicy
 from app.security.sessions import current_user, require_home_role, require_user
 from app.services.audit import record_event
 from app.services.freshness import sensor_freshness
+from app.timestamps import format_utc
 
 
 rooms = Blueprint("rooms", __name__)
@@ -93,7 +95,8 @@ def list_rooms(home_id: str):
                         "value": reading.value,
                         "unit": _metric_unit(db, reading.metric_code),
                         "source": reading.source,
-                        "measured_at": reading.measured_at.isoformat(),
+                        "measured_at": format_utc(reading.measured_at),
+                        "received_at": format_utc(reading.received_at),
                     }
                     for reading in latest_by_metric.values()
                 ],
@@ -174,6 +177,99 @@ def create_room(home_id: str):
             "ventilation_sources": room.ventilation_sources,
         }
     ), 201
+
+
+@rooms.patch("/api/homes/<home_id>/rooms/<room_id>")
+@require_user()
+def update_room(home_id: str, room_id: str):
+    require_home_role(home_id, "owner")
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify(error="Request body must be a JSON object."), 400
+
+    has_name = "name" in payload
+    has_sources = "ventilation_sources" in payload
+    has_legacy_ventilation = "ventilation" in payload
+    if not has_name and not has_sources and not has_legacy_ventilation:
+        return jsonify(error="Provide a room name or ventilation sources to update."), 400
+
+    name = None
+    if has_name:
+        name = payload["name"]
+        if not isinstance(name, str) or not name.strip() or len(name.strip()) > 100:
+            return jsonify(error="name must contain 1 to 100 characters."), 400
+        name = name.strip()
+
+    if has_sources:
+        source_input = payload["ventilation_sources"]
+    elif has_legacy_ventilation:
+        legacy_value = payload["ventilation"]
+        source_input = [legacy_value] if isinstance(legacy_value, str) else legacy_value
+    else:
+        source_input = None
+
+    ventilation_sources = (
+        _normalize_ventilation_sources(source_input)
+        if has_sources or has_legacy_ventilation
+        else None
+    )
+    if (has_sources or has_legacy_ventilation) and ventilation_sources is None:
+        return jsonify(
+            error="Choose valid ventilation sources. “Not specified” must be selected by itself, and custom sources need a description."
+        ), 400
+
+    db = get_session()
+    room = db.scalar(
+        select(Room).where(Room.id == room_id, Room.home_id == home_id)
+    )
+    if room is None:
+        return jsonify(error="Room not found."), 404
+
+    if name is not None:
+        duplicate = db.scalar(
+            select(Room.id).where(
+                Room.home_id == home_id,
+                Room.id != room_id,
+                Room.name.ilike(name),
+            )
+        )
+        if duplicate:
+            return jsonify(error="A room with this name already exists."), 409
+        room.name = name
+
+    if ventilation_sources is not None:
+        room.ventilation_sources = ventilation_sources
+        room.ventilation = ", ".join(ventilation_sources)
+
+    changed_fields = []
+    if has_name:
+        changed_fields.append("name")
+    if has_sources or has_legacy_ventilation:
+        changed_fields.append("ventilation_sources")
+
+    record_event(
+        db,
+        home_id=home_id,
+        actor_user_id=current_user().id,
+        event_type="room.updated",
+        entity_type="room",
+        entity_id=room.id,
+        details={"changed_fields": changed_fields},
+    )
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return jsonify(error="A room with this name already exists."), 409
+
+    return jsonify(
+        room={
+            "id": room.id,
+            "name": room.name,
+            "ventilation": room.ventilation,
+            "ventilation_sources": room.ventilation_sources,
+        }
+    )
 
 
 def _metric_unit(db, metric_code: str) -> str:

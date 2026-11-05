@@ -19,6 +19,31 @@ auth = Blueprint("auth", __name__)
 _DUMMY_PASSWORD_HASH = generate_password_hash("not-a-real-account-password", method="scrypt")
 
 
+def _record_user_auth_event(
+    db,
+    user_id: str,
+    event_type: str,
+    details: dict | None = None,
+    *,
+    actor_user_id: str | None = None,
+) -> None:
+    home_ids = db.scalars(
+        select(HomeMembership.home_id)
+        .where(HomeMembership.user_id == user_id)
+        .order_by(HomeMembership.home_id)
+    )
+    for home_id in home_ids:
+        record_event(
+            db,
+            home_id=home_id,
+            actor_user_id=actor_user_id,
+            event_type=event_type,
+            entity_type="user",
+            entity_id=user_id,
+            details=details,
+        )
+
+
 def _payload() -> dict:
     if request.is_json:
         body = request.get_json(silent=True)
@@ -114,6 +139,7 @@ def register():
             HomeMembership(home_id=home.id, user_id=user.id, role="owner"),
         ]
     )
+    db.flush()
     record_event(
         db,
         home_id=home.id,
@@ -153,12 +179,23 @@ def login():
         return _auth_error("Email or password is incorrect.", 401)
 
     user = get_session().scalar(select(User).where(User.email == email))
-    if (
-        user is None
-        or not user.is_active
-        or not verify_password(user.password_hash if user else _DUMMY_PASSWORD_HASH, password)
+    if user is None or not user.is_active or not verify_password(
+        user.password_hash if user else _DUMMY_PASSWORD_HASH, password
     ):
+        if user is not None:
+            _record_user_auth_event(
+                get_session(),
+                user.id,
+                "account.login_failed",
+                {"reason": "invalid_credentials"},
+            )
+            get_session().commit()
         return _auth_error("Email or password is incorrect.", 401)
+    db = get_session()
+    _record_user_auth_event(
+        db, user.id, "account.login_succeeded", actor_user_id=user.id
+    )
+    db.commit()
     session.clear()
     session["user_id"] = user.id
     session.permanent = True
@@ -174,11 +211,17 @@ def login():
 @auth.post("/api/auth/logout")
 @auth.post("/logout")
 def logout():
-    if current_user() is None:
+    user = current_user()
+    if user is None:
         return jsonify(error="Authentication is required."), 401
     from app.security.sessions import verify_csrf
 
     verify_csrf()
+    db = get_session()
+    _record_user_auth_event(
+        db, user.id, "account.logged_out", actor_user_id=user.id
+    )
+    db.commit()
     session.clear()
     if request.is_json or request.path.startswith("/api/"):
         return jsonify(status="signed_out")

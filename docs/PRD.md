@@ -1,33 +1,44 @@
 # AirSense implementation status
 
-The attached AirSense PRD (`AirSense PRD.docx`, dated October 26, 2026) is the authoritative product specification. The [AirSense Product Requirements Document](./product-requirements.md) records the proposed product scope and target architecture. This document tracks the Must-have scope implemented in the current branch; proposed requirements and target services must not be treated as completed work.
+## Status and source of truth
 
-## Implemented Must-have flows
+[product-requirements.md](product-requirements.md) describes the proposed product and submission target; it is not evidence that every requirement is implemented. This document summarizes the current local Flask application. Azure deployment, Power BI, Blob Storage, and other cloud services are not represented as complete.
 
-| Requirement | Current behavior |
-| --- | --- |
-| Registration and login | Accounts use validated email addresses and scrypt-hashed passwords. Successful registration creates an owner account and its first home. |
-| Household access | Home membership is checked on home-scoped routes. Owners can invite members by single-use token; invited users must sign in with the invited email. Members can view the home's members and readings. |
-| Sensor setup | Owners provision sensors for rooms, receive a one-time device key, rotate keys, and revoke sensors. Only a peppered key hash is stored. |
-| Reading ingestion | Device-key-authenticated sensor readings and signed-in simulator readings are validated and sent through the alert processing path. Sensor last-seen data drives freshness state. |
-| Demo lab | Choose a room, submit a custom CO₂ value or alert scenario, and upload up to 1,000 valid CO₂ rows from a processed DALTON CSV through the same alert pipeline. |
-| Room dashboard | The authenticated dashboard loads the selected home's rooms, latest readings, open alerts, and sensor freshness from the backend. Room ventilation notes are persisted. |
-| Thresholds | Owners can update per-room CO₂ threshold settings in a single validated batch. Members may view settings. Default values remain illustrative, not health guidance. |
-| History and export | Home-scoped history supports date, room, metric, CSV export, daily average bars, and a 90-day reading-coverage heatmap. |
-| Audit history | Owner-only activity lists recorded home events, including account, room, invitation, threshold, sensor, and ingestion actions. Device keys and passwords are not recorded. |
-| Alert lifecycle | High, sustained elevated, rapid-rise, acknowledgement, duplicate suppression, and all-clear behavior are persisted through the existing alert pipeline. |
+The latest full local test run passed **77 tests and 64 subtests**. Tests cover selected routes, services, database constraints/defaults, audit behavior, timestamps, CSV export safety, migration upgrade/downgrade on disposable SQLite databases, and an API-level end-to-end database workflow. There is no automated browser E2E result, PostgreSQL integration result, or cloud deployment/integration test result.
 
-The dashboard frontend is served by Flask with vanilla JavaScript and uses same-origin authenticated APIs. Mutating account/home requests require a CSRF token. The frontend no longer relies on local mock collections for these views.
+## Implemented local functionality
 
-## Out of scope or remaining limitations
+| Area | Current implementation |
+|---|---|
+| Authentication | Registration, login, logout, session cookies, CSRF protection for authenticated mutations, and Werkzeug scrypt password hashes. Registration creates an owner and first home. |
+| Household authorization | Home-scoped `owner` and `member` roles are checked server-side. Owners manage invitations, sensors, rooms creation, and thresholds; members can view household data and submit simulator readings. |
+| Invitations | Owners create single-use, expiring invitations; acceptance is limited to the invited email. Delivery is manual; no email service is configured. |
+| Sensors | Owners provision sensors for rooms, receive a one-time device key, rotate keys, or revoke sensors. The application stores a peppered key hash. |
+| Ingestion | Device-key-authenticated readings and signed-in simulator/DALTON readings are validated and processed through threshold/alert logic. Sensor last-seen data feeds freshness state. |
+| Demo lab | Custom/scenario readings and processed DALTON CSV replay are supported; replay is limited to 1,000 valid CO₂ rows and labels imported data as dataset/recorded. Dataset files are not bundled. |
+| Dashboard | Flask serves an authenticated HTML/vanilla-JavaScript interface using same-origin APIs. It presents rooms, readings, alerts, sensor freshness, thresholds, members/activity, history charts/filters, CSV export, coverage heatmap, and simulator/replay actions. |
+| Thresholds and alerts | Per-room CO₂ policy reads/updates; high, sustained elevated, rapid-rise, duplicate suppression, acknowledgement, and all-clear behavior. Threshold values are illustrative, not health guidance. |
+| Audit | Registration, known-account login success/failure, logout, home/room/membership/invitation, sensor, threshold, reading rejection/ingestion, and alert lifecycle events are recorded in applicable home logs. Audit details avoid passwords and raw device/invitation secrets. |
+| Database | SQLAlchemy models/Alembic revisions cover 11 application tables: homes, accounts/memberships/invitations, rooms, sensors, metrics, threshold policies, readings, alerts, and audit logs. Local SQLite is at revision `20261105_0004`; `received_at` is present and nullable. SQLite integrity/FK checks pass and current row counts match the pre-migration backup. Same-home consistency across independently referenced home/room/sensor IDs is not enforced by composite database constraints. |
 
-* DALTON source data is not bundled. Replay requires a user-provided processed CSV and is clearly labeled as recorded data, not a live sensor reading.
-* Email delivery is not configured; invitations must be copied and shared manually.
-* Automatic vendor integrations, live sensor discovery, and push/WebSocket updates are not implemented.
-* The rate limiter is process-local and must be replaced with shared storage for multi-worker deployments.
-* Threshold defaults do not have persisted authoritative citations. Confirm units, sensor range, and external guidance before any use beyond a demonstration.
-* Additional Should/Could/Stretch features (critical alarm mode, room photos, and broader device integrations) remain out of scope.
+## Incomplete local PRD requirements
 
-Alembic migrations manage the shared SQLite/PostgreSQL schema in `migrations/versions/`. The empty files in older `database/` and `app/templates/` folders are legacy placeholders, not migrations or active application surfaces.
+- **Room management:** The owner-authorized room update API and dashboard editing for room name and ventilation sources are implemented. Room deletion is not implemented.
+- **Role model:** Only home-scoped `owner` and `member` roles exist. The proposed standard-user/facility-manager/administrator roles, global administration, and role-change workflow are not implemented.
+- **Reading receipt time:** `air_readings` persists `measured_at` and nullable `received_at`. New readings receive a server-generated UTC timestamp when they enter the shared ingestion service. Existing rows are not backfilled and retain a null receipt time.
+- **Audit edge cases:** Known-account failed sign-ins, successful sign-ins, and logout are audited against that user's homes. Unknown-account failures have no home-scoped event. Role-change events cannot exist until role changes are implemented.
+- **Browser verification:** The UI calls the backend in code, but no automated or recorded browser E2E verification has been completed.
+- **Schema/documentation deliverables:** [data-model.md](data-model.md) documents the active ORM schema, but no completed ER diagram, project-specific threat model, or data-classification note is present.
+- **Transaction rollback evidence:** A forced later-row validation failure in DALTON replay is tested to roll back the batch's readings and alerts and leave no partial ingestion/alert audit events. Forced database failures across all individual ingestion paths are not tested.
+- **Threshold provenance:** Defaults are illustrative and authoritative citations are not persisted.
+
+## Deferred cloud and submission requirements
+
+- **Azure hosting and database:** No cloud deployment is claimed. SQLite is the local default; PostgreSQL URL handling exists, but PostgreSQL compatibility has not been integration-tested. Separate SQL Server scripts under `database/migrations/` do not configure the active Flask app's Alembic schema.
+- **Database migration verification:** The active Alembic chain has one head, `20261105_0004`. Fresh upgrade, upgrade from `20261028_0003`, and downgrade/re-upgrade are tested using disposable SQLite databases only. Downgrading the receipt-time revision drops the `received_at` column and any values in it.
+- **Blob Storage:** No active integration; DALTON uploads are processed in memory and CSV export is streamed.
+- **Power BI:** `database/powerbi/airsense-report.pbix` is a zero-byte placeholder; no finished report or connection exists.
+- **Deployment security evidence:** HTTPS, security headers, hosted database network restrictions, least-privilege hosted identity, private Blob access, and Azure resource evidence remain unconfigured/unverified.
+- **Operational extensions:** Email delivery, automatic vendor integrations/live discovery, push/WebSocket updates, room photos, and installable/offline PWA behavior are not current features.
 
 AirSense supports ventilation decisions; it is not a medical or safety device and does not replace a certified carbon monoxide alarm.

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -18,7 +18,9 @@ class AuditLog(Base):
     event_type: Mapped[str] = mapped_column(String(80), nullable=False)
     entity_type: Mapped[str] = mapped_column(String(40), nullable=False)
     entity_id: Mapped[str | None] = mapped_column(String(64))
-    details_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    details_json: Mapped[str] = mapped_column(
+        Text, nullable=False, default="{}", server_default=text("'{}'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

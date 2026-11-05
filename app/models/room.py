@@ -23,6 +23,6 @@ class Room(Base):
         String(80), nullable=False, default="Not specified", server_default="Not specified"
     )
     ventilation_sources: Mapped[list[str]] = mapped_column(
-        JSON, nullable=False, default=list
+        JSON, nullable=False, default=list, server_default=text("'[]'")
     )
     home: Mapped["Home"] = relationship(back_populates="rooms")

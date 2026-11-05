@@ -10,8 +10,10 @@ from app.db import get_session
 from app.models.room import Room
 from app.security.sessions import current_user, require_home_role, require_user
 from app.services.ingestion.ingest import ingest_reading
+from app.services.ingestion.rejections import record_rejection
 from app.sources.dalton_replay import load_dalton_csv
 from app.sources.simulator import build_simulated_reading
+from app.timestamps import format_utc
 
 
 demo = Blueprint("demo", __name__)
@@ -52,7 +54,16 @@ def submit_demo_reading(home_id: str):
             actor_user_id=current_user().id,
         )
     except ValueError as error:
-        get_session().rollback()
+        session = get_session()
+        session.rollback()
+        record_rejection(
+            session,
+            home_id=home_id,
+            sensor_id=None,
+            source="simulated",
+            actor_user_id=current_user().id,
+        )
+        session.commit()
         return jsonify(error=str(error)), 400
     return jsonify(result), 201
 
@@ -111,29 +122,41 @@ def submit_dalton_replay(home_id: str):
         offset = datetime.now(timezone.utc) - latest_timestamp
         for row in rows:
             measured_at = datetime.fromisoformat(row["measured_at"])
-            row["measured_at"] = (measured_at + offset).isoformat()
+            row["measured_at"] = format_utc(measured_at + offset)
 
     session = get_session()
     created = []
-    for row in rows:
-        try:
-            created.append(
-                ingest_reading(
-                    session,
-                    home_id=home_id,
-                    home_name="",
-                    payload=row,
-                    source="dataset",
-                    defaults=_policy_defaults(),
-                    max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
-                    actor_user_id=current_user().id,
+    try:
+        with session.begin_nested():
+            for row in rows:
+                created.append(
+                    ingest_reading(
+                        session,
+                        home_id=home_id,
+                        home_name="",
+                        payload=row,
+                        source="dataset",
+                        defaults=_policy_defaults(),
+                        max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
+                        actor_user_id=current_user().id,
+                        commit=False,
+                    )
                 )
-            )
-        except ValueError as error:
-            session.rollback()
-            return jsonify(error=f"Failed on DALTON row: {error}"), 400
-
-    session.commit()
+        session.commit()
+    except ValueError as error:
+        session.rollback()
+        record_rejection(
+            session,
+            home_id=home_id,
+            sensor_id=None,
+            source="dataset",
+            actor_user_id=current_user().id,
+        )
+        session.commit()
+        return jsonify(error=f"Failed on DALTON row: {error}"), 400
+    except Exception:
+        session.rollback()
+        raise
     return jsonify(
         {
             "source": "dalton_replay",

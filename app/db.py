@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from flask import current_app, g
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
@@ -10,6 +10,12 @@ from sqlalchemy.pool import NullPool
 from app.models import alert, audit, home, metric, reading, room, sensor, threshold, user
 from app.models.base import Base
 from app.models.metric import Metric
+
+
+def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 
 def _engine() -> Engine:
@@ -42,6 +48,8 @@ def init_db(app) -> None:
         if url.get_backend_name() == "sqlite"
         else {},
     )
+    if url.get_backend_name() == "sqlite":
+        event.listen(engine, "connect", _enable_sqlite_foreign_keys)
     app.extensions["airsense_engine"] = engine
     if app.config.get("AUTO_CREATE_SCHEMA"):
         with app.app_context():

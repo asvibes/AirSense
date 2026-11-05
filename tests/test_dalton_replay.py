@@ -1,8 +1,14 @@
 import csv
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from io import BytesIO, StringIO
 from pathlib import Path
 
+from sqlalchemy import select
+
+from app.db import get_session
+from app.models.alert import Alert
+from app.models.audit import AuditLog
+from app.models.reading import Reading
 from app.sources.dalton_replay import load_dalton_csv
 from tests.helpers import AirSenseTestCase
 
@@ -78,10 +84,39 @@ class DaltonReplayTests(AirSenseTestCase):
         self.assertEqual(response.get_json()["source"], "dalton_replay")
         self.assertFalse(response.get_json()["timestamps_shifted"])
         self.assertEqual(response.get_json()["source_file"], "replay.csv")
+        with self.app.app_context():
+            session = get_session()
+            readings = list(
+                session.scalars(
+                    select(Reading).where(
+                        Reading.home_id == self.home_id,
+                        Reading.room_id == room["id"],
+                    )
+                )
+            )
+            rejection_events = list(
+                session.scalars(
+                    select(AuditLog).where(
+                        AuditLog.home_id == self.home_id,
+                        AuditLog.event_type == "reading.rejected",
+                    )
+                )
+            )
+        self.assertEqual(len(readings), 2)
+        self.assertEqual(rejection_events, [])
         self.assertEqual(
             response.get_json()["created"][0]["measured_at"],
             "2023-06-10T00:00:00Z",
         )
+        for imported in response.get_json()["created"]:
+            self.assertTrue(imported["received_at"].endswith("Z"))
+            received_at = datetime.fromisoformat(
+                imported["received_at"].replace("Z", "+00:00")
+            )
+            self.assertLessEqual(
+                abs((datetime.now(timezone.utc) - received_at).total_seconds()),
+                2,
+            )
         dashboard = self.client.get(
             f"/api/homes/{self.home_id}/dashboard"
         )
@@ -89,6 +124,142 @@ class DaltonReplayTests(AirSenseTestCase):
         latest_reading = dashboard.get_json()["readings"][0]
         self.assertEqual(latest_reading["source"], "dataset")
         self.assertEqual(latest_reading["value"], 1100)
+
+    def test_replay_rolls_back_readings_alerts_and_audit_if_later_row_fails(self):
+        room = self.create_room("Bedroom")
+        first_timestamp = datetime.now(timezone.utc) - timedelta(minutes=2)
+        future_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
+        csv_content = (
+            "ts,CO2,Valid_CO2,Loc\n"
+            f"{first_timestamp.strftime('%Y-%m-%d %H:%M:%S')},1800,1,Bedroom\n"
+            f"{future_timestamp.strftime('%Y-%m-%d %H:%M:%S')},1700,1,Bedroom\n"
+        )
+
+        response = self.client.post(
+            f"/api/homes/{self.home_id}/demo/replay",
+            data={
+                "room_id": room["id"],
+                "limit": "10",
+                "shift_timestamps": "false",
+                "csv_file": (BytesIO(csv_content.encode()), "failing-replay.csv"),
+            },
+            headers={"X-CSRF-Token": self.csrf},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 400, response.get_json())
+        self.assertIn("Failed on DALTON row", response.get_json()["error"])
+        self.assertIn("cannot be in the future", response.get_json()["error"])
+
+        with self.app.app_context():
+            session = get_session()
+            self.assertEqual(
+                list(
+                    session.scalars(
+                        select(Reading).where(
+                            Reading.home_id == self.home_id,
+                            Reading.room_id == room["id"],
+                        )
+                    )
+                ),
+                [],
+            )
+            self.assertEqual(
+                list(
+                    session.scalars(
+                        select(Alert).where(
+                            Alert.home_id == self.home_id,
+                            Alert.room_id == room["id"],
+                        )
+                    )
+                ),
+                [],
+            )
+            reading_events = list(
+                session.scalars(
+                    select(AuditLog).where(
+                        AuditLog.home_id == self.home_id,
+                        AuditLog.event_type.in_(
+                            ("reading.ingested", "alert.created")
+                        ),
+                    )
+                )
+            )
+            self.assertEqual(reading_events, [])
+            rejection_events = list(
+                session.scalars(
+                    select(AuditLog).where(
+                        AuditLog.home_id == self.home_id,
+                        AuditLog.event_type == "reading.rejected",
+                    )
+                )
+            )
+            self.assertEqual(len(rejection_events), 1)
+            self.assertEqual(
+                rejection_events[0].details_json,
+                '{"reason":"invalid_reading","source":"dataset"}',
+            )
+            self.assertIsNotNone(rejection_events[0].actor_user_id)
+            self.assertNotIn("1700", str(rejection_events))
+
+    def test_successful_replay_commits_alerts_and_audit_with_all_readings(self):
+        room = self.create_room("Bedroom")
+        start = datetime.now(timezone.utc) - timedelta(minutes=2)
+        csv_content = (
+            "ts,CO2,Valid_CO2,Loc\n"
+            f"{start.strftime('%Y-%m-%d %H:%M:%S')},1800,1,Bedroom\n"
+            f"{(start + timedelta(seconds=30)).strftime('%Y-%m-%d %H:%M:%S')},1700,1,Bedroom\n"
+        )
+
+        response = self.client.post(
+            f"/api/homes/{self.home_id}/demo/replay",
+            data={
+                "room_id": room["id"],
+                "limit": "10",
+                "shift_timestamps": "false",
+                "csv_file": (BytesIO(csv_content.encode()), "alert-replay.csv"),
+            },
+            headers={"X-CSRF-Token": self.csrf},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 201, response.get_json())
+        self.assertEqual(response.get_json()["imported"], 2)
+        self.assertEqual(response.get_json()["created"][0]["created"][0]["level"], "high")
+        with self.app.app_context():
+            session = get_session()
+            readings = list(
+                session.scalars(
+                    select(Reading).where(
+                        Reading.home_id == self.home_id,
+                        Reading.room_id == room["id"],
+                    )
+                )
+            )
+            alerts = list(
+                session.scalars(
+                    select(Alert).where(
+                        Alert.home_id == self.home_id,
+                        Alert.room_id == room["id"],
+                    )
+                )
+            )
+            events = list(
+                session.scalars(
+                    select(AuditLog.event_type).where(
+                        AuditLog.home_id == self.home_id,
+                        AuditLog.event_type.in_(
+                            ("reading.ingested", "alert.created")
+                        ),
+                    )
+                )
+            )
+        self.assertEqual(len(readings), 2)
+        self.assertEqual(len(alerts), 1)
+        self.assertCountEqual(
+            events,
+            ["reading.ingested", "reading.ingested", "alert.created"],
+        )
 
     def test_demo_replay_shifts_timestamps_and_rejects_missing_file(self):
         room = self.create_room("Bedroom")

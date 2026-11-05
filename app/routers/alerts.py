@@ -35,8 +35,8 @@ from app.repositories.alerts import (
     configure_policy,
     list_alerts,
     list_latest_readings,
-    process_reading,
 )
+from app.services.ingestion.ingest import ingest_reading
 
 
 alerts = Blueprint("alerts", __name__)
@@ -201,29 +201,22 @@ def submit_reading():
         )
         if home is None or room is None:
             return _request_error("Home or room was not found.", 404)
-        reading = process_reading(
+        reading = ingest_reading(
             get_session(),
             home_id=home_id,
             home_name=home.name,
-            room_name=room.name,
-            metric_code=_text(payload, "metric", "CO2", 32),
-            unit=_text(payload, "unit", "ppm", 24),
-            value=_number(payload, "value", payload.get("co2_ppm")),
+            payload={
+                "room": room.name,
+                "metric": _text(payload, "metric", "CO2", 32),
+                "unit": _text(payload, "unit", "ppm", 24),
+                "value": _number(payload, "value", payload.get("co2_ppm")),
+                "measured_at": _timestamp(payload.get("measured_at")).isoformat(),
+            },
             source="simulated",
-            measured_at=_timestamp(payload.get("measured_at")),
             defaults=_policy_defaults(),
             max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
-        )
-        record_event(
-            get_session(),
-            home_id=home_id,
             actor_user_id=current_user().id,
-            event_type="reading.ingested",
-            entity_type="reading",
-            entity_id=str(reading["reading_id"]),
-            details={"source": "simulated", "metric": reading["metric"]},
         )
-        get_session().commit()
     except (TypeError, ValueError) as error:
         return _request_error(str(error), 400)
 
@@ -250,14 +243,11 @@ def acknowledge(alert_id: int):
             raise AlertNotFound(f"Alert {alert_id} was not found.")
         require_home_role(alert_row.home_id, "owner", "member")
         actor = current_user()
-        alert = acknowledge_alert(get_session(), alert_id, actor.display_name)
-        record_event(
+        alert = acknowledge_alert(
             get_session(),
-            home_id=alert_row.home_id,
+            alert_id,
+            actor.display_name,
             actor_user_id=actor.id,
-            event_type="alert.acknowledged",
-            entity_type="alert",
-            entity_id=str(alert_id),
         )
         get_session().commit()
     except InvalidAlertTransition as error:
