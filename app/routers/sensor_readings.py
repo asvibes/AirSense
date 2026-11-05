@@ -5,6 +5,7 @@ from app.db import get_session
 from app.models.metric import Metric
 from app.models.sensor import Sensor
 from app.security.device_keys import verify_device_key
+from app.services.audit import record_event
 from app.services.ingestion.ingest import ingest_reading
 from app.services.ingestion.rejections import record_rejection
 from app.services.ingestion.validate import ReadingValidationError, validate_reading
@@ -26,12 +27,23 @@ def ingest_sensor_reading(sensor_id: str):
     sensor = db.scalar(select(Sensor).where(Sensor.id == sensor_id))
     supplied = request.headers.get("X-Device-Key", "")
     pepper = current_app.config.get("DEVICE_KEY_PEPPER") or current_app.config["SECRET_KEY"]
+    if sensor is None:
+        return jsonify(error="A valid active sensor key is required."), 401
     if (
-        sensor is None
-        or sensor.status != "active"
+        sensor.status != "active"
         or not supplied
         or not verify_device_key(supplied, sensor.key_hash, pepper)
     ):
+        record_event(
+            db,
+            home_id=sensor.home_id,
+            actor_user_id=None,
+            event_type="sensor.authentication_failed",
+            entity_type="sensor",
+            entity_id=sensor.id,
+            details={"reason": "invalid_or_inactive_credentials"},
+        )
+        db.commit()
         return jsonify(error="A valid active sensor key is required."), 401
     payload = request.get_json(silent=True)
     try:
@@ -55,11 +67,12 @@ def ingest_sensor_reading(sensor_id: str):
             sensor_id=sensor.id,
         )
     except (ReadingValidationError, ValueError) as error:
+        db.rollback()
         record_rejection(
             db,
             home_id=sensor.home_id,
             sensor_id=sensor.id,
-            reason=str(error),
+            source="device",
         )
         db.commit()
         return jsonify(error=str(error)), 400

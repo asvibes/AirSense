@@ -1,6 +1,4 @@
-from datetime import datetime, timezone
-
-from app.models.audit import AuditLog
+from app.services.audit import record_event
 
 
 def record_rejection(
@@ -8,24 +6,17 @@ def record_rejection(
     *,
     home_id: str | None,
     sensor_id: str | None,
-    reason: str,
+    source: str,
+    actor_user_id: str | None = None,
 ) -> None:
     if not home_id:
         return
-    session.add(
-        AuditLog(
-            home_id=home_id,
-            actor_user_id=None,
-            event_type="reading.rejected",
-            entity_type="sensor",
-            entity_id=sensor_id,
-            details_json='{"reason":' + _json_string(reason[:160]) + "}",
-            created_at=datetime.now(timezone.utc),
-        )
+    record_event(
+        session,
+        home_id=home_id,
+        actor_user_id=actor_user_id,
+        event_type="reading.rejected",
+        entity_type="sensor" if sensor_id else "reading",
+        entity_id=sensor_id,
+        details={"reason": "invalid_reading", "source": source},
     )
-
-
-def _json_string(value: str) -> str:
-    import json
-
-    return json.dumps(value)

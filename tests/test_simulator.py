@@ -100,9 +100,11 @@ class SimulatorRouteTests(AirSenseTestCase):
         high = self.submit(scenario="high")
         self.assertEqual(high.status_code, 201, high.get_json())
         self.assertEqual(high.get_json()["created"][0]["level"], "high")
+        self.assertTrue(high.get_json()["received_at"].endswith("Z"))
 
         high_reading = self.stored_reading(high.get_json()["reading_id"])
         self.assertEqual(high_reading.source, "simulated")
+        self.assertIsNotNone(high_reading.received_at)
         self.assertIsNone(high_reading.sensor_id)
         self.assertEqual(high_reading.room_id, self.room["id"])
 
@@ -120,7 +122,8 @@ class SimulatorRouteTests(AirSenseTestCase):
             events = list(
                 get_session().scalars(
                     select(AuditLog).where(
-                        AuditLog.entity_id == str(high.get_json()["reading_id"])
+                        AuditLog.entity_type == "reading",
+                        AuditLog.entity_id == str(high.get_json()["reading_id"]),
                     )
                 )
             )
@@ -165,6 +168,26 @@ class SimulatorRouteTests(AirSenseTestCase):
         self.assertEqual(invalid_value.status_code, 400)
         self.assertIn("finite non-negative", invalid_value.get_json()["error"])
         self.assertEqual(unknown_room.status_code, 404)
+
+        with self.app.app_context():
+            events = list(
+                get_session().scalars(
+                    select(AuditLog).where(
+                        AuditLog.home_id == self.home_id,
+                        AuditLog.event_type == "reading.rejected",
+                    )
+                )
+            )
+        self.assertEqual(len(events), 2)
+        self.assertTrue(
+            all(
+                event.details_json
+                == '{"reason":"invalid_reading","source":"simulated"}'
+                for event in events
+            )
+        )
+        self.assertTrue(all(event.actor_user_id is not None for event in events))
+        self.assertNotIn("not-a-scenario", str(events))
 
     def test_legacy_manual_reading_payload_remains_supported(self):
         response = self.submit(value=725)
