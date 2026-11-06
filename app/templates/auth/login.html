@@ -266,7 +266,7 @@
       <h1 id="auth-title">Sign in</h1>
       <p class="page-subtitle">Access your household’s AirSense dashboard.</p>
       {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
-      <form method="post" action="{{ url_for('auth.login') }}">
+      <form method="post" action="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label class="field">Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
         <label class="field">Password<input name="password" type="password" autocomplete="current-password" required maxlength="256"></label>

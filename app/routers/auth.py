@@ -76,14 +76,24 @@ def _auth_error(message: str, status: int = 400):
         if request.path.endswith("/register")
         else "auth/login.html"
     )
-    return render_template(template, csrf_token=csrf_token(), error=message), status
+    return render_template(
+        template,
+        csrf_token=csrf_token(),
+        error=message,
+        next_url=request.args.get("next", ""),
+    ), status
 
 
 @auth.get("/login")
 def login_page():
     if current_user():
         return redirect(url_for("alerts.alerts_page"))
-    return render_template("auth/login.html", csrf_token=csrf_token(), error=None)
+    return render_template(
+        "auth/login.html",
+        csrf_token=csrf_token(),
+        error=None,
+        next_url=request.args.get("next", ""),
+    )
 
 
 @auth.get("/register")
