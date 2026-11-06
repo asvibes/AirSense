@@ -3,32 +3,387 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f7f5">
+  <meta name="theme-color" content="#120f17">
   <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>Create account | AirSense</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <style>
+    :root {
+      color-scheme: dark;
+      --air-bg: #120f17;
+      --air-white: #f7f9fa;
+      --air-muted: rgba(247, 249, 250, .7);
+      --air-lilac: #c8abff;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    html { color-scheme: dark; background: var(--air-bg); scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    body.auth-page {
+      min-width: 320px;
+      min-height: 100vh;
+      min-height: 100svh;
+      overflow-x: hidden;
+      background: var(--air-bg);
+      color: var(--air-white);
+      font-family: "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    .auth-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      background: var(--air-bg);
+    }
+    .auth-card {
+      align-self: center;
+      justify-self: center;
+      width: min(100%, 470px);
+      padding: clamp(34px, 5vw, 68px);
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+    .eyebrow {
+      margin: 0 0 16px;
+      color: var(--air-lilac);
+      font: 600 11px/1.4 "Geist", ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .gradient-text {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      max-width: 100%;
+      isolation: isolate;
+    }
+    .gradient-text__content {
+      display: inline-block;
+      background-image: linear-gradient(90deg, #77757d 0%, #aaa8b0 40%, #ffffff 75%, #77757d 110%);
+      background-size: 300% 100%;
+      background-position: 0% 50%;
+      animation: gradient-text-flow 8s ease-in-out infinite alternate;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      -webkit-text-stroke: .35px rgba(255, 255, 255, .2);
+    }
+    @keyframes gradient-text-flow {
+      from { background-position: 0% 50%; }
+      to { background-position: 100% 50%; }
+    }
+    .auth-card h1 {
+      margin: 0;
+      font-size: clamp(36px, 4.1vw, 48px);
+      font-weight: 500;
+      letter-spacing: -.055em;
+      line-height: 1.04;
+    }
+    .page-subtitle {
+      margin: 14px 0 26px;
+      color: var(--air-muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .notice {
+      margin: 0 0 18px;
+      padding: 11px 13px;
+      border: 1px solid rgba(255, 125, 125, .34);
+      border-radius: 8px;
+      background: rgba(128, 37, 48, .3);
+      color: #ffd7d7;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .auth-card form { display: grid; gap: 15px; }
+    .field {
+      display: grid;
+      gap: 7px;
+      color: rgba(247, 249, 250, .88);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .field input {
+      width: 100%;
+      min-height: 47px;
+      padding: 11px 13px;
+      border: 1px solid rgba(247, 249, 250, .2);
+      border-radius: 7px;
+      outline: none;
+      background: rgba(18, 15, 23, .75);
+      color: var(--air-white);
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.4;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .field input:focus {
+      border-color: var(--air-lilac);
+      background: #17131e;
+      box-shadow: 0 0 0 3px rgba(200, 171, 255, .14);
+    }
+    .field-help { color: rgba(247, 249, 250, .5); font-size: 11px; font-weight: 400; line-height: 1.45; }
+    .password-control { position: relative; display: block; width: 100%; }
+    .password-control input { padding-right: 64px; }
+    .password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 11px;
+      transform: translateY(-50%);
+      padding: 6px 2px;
+      border: 0;
+      background: transparent;
+      color: rgba(247, 249, 250, .7);
+      font: 500 12px/1 "Geist", ui-sans-serif, system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .password-toggle:hover { color: #fff; }
+    .password-toggle:focus-visible { outline: 2px solid var(--air-lilac); outline-offset: 2px; border-radius: 3px; }
+    .button.button-dark {
+      min-height: 48px;
+      margin-top: 3px;
+      padding: 12px 17px;
+      border: 1px solid rgba(247, 249, 250, .9);
+      border-radius: 7px;
+      background: var(--air-white);
+      color: #101014;
+      font: 600 14px/1.2 "Geist", ui-sans-serif, system-ui, sans-serif;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .button.button-dark:hover { transform: translateY(-1px); background: #fff; box-shadow: 0 8px 26px rgba(200, 171, 255, .15); }
+    .button.button-dark:active { transform: translateY(0); }
+    .auth-switch { margin: 22px 0 0; color: var(--air-muted); font-size: 12px; }
+    .auth-switch a { color: var(--air-lilac); text-decoration: underline; text-underline-offset: 3px; }
+    .auth-visual {
+      position: relative;
+      min-width: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      overflow: hidden;
+      isolation: isolate;
+      background: var(--air-bg);
+    }
+    .dither-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--air-bg);
+    }
+    .dither-layer canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      opacity: 0;
+      transition: opacity 700ms cubic-bezier(.22, 1, .36, 1);
+    }
+    .dither-layer[data-ready="true"] canvas { opacity: 1; }
+    :focus-visible { outline: 2px solid var(--air-lilac); outline-offset: 3px; }
+    @media (max-width: 760px) {
+      .auth-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(220px, 30svh);
+      }
+      .auth-card { width: min(100%, 520px); padding: 38px clamp(24px, 8vw, 56px) 44px; }
+      .auth-card h1 { font-size: clamp(34px, 8vw, 42px); }
+      .auth-visual { min-height: 0; }
+    }
+    @media (max-height: 720px) and (min-width: 761px) {
+      .auth-card { padding-block: 25px; }
+      .page-subtitle { margin-block: 10px 19px; }
+      .auth-card form { gap: 12px; }
+      .auth-switch { margin-top: 17px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      .dither-layer canvas { transition: none; }
+      .gradient-text__content { animation: none; background-position: 50% 50%; }
+    }
+  </style>
 </head>
 <body class="auth-page">
   <main class="auth-layout">
-    <aside class="auth-aside">
-      <a class="brand" href="{{ url_for('auth.login_page') }}" aria-label="AirSense home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><path d="M7 22c1.5-4.5 5.3-7.2 11.2-8.2 2.8-.5 5.1-1.5 6.8-3.8-.3 7.5-3 12.2-8.8 14.4-3.4 1.3-6.5.6-9.2-2.4Z"/><path d="M8 25c3.6-5.4 7.6-8.9 13.7-11.7"/></svg></span><span>airsense</span></a>
-      <div class="auth-aside-copy"><p class="eyebrow">A CLEARER VIEW AT HOME</p><h2>Understand the air, room by room.</h2><p>AirSense turns sensor readings into room status, history, and practical ventilation guidance.</p></div>
-      <p class="auth-aside-note">Readings depend on configured sensors or simulator data. AirSense does not measure air itself.</p>
-    </aside>
     <section class="auth-card" aria-labelledby="auth-title">
-      <p class="eyebrow">GET STARTED</p>
-      <h1 id="auth-title">Create your account</h1>
-      <p class="page-subtitle">Your first home will be created as part of setup.</p>
+      <h1 id="auth-title"><span class="gradient-text"><span class="gradient-text__content">Let's get your home on the map.</span></span></h1>
+      <p class="page-subtitle">Create an account, set up your first home, and start exploring your room readings.</p>
       {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
       <form method="post" action="{{ url_for('auth.register') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label class="field">Your name<input name="display_name" autocomplete="name" required maxlength="120"></label>
         <label class="field">Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
-        <label class="field">Password<input name="password" type="password" autocomplete="new-password" minlength="12" required maxlength="256"><span class="field-help">Use at least 12 characters, including a letter and a number.</span></label>
-        <button class="button button-dark" type="submit">Create account</button>
+        <label class="field">Password<span class="password-control"><input id="password" name="password" type="password" autocomplete="new-password" minlength="12" required maxlength="256"><button class="password-toggle" type="button" aria-controls="password" aria-label="Show password" aria-pressed="false">Show</button></span><span class="field-help">Use at least 12 characters, including a letter and a number.</span></label>
+        <button class="button button-dark" type="submit">Create my account</button>
       </form>
-      <p class="auth-switch">Already registered? <a href="{{ url_for('auth.login_page') }}">Sign in</a></p>
+      <p class="auth-switch">Already part of AirSense? <a href="{{ url_for('auth.login_page') }}">Sign in</a></p>
     </section>
+    <aside class="auth-visual" aria-label="Animated dither background">
+      <div class="dither-layer" data-ready="false" aria-hidden="true"><canvas></canvas></div>
+    </aside>
   </main>
+  <script>
+    (() => {
+      const password = document.getElementById('password');
+      const passwordToggle = document.querySelector('.password-toggle');
+      passwordToggle?.addEventListener('click', () => {
+        const isVisible = password.type === 'text';
+        password.type = isVisible ? 'password' : 'text';
+        passwordToggle.textContent = isVisible ? 'Show' : 'Hide';
+        passwordToggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+        passwordToggle.setAttribute('aria-pressed', String(!isVisible));
+      });
+
+      const root = document.querySelector('.dither-layer');
+      const canvas = root?.querySelector('canvas');
+      const ctx = canvas?.getContext('2d', { alpha: false });
+      const panel = root?.parentElement;
+      if (!root || !canvas || !ctx || !panel) return;
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const bayer = [
+        [0, 8, 2, 10],
+        [12, 4, 14, 6],
+        [3, 11, 1, 9],
+        [15, 7, 13, 5]
+      ];
+      const palette = [
+        [18, 15, 23],
+        [49, 46, 55],
+        [91, 88, 97],
+        [175, 175, 175]
+      ];
+      const state = {
+        width: 0, height: 0, cols: 0, rows: 0, dpr: 1,
+        start: performance.now(), raf: 0, lastDraw: 0,
+        pointer: null, ripples: [], visible: true
+      };
+      let pixels;
+
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+      const smooth = (a, b, value) => {
+        const x = clamp((value - a) / (b - a), 0, 1);
+        return x * x * (3 - 2 * x);
+      };
+      const resize = () => {
+        const rect = root.getBoundingClientRect();
+        state.width = Math.max(1, rect.width);
+        state.height = Math.max(1, rect.height);
+        state.dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        state.cols = Math.max(1, Math.ceil(state.width * state.dpr / 2));
+        state.rows = Math.max(1, Math.ceil(state.height * state.dpr / 2));
+        canvas.width = state.cols;
+        canvas.height = state.rows;
+        ctx.imageSmoothingEnabled = false;
+        pixels = ctx.createImageData(state.cols, state.rows);
+        requestDraw();
+      };
+      const draw = now => {
+        state.raf = 0;
+        if (!state.visible || !state.width || !state.height) return;
+        if (!reduceMotion.matches && now - state.lastDraw < 32) {
+          requestDraw();
+          return;
+        }
+        state.lastDraw = now;
+        const elapsed = reduceMotion.matches ? 0 : (now - state.start) / 1000;
+        const t = elapsed * 0.05;
+        const intro = reduceMotion.matches ? 1 : smooth(0, 1.6, elapsed);
+        const pointer = state.pointer;
+        state.ripples = state.ripples.filter(ripple => elapsed - ripple.time < 1.5);
+        const data = pixels.data;
+        let index = 0;
+
+        for (let y = 0; y < state.rows; y++) {
+          const ny = y / state.rows;
+          for (let x = 0; x < state.cols; x++) {
+            const nx = x / state.cols;
+            const wave = Math.sin((ny * 3 + Math.sin(nx * 4.2 + t * 2) * 0.22) * Math.PI * 2 - t * 3);
+            const detail = Math.sin((nx * 2.1 + ny * 1.7) * Math.PI * 2 + t * 1.4) * 0.16;
+            let intensity = clamp(0.43 + wave * 0.33 + detail, 0, 1);
+
+            if (pointer) {
+              const dx = x - pointer.x;
+              const dy = y - pointer.y;
+              const distance = Math.hypot(dx, dy);
+              const erase = (1 - smooth(state.eraseRadius * 0.55, state.eraseRadius, distance)) * state.mouseStrength;
+              intensity *= 1 - erase;
+            }
+            for (const ripple of state.ripples) {
+              const age = elapsed - ripple.time;
+              const distance = Math.hypot(x - ripple.x, y - ripple.y);
+              const ring = Math.abs(distance - age * Math.min(state.cols, state.rows) * 0.9);
+              intensity = clamp(intensity + (1 - smooth(1, 7 + age * 10, ring)) * (1 - age / 1.5) * 0.28, 0, 1);
+            }
+            intensity *= intro;
+
+            const scaled = intensity * (palette.length - 1);
+            let level = Math.floor(scaled);
+            const fraction = scaled - level;
+            const threshold = (bayer[y & 3][x & 3] + 0.5) / 16;
+            if (fraction > threshold && level < palette.length - 1) level++;
+            const color = palette[level];
+            data[index++] = color[0];
+            data[index++] = color[1];
+            data[index++] = color[2];
+            data[index++] = 255;
+          }
+        }
+        ctx.putImageData(pixels, 0, 0);
+        root.dataset.ready = 'true';
+        if (!reduceMotion.matches || state.ripples.length) requestDraw();
+      };
+      const requestDraw = () => {
+        if (!state.raf && state.visible) state.raf = requestAnimationFrame(draw);
+      };
+      const locate = event => {
+        const rect = panel.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
+        state.pointer = inside ? {
+          x: x / rect.width * state.cols,
+          y: y / rect.height * state.rows
+        } : null;
+        state.eraseRadius = 0.24 * Math.min(state.cols, state.rows);
+        state.mouseStrength = 0.55;
+        requestDraw();
+      };
+      const clickRipple = event => {
+        const rect = panel.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+        state.ripples.push({
+          x: x / rect.width * state.cols,
+          y: y / rect.height * state.rows,
+          time: (performance.now() - state.start) / 1000
+        });
+        requestDraw();
+      };
+      const observer = new IntersectionObserver(entries => {
+        state.visible = entries.some(entry => entry.isIntersecting);
+        if (state.visible) requestDraw();
+        else if (state.raf) { cancelAnimationFrame(state.raf); state.raf = 0; }
+      });
+      observer.observe(panel);
+      new ResizeObserver(resize).observe(root);
+      window.addEventListener('pointermove', locate, { passive: true });
+      panel.addEventListener('pointerleave', () => { state.pointer = null; requestDraw(); }, { passive: true });
+      panel.addEventListener('pointerdown', clickRipple, { passive: true });
+      reduceMotion.addEventListener?.('change', requestDraw);
+      resize();
+    })();
+  </script>
 </body>
 </html>

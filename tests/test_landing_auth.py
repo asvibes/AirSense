@@ -1,6 +1,7 @@
 import re
 import unittest
 from html import unescape
+from urllib.parse import urlparse
 
 from helpers import AirSenseTestCase
 
@@ -58,6 +59,54 @@ class LandingAuthTests(AirSenseTestCase):
         landing = client.get("/", follow_redirects=False)
         self.assertEqual(landing.status_code, 200)
         self.assertIsNone(landing.headers.get("Location"))
+
+    def test_landing_sign_in_dashboard_and_sign_out_are_connected(self):
+        client = self.app.test_client()
+
+        landing = client.get("/")
+        self.assertEqual(landing.status_code, 200)
+        self.assertIn(b'href="/login"', landing.data)
+
+        login_page = client.get("/login")
+        self.assertEqual(login_page.status_code, 200)
+        self.assertIn(b'href="/"', login_page.data)
+        csrf = re.search(
+            rb'name="csrf_token" value="([^"]+)"', login_page.data
+        ).group(1).decode()
+        signed_in = client.post(
+            "/login",
+            data={
+                "csrf_token": csrf,
+                "email": "owner@example.test",
+                "password": "secure-password-123",
+            },
+        )
+        self.assertEqual(signed_in.status_code, 302)
+        self.assertEqual(signed_in.headers["Location"], "/alerts")
+
+        dashboard = client.get("/alerts")
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertIn(b"AirSense <span>Home</span>", dashboard.data)
+        self.assertIn(b"AirSense Owner", dashboard.data)
+        self.assertIn(b"owner@example.test", dashboard.data)
+        sign_out_form = re.search(
+            rb'<form class="sign-out-form" method="post" action="([^"]+)">'
+            rb'<input type="hidden" name="csrf_token" value="([^"]+)">',
+            dashboard.data,
+        )
+        self.assertIsNotNone(sign_out_form)
+        signed_out = client.post(
+            unescape(sign_out_form.group(1).decode()),
+            data={"csrf_token": sign_out_form.group(2).decode()},
+        )
+        self.assertEqual(signed_out.status_code, 302)
+        self.assertEqual(signed_out.headers["Location"], "/")
+
+        landing_after_sign_out = client.get("/")
+        self.assertEqual(landing_after_sign_out.status_code, 200)
+        protected_dashboard = client.get("/alerts")
+        self.assertEqual(protected_dashboard.status_code, 302)
+        self.assertEqual(urlparse(protected_dashboard.headers["Location"]).path, "/login")
 
 
 if __name__ == "__main__":

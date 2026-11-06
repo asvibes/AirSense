@@ -818,6 +818,370 @@
     showMessage(`Imported ${result.imported} DALTON reading${result.imported === 1 ? "" : "s"} from ${result.source_file}.${timestampMessage}`);
   }
 
+  async function initRedesignedDashboard() {
+    let activeRooms = [];
+    let activeSensors = [];
+    let activeThresholds = [];
+    let activeAlerts = [];
+    let activeMembers = [];
+    let currentRoomIndex = 0;
+    let rotationPaused = false;
+
+    const homePath = `/api/homes/${encodeURIComponent(config.homeId)}`;
+    const modal = $("#modalBg");
+    const roomForm = $("#room-form");
+    const toast = $("#toast");
+
+    function notify(message, type = "info") {
+      toast.textContent = message;
+      toast.dataset.type = type;
+      toast.classList.add("show");
+      window.clearTimeout(notify.timer);
+      notify.timer = window.setTimeout(() => toast.classList.remove("show"), 5000);
+    }
+
+    function go(name) {
+      const selected = $(`#view-${name}`);
+      if (!selected) return;
+      $$(".view").forEach(view => view.classList.toggle("active", view === selected));
+      $$(".nav-link[data-view]").forEach(button => {
+        const active = button.dataset.view === name;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-current", active ? "page" : "false");
+      });
+      $("#crumbCurrent").textContent = selected.dataset.title || name;
+      $("#sidebar").classList.remove("open");
+      $("#navBackdrop").classList.remove("open");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function latestCo2(room) {
+      return (room.readings || []).find(reading => reading.metric === "CO2") || null;
+    }
+
+    function roomAlert(room) {
+      return activeAlerts.find(alert =>
+        alert.room_id === room.id && ["active", "acknowledged"].includes(alert.status)
+      );
+    }
+
+    function renderRoom(room, index, scope) {
+      const reading = latestCo2(room);
+      const alert = roomAlert(room);
+      const status = alert ? statusText(alert.level) : reading ? "Comfortable" : "Awaiting reading";
+      const sources = (room.ventilation_sources || []).join(" · ") || "Ventilation source not specified";
+      const sensorNames = (room.sensors || []).map(sensor => sensor.name).join(", ") || "No sensor assigned";
+      const editButton = config.role === "owner"
+        ? `<button class="btn room-edit" type="button" data-edit-room="${escapeHtml(room.id)}">Edit room</button>`
+        : "";
+      return `<article class="room room-accordion"><div class="room-toggle"><span class="room-symbol" aria-hidden="true">⌂</span><span class="room-info"><strong>${escapeHtml(room.name)}</strong><small>${escapeHtml(sources)}</small></span><span class="room-reading"><b>${reading ? `${escapeHtml(format(reading.value))} <small>${escapeHtml(reading.unit)}</small>` : "—"}</b><small>${escapeHtml(status)}</small></span><span class="pill">${escapeHtml(status)}</span></div><div class="room-details"><p>${escapeHtml(sensorNames)} · ${reading ? `Updated ${escapeHtml(dateTime(reading.measured_at))}` : "No readings received yet."}</p>${editButton}</div></article>`;
+    }
+
+    function renderRooms() {
+      $("#overviewRooms").innerHTML = activeRooms.slice(0, 3).map((room, index) =>
+        renderRoom(room, index, "overview")
+      ).join("") || '<p class="empty-note">No rooms yet. Add a room to get started.</p>';
+      $("#allRooms").innerHTML = activeRooms.map((room, index) =>
+        renderRoom(room, index, "all")
+      ).join("") || '<p class="empty-note">No rooms yet. Add a room to get started.</p>';
+      const readings = activeRooms.map(latestCo2).filter(Boolean);
+      const mean = readings.length
+        ? Math.round(readings.reduce((sum, reading) => sum + Number(reading.value), 0) / readings.length)
+        : null;
+      const recentReading = readings
+        .slice()
+        .sort((left, right) => new Date(right.measured_at) - new Date(left.measured_at))[0];
+      $("#snapshotStatus").textContent = mean === null ? "Waiting for readings" : mean >= 1500 ? "High reading to review" : mean >= 1000 ? "Elevated reading to review" : "Air readings available";
+      $("#snapshotDescription").textContent = mean === null
+        ? "Connect a sensor or send a simulator reading to see home conditions."
+        : `${readings.length} room${readings.length === 1 ? "" : "s"} with recent CO₂ data.`;
+      $("#snapshotRoomCount").textContent = `${activeRooms.length} room${activeRooms.length === 1 ? "" : "s"}`;
+      $("#snapshotUpdated").textContent = recentReading ? dateTime(recentReading.measured_at) : "—";
+      $("#averageCo2Metric").innerHTML = mean === null ? `— <span class="unit">ppm</span>` : `${escapeHtml(format(mean))} <span class="unit">ppm</span>`;
+      $("#averageCo2Status").textContent = mean === null ? "Waiting for readings" : "Latest available room readings";
+      $("#alertMetric").textContent = activeAlerts.filter(alert => alert.status === "active").length;
+      const demoRoomSelect = $("#demo-room-select");
+      const selectedDemoRoom = demoRoomSelect.value;
+      demoRoomSelect.innerHTML = activeRooms.map(room =>
+        `<option value="${escapeHtml(room.id)}">${escapeHtml(room.name)}</option>`
+      ).join("") || '<option value="">Add a room first</option>';
+      if (activeRooms.some(room => room.id === selectedDemoRoom)) demoRoomSelect.value = selectedDemoRoom;
+      renderRoomCycle();
+      renderHistoryChart();
+    }
+
+    function renderRoomCycle() {
+      const roomsWithReadings = activeRooms.filter(latestCo2);
+      if (!roomsWithReadings.length) {
+        $("#cycleRoomName").textContent = "No readings yet";
+        $("#cyclePosition").textContent = "0 / 0";
+        $("#cycleValue").textContent = "—";
+        $("#cycleLevel").textContent = "Waiting";
+        $("#cycleGauge").style.width = "0%";
+        return;
+      }
+      currentRoomIndex %= roomsWithReadings.length;
+      const room = roomsWithReadings[currentRoomIndex];
+      const reading = latestCo2(room);
+      const value = Number(reading.value);
+      const level = value >= 1500 ? "high" : value >= 1000 ? "medium" : "low";
+      $("#cycleRoomName").textContent = room.name;
+      $("#cyclePosition").textContent = `${currentRoomIndex + 1} / ${roomsWithReadings.length}`;
+      $("#cycleValue").textContent = format(value);
+      $("#cycleLevel").textContent = level === "low" ? "Low" : level === "medium" ? "Medium" : "High";
+      $("#cycleLevel").className = `level-pill level-${level}`;
+      $("#cycleGauge").className = `gauge-fill level-${level}`;
+      $("#cycleGauge").style.width = `${Math.min(100, Math.max(2, value / 1500 * 100))}%`;
+    }
+
+    function renderAlerts() {
+      const markup = alert => `<article class="alert"><span class="alert-mark"></span><div><strong>${escapeHtml(alert.room)} · ${escapeHtml(statusText(alert.level))}</strong><p>${escapeHtml(alert.detail)}</p><time>${escapeHtml(dateTime(alert.created_at))}</time>${alert.status === "active" ? `<form data-ack="${escapeHtml(alert.id)}"><button class="btn" type="submit">Acknowledge</button></form>` : ""}</div></article>`;
+      const rendered = activeAlerts.map(markup).join("") || '<div class="empty-note">No open alerts. Keep monitoring fresh readings.</div>';
+      $("#overviewAlerts").innerHTML = rendered;
+      $("#allAlerts").innerHTML = rendered;
+      const openCount = activeAlerts.filter(alert => alert.status === "active").length;
+      $("#alertMetric").textContent = openCount;
+      $("#navAlertCount").textContent = openCount;
+    }
+
+    function renderSensors() {
+      $("#sensorRows").innerHTML = activeSensors.map(sensor =>
+        `<tr><td>${escapeHtml(sensor.name)}</td><td>${escapeHtml(sensor.room)}</td><td>${escapeHtml(sensor.status)}</td><td>${escapeHtml(dateTime(sensor.last_seen_at))}</td></tr>`
+      ).join("") || '<tr><td colspan="4">No sensors are connected to this home.</td></tr>';
+    }
+
+    function renderThresholds() {
+      $("#thresholdRows").innerHTML = activeRooms.map(room => {
+        const threshold = activeThresholds.find(item => item.room_id === room.id && item.metric === "CO2");
+        return `<tr><td>${escapeHtml(room.name)}</td><td>${threshold ? `${escapeHtml(format(threshold.elevated_threshold))} ppm` : "Default"}</td><td>${threshold ? `${escapeHtml(format(threshold.high_threshold))} ppm` : "Default"}</td></tr>`;
+      }).join("") || '<tr><td colspan="3">Add a room to configure thresholds.</td></tr>';
+    }
+
+    function renderMembers() {
+      $("#memberRows").innerHTML = activeMembers.map(member =>
+        `<tr><td>${escapeHtml(member.display_name)}</td><td>${escapeHtml(member.role)}</td><td>${member.user_id === config.userId ? "Signed in" : "Active"}</td></tr>`
+      ).join("") || '<tr><td colspan="3">No members found.</td></tr>';
+    }
+
+    function renderHistoryChart() {
+      const readings = activeRooms.map(room => ({ room, reading: latestCo2(room) })).filter(item => item.reading);
+      $(".chart").innerHTML = readings.map(({ room, reading }) =>
+        `<div class="bar-wrap"><div class="bar" title="${escapeHtml(room.name)}: ${escapeHtml(format(reading.value))} ppm" style="--h:${Math.min(100, Number(reading.value) / 2000 * 100)}%"></div><span class="bar-label">${escapeHtml(room.name)}</span></div>`
+      ).join("") || '<p class="empty-note">No stored CO₂ readings yet.</p>';
+    }
+
+    async function loadDashboard() {
+      const [roomData, sensorData, thresholdData, dashboardData, memberData] = await Promise.all([
+        api(`${homePath}/rooms`),
+        api(`${homePath}/sensors`),
+        api(`${homePath}/thresholds`),
+        api(`${homePath}/dashboard`),
+        api(`${homePath}/members`)
+      ]);
+      activeRooms = roomData.rooms;
+      activeSensors = sensorData.sensors;
+      activeThresholds = thresholdData.thresholds;
+      activeAlerts = dashboardData.alerts;
+      activeMembers = memberData.members;
+      renderRooms();
+      renderAlerts();
+      renderSensors();
+      renderThresholds();
+      renderMembers();
+    }
+
+    function openRoomModal(room = null) {
+      roomForm.reset();
+      delete roomForm.dataset.roomId;
+      $("#modalTitle").textContent = room ? "Edit room" : "Add room";
+      $("#modalSubmit").textContent = room ? "Save changes" : "Add room";
+      if (room) {
+        roomForm.dataset.roomId = room.id;
+        $("#modalInput").value = room.name;
+        for (const source of room.ventilation_sources || []) {
+          if (source.startsWith("Other: ")) {
+            $("#custom_ventilation_source").value = source.slice(7);
+          } else {
+            const checkbox = $(`#room-form input[value="${CSS.escape(source)}"]`);
+            if (checkbox) checkbox.checked = true;
+          }
+        }
+      }
+      modal.classList.add("open");
+      $("#modalInput").focus();
+    }
+
+    async function saveRoom(event) {
+      event.preventDefault();
+      const formData = new FormData(roomForm);
+      const sources = formData.getAll("ventilation_sources");
+      const customSource = String(formData.get("custom_ventilation_source") || "").trim();
+      if (customSource) sources.push(`Other: ${customSource}`);
+      if (!sources.length) {
+        notify("Choose at least one ventilation source.", "error");
+        return;
+      }
+      if (sources.includes("Not specified") && sources.length > 1) {
+        notify("“Not specified” must be selected by itself.", "error");
+        return;
+      }
+      const payload = JSON.stringify({
+        name: String(formData.get("name") || "").trim(),
+        ventilation_sources: sources
+      });
+      const roomId = roomForm.dataset.roomId;
+      const path = roomId
+        ? `${homePath}/rooms/${encodeURIComponent(roomId)}`
+        : `${homePath}/rooms`;
+      try {
+        await api(path, { method: roomId ? "PATCH" : "POST", body: payload });
+        modal.classList.remove("open");
+        await loadDashboard();
+        notify(roomId ? "Room updated." : "Room added.");
+      } catch (error) {
+        notify(error.message || "Unable to save this room.", "error");
+      }
+    }
+
+    async function runScenario(scenario) {
+      const roomId = $("#demo-room-select").value;
+      if (!roomId) throw new Error("Add a room before submitting a simulated reading.");
+      await api(`${homePath}/demo/readings`, {
+        method: "POST",
+        body: JSON.stringify({ room_id: roomId, scenario, metric: "CO2", unit: "ppm" })
+      });
+      await loadDashboard();
+      go("alerts");
+      notify("Simulated reading sent through the server alert pipeline.");
+    }
+
+    async function runCustomReading() {
+      const roomId = $("#demo-room-select").value;
+      const value = $("#demo-reading-value").value.trim();
+      if (!roomId) throw new Error("Add a room before submitting a simulated reading.");
+      if (value === "" || !Number.isFinite(Number(value))) throw new Error("Enter a valid CO₂ value.");
+      await api(`${homePath}/demo/readings`, {
+        method: "POST",
+        body: JSON.stringify({ room_id: roomId, value: Number(value), metric: "CO2", unit: "ppm" })
+      });
+      await loadDashboard();
+      go("alerts");
+      notify("Simulated reading sent through the server alert pipeline.");
+    }
+
+    async function runDaltonReplay() {
+      const roomId = $("#demo-room-select").value;
+      const file = $("#dalton-csv-file").files[0];
+      const limit = Number($("#dalton-limit").value || 250);
+      if (!roomId) throw new Error("Add a room before replaying DALTON data.");
+      if (!file) throw new Error("Choose a DALTON CSV file before replaying.");
+      if (file.size > 16 * 1024 * 1024) throw new Error("Choose a DALTON CSV smaller than 16 MB.");
+      if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+        throw new Error("Choose a sample limit between 1 and 1000.");
+      }
+      const data = new FormData();
+      data.set("room_id", roomId);
+      data.set("limit", String(limit));
+      data.set("shift_timestamps", String($("#dalton-shift-timestamps").checked));
+      data.set("csv_file", file);
+      const result = await api(`${homePath}/demo/replay`, { method: "POST", body: data });
+      await loadDashboard();
+      go("alerts");
+      const timestampMessage = result.timestamps_shifted
+        ? " Timeline shifted so the newest sample appears recent."
+        : " Original dataset timestamps kept.";
+      notify(`Imported ${result.imported} DALTON reading${result.imported === 1 ? "" : "s"} from ${result.source_file}.${timestampMessage}`);
+    }
+
+    document.addEventListener("click", event => {
+      const target = event.target.closest("[data-view], [data-goto], [data-edit-room], [data-scenario], #run-custom-reading, #run-dalton-replay");
+      if (target?.dataset.view) go(target.dataset.view);
+      else if (target?.dataset.goto) go(target.dataset.goto);
+      else if (target?.dataset.editRoom) {
+        const room = activeRooms.find(item => item.id === target.dataset.editRoom);
+        if (room) openRoomModal(room);
+      }
+      if (target?.dataset.scenario) runScenario(target.dataset.scenario).catch(error => notify(error.message, "error"));
+      if (target?.id === "run-custom-reading") runCustomReading().catch(error => notify(error.message, "error"));
+      if (target?.id === "run-dalton-replay") runDaltonReplay().catch(error => notify(error.message, "error"));
+      if (event.target.closest("#addRoomBtn")) openRoomModal();
+      if (event.target.closest("#closeModal") || event.target === modal) modal.classList.remove("open");
+      if (event.target.closest("#menuBtn")) {
+        $("#sidebar").classList.add("open");
+        $("#navBackdrop").classList.add("open");
+      }
+      if (event.target.closest("#navBackdrop")) {
+        $("#sidebar").classList.remove("open");
+        $("#navBackdrop").classList.remove("open");
+      }
+      if (event.target.closest("#noticeBtn")) go("alerts");
+      if (event.target.closest("#roomPrev")) {
+        currentRoomIndex = (currentRoomIndex - 1 + Math.max(activeRooms.length, 1)) % Math.max(activeRooms.length, 1);
+        renderRoomCycle();
+      }
+      if (event.target.closest("#roomNext")) {
+        currentRoomIndex = (currentRoomIndex + 1) % Math.max(activeRooms.length, 1);
+        renderRoomCycle();
+      }
+      if (event.target.closest("#cyclePause")) {
+        rotationPaused = !rotationPaused;
+        event.target.textContent = rotationPaused ? "Resume rotation" : "Pause rotation";
+        event.target.setAttribute("aria-pressed", String(rotationPaused));
+      }
+      if (event.target.closest("#themeBtn")) {
+        const theme = document.documentElement.dataset.theme === "day" ? "night" : "day";
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem("airsense-theme", theme);
+      }
+      if (event.target.closest("#exportBtn") && activeRooms[0]) {
+        const end = new Date();
+        const start = new Date(end.getTime() - 7 * 86400000);
+        const params = new URLSearchParams({
+          room_id: activeRooms[0].id,
+          metric: "CO2",
+          from: start.toISOString(),
+          to: end.toISOString()
+        });
+        window.location.assign(`${homePath}/history.csv?${params}`);
+      }
+    });
+
+    roomForm.addEventListener("submit", saveRoom);
+    document.addEventListener("submit", async event => {
+      const form = event.target;
+      if (!form.matches("[data-ack]")) return;
+      event.preventDefault();
+      try {
+        await api(`/api/alerts/${encodeURIComponent(form.dataset.ack)}/acknowledge`, {
+          method: "POST",
+          body: "{}"
+        });
+        await loadDashboard();
+        notify("Alert acknowledged.");
+      } catch (error) {
+        notify(error.message || "Unable to acknowledge the alert.", "error");
+      }
+    });
+
+    try {
+      const savedTheme = localStorage.getItem("airsense-theme");
+      if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+    } catch (error) {
+      console.warn("Unable to load the saved AirSense theme.", error);
+    }
+    $("#todayLabel").textContent = `HOME AIR · ${new Intl.DateTimeFormat(undefined, {
+      weekday: "long", month: "long", day: "numeric"
+    }).format(new Date()).toUpperCase()}`;
+    $("#averageCo2Status").textContent = "Loading readings…";
+    await loadDashboard().catch(error => notify(error.message || "Unable to load home data.", "error"));
+    window.setInterval(() => {
+      if (!rotationPaused && document.visibilityState === "visible" && activeRooms.length) {
+        currentRoomIndex = (currentRoomIndex + 1) % activeRooms.length;
+        renderRoomCycle();
+      }
+    }, 5000);
+  }
+
   async function init() {
     $("#history-metric").innerHTML = Object.entries(metrics).map(([key, metric]) => `<option value="${key}">${metric.label}</option>`).join("");
     bindEvents();
@@ -829,5 +1193,11 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.body.dataset.dashboardMode === "redesign") {
+      initRedesignedDashboard();
+    } else {
+      init();
+    }
+  });
 })();

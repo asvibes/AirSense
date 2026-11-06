@@ -235,4 +235,4 @@ def logout():
     session.clear()
     if request.is_json or request.path.startswith("/api/"):
         return jsonify(status="signed_out")
-    return redirect(url_for("auth.login_page"))
+    return redirect(url_for("landing"))
