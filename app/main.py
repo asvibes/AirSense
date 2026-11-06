@@ -1,8 +1,6 @@
 from typing import Any
 
 from flask import Flask
-from flask import jsonify, request
-from werkzeug.exceptions import HTTPException
 from sqlalchemy import text
 
 from app.config import Config
@@ -19,10 +17,11 @@ from app.routers.sensor_readings import sensor_readings
 from app.routers.sensors import sensors
 from app.routers.thresholds import thresholds
 from app.security.rate_limit import InMemoryRateLimiter
-
+from .error_handlers import register_error_handlers
 
 def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     app = Flask(__name__)
+    register_error_handlers(app)
     app.config.from_object(Config)
     if test_config is not None:
         app.config.update(test_config)
@@ -48,12 +47,6 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         alerts,
     ):
         app.register_blueprint(blueprint)
-
-    @app.errorhandler(HTTPException)
-    def handle_http_error(error: HTTPException):
-        if request.path.startswith("/api/"):
-            return jsonify(error=error.description), error.code
-        return error
 
     @app.get("/api/health")
     def health():
