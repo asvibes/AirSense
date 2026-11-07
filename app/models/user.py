@@ -13,6 +13,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(254), unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(120), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
+    session_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default=true()
     )
@@ -74,3 +77,16 @@ class EmailChallenge(Base):
     last_sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reset_token_hash: Mapped[str | None] = mapped_column(String(64), unique=True)
+    reset_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reset_token_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RateLimitBucket(Base):
+    __tablename__ = "rate_limit_buckets"
+
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    window_started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")

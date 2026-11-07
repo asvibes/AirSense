@@ -14,7 +14,11 @@ from app.models.user import HomeMembership, User
 def current_user() -> User | None:
     if "airsense_user" not in g:
         user_id = session.get("user_id")
-        g.airsense_user = get_session().get(User, user_id) if user_id else None
+        user = get_session().get(User, user_id) if user_id else None
+        if user is not None and session.get("session_version", 0) != user.session_version:
+            session.clear()
+            user = None
+        g.airsense_user = user
     return g.airsense_user
 
 

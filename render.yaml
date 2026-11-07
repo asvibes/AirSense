@@ -10,6 +10,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
+      - key: APP_ENV
+        value: production
       - key: DATABASE_URL
         sync: false
       - key: SECRET_KEY
@@ -20,3 +22,17 @@ services:
         value: "true"
       - key: AUTO_CREATE_SCHEMA
         value: "false"
+      - key: AIRSENSE_DEVICE_KEY_PEPPER
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+      - key: MAIL_DEFAULT_SENDER_NAME
+        value: AirSense
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: EMAIL_VERIFICATION_REQUIRED
+        value: "true"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"

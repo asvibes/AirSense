@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlsplit
 
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session, url_for
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -14,7 +14,7 @@ from app.models.home import Home
 from app.models.user import EmailChallenge, HomeMembership, User
 from app.schemas.auth import AuthInputError, validate_display_name, validate_email
 from app.security.passwords import hash_password, validate_password, verify_password
-from app.security.rate_limit import InMemoryRateLimiter
+from app.security.rate_limit import InMemoryRateLimiter, allow_persistent
 from app.security.sessions import current_user, csrf_token
 from app.services.audit import record_event
 from app.services.email import EmailDeliveryError, send_otp_email
@@ -73,6 +73,26 @@ def _rate_limit(action: str, limit: int = 10) -> bool:
     )
 
 
+def _email_rate_limit(action: str, email: str | None, *, ip_limit: int, email_limit: int) -> bool:
+    db = get_session()
+    remote = request.remote_addr or "unknown"
+    if not allow_persistent(
+        db,
+        f"auth:{action}:ip:{remote}",
+        limit=ip_limit,
+        window_seconds=current_app.config["AUTH_RATE_LIMIT_WINDOW_SECONDS"],
+    ):
+        return False
+    if email:
+        return allow_persistent(
+            db,
+            f"auth:{action}:email:{email}",
+            limit=email_limit,
+            window_seconds=current_app.config["AUTH_RATE_LIMIT_WINDOW_SECONDS"],
+        )
+    return True
+
+
 def _auth_error(message: str, status: int = 400):
     if request.is_json or request.path.startswith("/api/"):
         return jsonify(error=message), status
@@ -100,6 +120,11 @@ def _auth_error(message: str, status: int = 400):
 def _challenge_hash(otp: str) -> str:
     secret = current_app.config["SECRET_KEY"]
     return hashlib.sha256(f"{secret}:{otp}".encode()).hexdigest()
+
+
+def _reset_token_hash(token: str) -> str:
+    secret = current_app.config["SECRET_KEY"]
+    return hashlib.sha256(f"{secret}:reset:{token}".encode()).hexdigest()
 
 
 def _new_challenge(db, *, user: User | None, email: str, purpose: str) -> tuple[EmailChallenge, str]:
@@ -153,7 +178,7 @@ def _verify_challenge(db, *, email: str, purpose: str, otp: str) -> EmailChallen
         raise AuthInputError("Too many incorrect attempts. Request a new code.")
     challenge.attempts += 1
     if not isinstance(otp, str) or not secrets.compare_digest(challenge.otp_hash, _challenge_hash(otp)):
-        db.flush()
+        db.commit()
         raise AuthInputError("That code is invalid or has expired.")
     challenge.consumed_at = now
     db.flush()
@@ -296,6 +321,7 @@ def register():
         )
     session.clear()
     session["user_id"] = user.id
+    session["session_version"] = user.session_version
     session.permanent = True
     csrf_token()
     if request.is_json:
@@ -310,6 +336,8 @@ def verify_email():
         payload = _payload()
         _csrf(payload)
         email = validate_email(payload.get("email"))
+        if not _email_rate_limit("verify-email", email, ip_limit=20, email_limit=10):
+            raise AuthInputError("Too many verification attempts. Request a new code later.")
         otp = payload.get("otp")
         db = get_session()
         challenge = _verify_challenge(db, email=email, purpose="email_verification", otp=otp)
@@ -334,6 +362,8 @@ def resend_verification():
         payload = _payload()
         _csrf(payload)
         email = validate_email(payload.get("email"))
+        if not _email_rate_limit("resend-verification", email, ip_limit=10, email_limit=5):
+            return jsonify(message="If the account can be verified, a new code has been sent.")
         db = get_session()
         user = db.scalar(select(User).where(User.email == email, User.is_active.is_(False)))
         if user is None:
@@ -360,6 +390,8 @@ def forgot_password():
         payload = _payload()
         _csrf(payload)
         email = validate_email(payload.get("email"))
+        if not _email_rate_limit("forgot-password", email, ip_limit=10, email_limit=3):
+            return jsonify(message=generic)
         db = get_session()
         user = db.scalar(select(User).where(User.email == email))
         if user is not None:
@@ -386,12 +418,20 @@ def verify_reset():
         payload = _payload()
         _csrf(payload)
         email = validate_email(payload.get("email"))
-        challenge = _verify_challenge(get_session(), email=email, purpose="password_reset", otp=payload.get("otp"))
-        get_session().commit()
+        if not _email_rate_limit("verify-reset", email, ip_limit=20, email_limit=10):
+            raise AuthInputError("That code is invalid or has expired.")
+        db = get_session()
+        challenge = _verify_challenge(db, email=email, purpose="password_reset", otp=payload.get("otp"))
+        reset_token = secrets.token_urlsafe(32)
+        challenge.reset_token_hash = _reset_token_hash(reset_token)
+        challenge.reset_token_expires_at = datetime.now(timezone.utc) + timedelta(
+            seconds=current_app.config["RESET_TOKEN_EXPIRY_SECONDS"]
+        )
+        db.commit()
     except (AuthInputError, ValueError, TypeError) as error:
         get_session().rollback()
         return jsonify(error=str(error)), 400
-    return jsonify(reset_token=challenge.id)
+    return jsonify(reset_token=reset_token)
 
 
 @auth.post("/api/auth/reset-password")
@@ -404,18 +444,44 @@ def reset_password():
         password = payload.get("password")
         validate_password(password)
         db = get_session()
+        now = datetime.now(timezone.utc)
+        claim = db.execute(
+            update(EmailChallenge)
+            .where(
+                EmailChallenge.reset_token_hash == _reset_token_hash(token),
+                EmailChallenge.purpose == "password_reset",
+                EmailChallenge.reset_token_used_at.is_(None),
+            )
+            .values(reset_token_used_at=now)
+        )
+        if claim.rowcount != 1:
+            raise AuthInputError("Reset verification is required.")
+        db.flush()
         challenge = db.scalar(
             select(EmailChallenge).where(
-                EmailChallenge.id == token,
+                EmailChallenge.reset_token_hash == _reset_token_hash(token),
                 EmailChallenge.purpose == "password_reset",
             )
         )
-        if challenge is None or challenge.consumed_at is None or challenge.user_id is None:
+        if (
+            challenge is None
+            or challenge.consumed_at is None
+            or challenge.reset_token_expires_at is None
+            or _aware(challenge.reset_token_expires_at) <= now
+            or challenge.user_id is None
+        ):
             raise AuthInputError("Reset verification is required.")
         user = db.get(User, challenge.user_id)
         if user is None:
             raise AuthInputError("Reset verification is required.")
         user.password_hash = hash_password(password)
+        user.session_version += 1
+        _record_user_auth_event(
+            db,
+            user.id,
+            "account.password_reset",
+            actor_user_id=user.id,
+        )
         db.commit()
     except (AuthInputError, ValueError, TypeError) as error:
         get_session().rollback()
@@ -466,6 +532,7 @@ def login():
     db.commit()
     session.clear()
     session["user_id"] = user.id
+    session["session_version"] = user.session_version
     session.permanent = True
     csrf_token()
     if request.is_json:
