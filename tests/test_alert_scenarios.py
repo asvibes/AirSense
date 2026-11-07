@@ -246,7 +246,7 @@ class AlertLifecycleTests(AirSenseTestCase):
         self.assertIn(b"High", page.data)
         self.assertNotIn(b"SUBJECT CONSTRAINTS", page.data)
         self.assertIn(b"certified carbon monoxide alarm", page.data)
-        self.assertIn(b"DALTON files are not included", page.data)
+        self.assertNotIn(b"Ventilation support, at a glance.", page.data)
         self.assertIn(b"dalton-csv-file", page.data)
         self.assertIn(b"demo-room-select", page.data)
         self.assertNotIn(b"DALTON replay is not connected", page.data)

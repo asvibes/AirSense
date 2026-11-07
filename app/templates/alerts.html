@@ -219,13 +219,44 @@ html:not([data-theme="day"]) .text-loop-ribbon{background:#fff;color:#050505}
 @media(prefers-reduced-motion:reduce){.text-loop-track{animation:none;white-space:normal;transform:none}.text-loop-track span:nth-child(2){display:none}.text-loop-ribbon{white-space:normal}}
 
 .dashboard-home-link{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-weight:650}.dashboard-home-link span{color:var(--muted);font-size:12px}.sign-out-form{display:inline-flex}.field{display:grid;gap:7px;margin:12px 0}.field input:not([type=checkbox]),.field select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text)}.ventilation-options{display:grid;gap:7px;border:1px solid var(--line);border-radius:10px;padding:12px}.ventilation-options legend{padding:0 5px;color:var(--muted)}.ventilation-options label{display:flex;align-items:center;gap:8px}.custom-source-field{display:grid!important;grid-template-columns:1fr!important}.demo-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.toast.show{display:block}.toast{position:fixed;right:24px;bottom:24px;z-index:10;max-width:min(420px,calc(100vw - 48px));padding:12px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow)}
+/* Adjustable navigation and an unboxed account section. */
+.sidebar{transition:width .22s ease,padding .22s ease}
+.main{transition:margin-left .22s ease}
+.side-bottom{display:block;width:100%;margin-top:auto;padding:0;border:0}
+.home-account-toggle,.account-owner-link{display:flex;width:100%;align-items:center;gap:10px;border:0;background:transparent;text-align:left;color:var(--text)}
+.home-account-toggle{justify-content:space-between;padding:10px 8px;cursor:pointer}
+.home-account-copy{display:grid;min-width:0;gap:2px}
+.home-account-copy small{color:var(--muted);font:10px/1.4 ui-monospace,SFMono-Regular,monospace;letter-spacing:.13em}
+.home-account-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:550}
+.home-account-mark{display:none;flex:none;width:36px;height:36px;place-items:center;border-radius:50%;background:#48cae4;color:#023e8a;font-weight:700}
+.home-account-chevron{flex:none;color:var(--muted);font-size:12px;transition:transform .18s ease}
+.home-account-toggle[aria-expanded="true"] .home-account-chevron{transform:rotate(180deg)}
+.account-details{padding:2px 0 0}
+.account-owner-link{justify-content:flex-start;padding:8px;cursor:pointer}
+.account-owner-link:hover,.home-account-toggle:hover{color:var(--accent)}
+.account-owner-link>span:nth-child(2){min-width:0;flex:1}
+.account-owner-link b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.account-owner-link small{display:block;margin-top:2px;color:var(--muted);font-size:11px}
+.account-owner-link .account-chevron{color:var(--muted)}
+.sidebar:not(.expanded) .home-account-toggle{justify-content:center;padding:6px}
+.sidebar:not(.expanded) .home-account-copy,.sidebar:not(.expanded) .home-account-chevron{display:none}
+.sidebar:not(.expanded) .home-account-mark{display:grid}
+.sidebar:not(.expanded) .account-details{display:none!important}
+.sidebar:not(.expanded) .dock-toggle{margin-inline:auto}
+.sidebar:not(.expanded){width:78px;padding:20px 12px 14px;align-items:center}
+.sidebar:not(.expanded) .dashboard-home-link{width:48px;height:42px;justify-content:center;padding:0;border:0;font-size:0;overflow:hidden}
+.sidebar:not(.expanded) .dashboard-home-link span{display:none}
+.sidebar:not(.expanded) .dashboard-home-link::before{content:"A";display:grid;width:34px;height:34px;place-items:center;border-radius:11px;background:var(--text);color:var(--bg);font-size:16px;font-weight:750}
+.account-page-card{max-width:760px}
+@media(max-width:720px){.main,.main.sidebar-expanded{margin-left:0}.sidebar{width:224px}.sidebar:not(.expanded){width:78px}.sidebar.expanded{width:224px}}
+[hidden]{display:none!important}
 </style>
 </head>
 <body data-dashboard-mode="redesign">
 <div class="shell">
 <aside class="sidebar expanded" id="sidebar">
   <a class="dashboard-home-link" href="{{ url_for('landing') }}">AirSense <span>Home</span></a>
-  <div class="homebox"><span class="home-avatar">{{ active_home.name[:1] }}</span><div class="home-meta"><small>YOUR HOME</small><strong>{{ active_home.name }}</strong></div></div>
+  <button class="dock-toggle" id="sidebarToggle" type="button" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg><span>Collapse sidebar</span></button>
   <p class="nav-label">MONITOR</p><nav class="nav-list" aria-label="Main navigation">
     <button class="nav-link active" data-view="overview" data-tooltip="Overview" aria-label="Overview"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></svg></span><span class="nav-text">Overview</span></button>
     <button class="nav-link" data-view="rooms" data-tooltip="Rooms" aria-label="Rooms"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21V5h12v16M15 10h6v11M7 9h4M7 13h4M7 17h4M18 14h1M18 17h1M2 21h20"/></svg></span><span class="nav-text">Rooms</span></button>
@@ -238,13 +269,25 @@ html:not([data-theme="day"]) .text-loop-ribbon{background:#fff;color:#050505}
     <button class="nav-link" data-view="thresholds" data-tooltip="Thresholds" aria-label="Thresholds"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg></span><span class="nav-text">Thresholds</span></button>
     <button class="nav-link" data-view="members" data-tooltip="Members" aria-label="Members"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5.5a3 3 0 0 1 0 5.8M18 14c2 .8 3 2.7 3 5"/></svg></span><span class="nav-text">Members</span></button>
   </nav>
-  <div class="side-bottom"><button class="userline account-trigger" id="accountBtn" type="button" aria-label="Open account page"><span class="user-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M5 21c.4-4 3.1-6 7-6s6.6 2 7 6"/></svg></span><span><b>{{ current_user.display_name }}</b><small>{{ active_home.role|title }} · signed in</small></span><span class="account-chevron" aria-hidden="true">→</span></button></div>
+  <div class="side-bottom">
+    <button class="home-account-toggle" id="homeAccountToggle" type="button" aria-expanded="false" aria-controls="accountDetails">
+      <span class="home-account-mark" aria-hidden="true">{{ active_home.name[:1] }}</span>
+      <span class="home-account-copy"><small>YOUR HOME</small><strong>{{ active_home.name }}</strong></span>
+      <span class="home-account-chevron" aria-hidden="true">⌃</span>
+    </button>
+    <div class="account-details" id="accountDetails" hidden>
+      <button class="account-owner-link" id="accountBtn" type="button" aria-label="View account details">
+        <span class="user-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M5 21c.4-4 3.1-6 7-6s6.6 2 7 6"/></svg></span>
+        <span><b>{{ current_user.display_name }}</b><small>{{ active_home.role|title }} · Signed in</small></span>
+        <span class="account-chevron" aria-hidden="true">→</span>
+      </button>
+    </div>
+  </div>
 </aside>
 <div class="nav-backdrop" id="navBackdrop"></div>
 <main class="main sidebar-expanded">
 <header class="topbar"><button class="mobile-menu" id="menuBtn" aria-label="Open navigation">☰</button><div class="crumb">{{ active_home.name }}&nbsp; / &nbsp;<b id="crumbCurrent">Overview</b></div><div class="top-actions"><button class="icon-btn" id="themeBtn" aria-label="Switch to day mode" title="Switch to day mode">☼</button><button class="icon-btn" id="noticeBtn" aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button></div></header>
 <div class="content">
-<div class="banner" role="note"><span class="banner-icon" aria-hidden="true">i</span><span><strong>Ventilation support, at a glance.</strong> Readings come from configured sensors or simulator data; AirSense does not measure air itself. DALTON files are not included.</span></div>
 <section class="view active" id="view-overview" data-title="Overview">
   <div class="heading"><div><p class="eyebrow" id="todayLabel">HOME AIR · TODAY</p><h1>Your air, at a glance.</h1><p class="sub">A room-by-room view of the latest readings in your home.</p></div></div>
 
@@ -264,7 +307,7 @@ html:not([data-theme="day"]) .text-loop-ribbon{background:#fff;color:#050505}
 <section class="view" id="view-history" data-title="History"><div class="heading"><div><p class="eyebrow">PATTERNS OVER TIME</p><h1>History</h1><p class="sub">A simple visual of recent sample readings.</p></div><button class="btn" id="exportBtn">↓ Export CSV</button></div><article class="card chart-card"><div class="section-head"><div><p class="eyebrow">LAST 7 DAYS</p><h2>Home CO₂ trend</h2><p>Illustrative daily averages · ppm</p></div></div><div class="chart"><div class="bar-wrap"><div class="bar" style="--h:40%"></div><span class="bar-label">Mon</span></div><div class="bar-wrap"><div class="bar" style="--h:52%"></div><span class="bar-label">Tue</span></div><div class="bar-wrap"><div class="bar" style="--h:47%"></div><span class="bar-label">Wed</span></div><div class="bar-wrap"><div class="bar" style="--h:70%"></div><span class="bar-label">Thu</span></div><div class="bar-wrap"><div class="bar" style="--h:59%"></div><span class="bar-label">Fri</span></div><div class="bar-wrap"><div class="bar" style="--h:45%"></div><span class="bar-label">Sat</span></div><div class="bar-wrap"><div class="bar" style="--h:54%"></div><span class="bar-label">Sun</span></div></div></article></section>
 <section class="view" id="view-thresholds" data-title="Thresholds"><div class="heading"><div><p class="eyebrow">OWNER SETTINGS</p><h1>Thresholds</h1><p class="sub">Configured advisory thresholds for this home.</p></div></div><article class="card subpage-card"><h2>CO₂ · ppm</h2><p>These values are configurable guidance, not medical advice.</p><table class="table"><thead><tr><th>Room</th><th>Elevated</th><th>High</th></tr></thead><tbody id="thresholdRows"><tr><td colspan="3">Loading thresholds…</td></tr></tbody></table></article></section>
 <section class="view" id="view-members" data-title="Members"><div class="heading"><div><p class="eyebrow">HOUSEHOLD ACCESS</p><h1>Members</h1><p class="sub">People with access to this home.</p></div><button class="btn btn-primary" id="inviteBtn" type="button">＋ Invite member</button></div><article class="card subpage-card"><h2>People in this home</h2><table class="table"><thead><tr><th>Member</th><th>Role</th><th>Status</th></tr></thead><tbody id="memberRows"><tr><td colspan="3">Loading members…</td></tr></tbody></table></article></section>
-<section class="view" id="view-account" data-title="Account"><div class="heading"><div><p class="eyebrow">HOUSEHOLD PROFILE</p><h1>Account</h1><p class="sub">Your profile and session options.</p></div></div><article class="card subpage-card account-page-card"><div class="account-page-header"><span class="user-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M5 21c.4-4 3.1-6 7-6s6.6 2 7 6"/></svg></span><div><h2>{{ current_user.display_name }}</h2><p>{{ active_home.role|title }}</p></div></div><div class="account-info-grid"><div><span class="eyebrow">EMAIL</span><strong>{{ current_user.email }}</strong></div><div><span class="eyebrow">ACTIVE HOME</span><strong>{{ active_home.name }}</strong></div><div><span class="eyebrow">ROLE</span><strong>{{ active_home.role|title }}</strong></div><div><span class="eyebrow">SESSION</span><strong>Signed in</strong></div></div><div class="account-page-actions"><button class="btn" id="accountBack">Back to overview</button><form class="sign-out-form" method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn" id="signOutBtn" type="submit">Sign out</button></form></div></article></section>
+<section class="view" id="view-account" data-title="Account"><div class="heading"><div><p class="eyebrow">HOUSEHOLD PROFILE</p><h1>{{ active_home.role|title }} details</h1><p class="sub">Your profile and session options.</p></div></div><article class="card subpage-card account-page-card"><div class="account-page-header"><span class="user-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M5 21c.4-4 3.1-6 7-6s6.6 2 7 6"/></svg></span><div><h2>{{ current_user.display_name }}</h2><p>{{ active_home.role|title }} · Signed in</p></div></div><div class="account-info-grid"><div><span class="eyebrow">EMAIL</span><strong>{{ current_user.email }}</strong></div><div><span class="eyebrow">ACTIVE HOME</span><strong>{{ active_home.name }}</strong></div><div><span class="eyebrow">ROLE</span><strong>{{ active_home.role|title }}</strong></div><div><span class="eyebrow">SESSION</span><strong>Signed in</strong></div></div><div class="account-page-actions"><button class="btn" id="accountBack">Back to overview</button><form class="sign-out-form" method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn" id="signOutBtn" type="submit">Sign out</button></form></div></article></section>
 </div></main></div>
 <div class="modal-bg modal-backdrop" id="modalBg" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><div class="modal-head"><h2 id="modalTitle">Add room</h2><button class="close" id="closeModal" type="button" aria-label="Close dialog">×</button></div><p class="sub" id="modalDescription">Add a room and its ventilation sources.</p><form id="room-form"><label class="field" for="modalInput">Room name<input id="modalInput" name="name" placeholder="e.g. Guest room" required maxlength="100"></label><fieldset class="field ventilation-options"><legend>Ventilation sources</legend><label><input type="checkbox" name="ventilation_sources" value="Window"> Window</label><label><input type="checkbox" name="ventilation_sources" value="Exhaust fan"> Exhaust fan</label><label><input type="checkbox" name="ventilation_sources" value="Air conditioner"> Air conditioner</label><label><input type="checkbox" name="ventilation_sources" value="Kitchen chimney"> Kitchen chimney</label><label><input type="checkbox" name="ventilation_sources" value="Not specified"> Not specified</label><label class="custom-source-field">Other<input id="custom_ventilation_source" name="custom_ventilation_source" maxlength="60" placeholder="Describe another source"></label></fieldset><button class="btn btn-primary" id="modalSubmit" type="submit">Add room</button></form></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

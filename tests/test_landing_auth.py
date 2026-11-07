@@ -108,6 +108,22 @@ class LandingAuthTests(AirSenseTestCase):
         self.assertEqual(protected_dashboard.status_code, 302)
         self.assertEqual(urlparse(protected_dashboard.headers["Location"]).path, "/login")
 
+    def test_dashboard_sidebar_account_and_banner_content(self):
+        response = self.client.get("/alerts")
+
+        self.assertEqual(response.status_code, 200)
+        dashboard = unescape(response.get_data(as_text=True))
+        self.assertIn('id="sidebarToggle"', dashboard)
+        self.assertIn('id="homeAccountToggle"', dashboard)
+        self.assertIn("YOUR HOME", dashboard)
+        self.assertIn("AirSense Owner's home", dashboard)
+        self.assertIn('id="accountDetails" hidden', dashboard)
+        self.assertIn("AirSense Owner", dashboard)
+        self.assertIn("owner@example.test", dashboard)
+        self.assertIn("Owner · Signed in", dashboard)
+        self.assertIn("Sign out", dashboard)
+        self.assertNotIn("Ventilation support, at a glance.", dashboard)
+
 
 if __name__ == "__main__":
     unittest.main()

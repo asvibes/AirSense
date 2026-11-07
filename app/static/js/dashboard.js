@@ -1094,9 +1094,23 @@
     }
 
     document.addEventListener("click", event => {
-      const target = event.target.closest("[data-view], [data-goto], [data-edit-room], [data-scenario], #run-custom-reading, #run-dalton-replay");
+      const target = event.target.closest("[data-view], [data-goto], [data-edit-room], [data-scenario], #run-custom-reading, #run-dalton-replay, #sidebarToggle, #homeAccountToggle, #accountBtn, #accountBack");
       if (target?.dataset.view) go(target.dataset.view);
       else if (target?.dataset.goto) go(target.dataset.goto);
+      else if (target?.id === "sidebarToggle") {
+        const expanded = $("#sidebar").classList.toggle("expanded");
+        $(".main").classList.toggle("sidebar-expanded", expanded);
+        const label = expanded ? "Collapse sidebar" : "Expand sidebar";
+        target.setAttribute("aria-expanded", String(expanded));
+        target.setAttribute("aria-label", label);
+        target.title = label;
+        $("span", target).textContent = label;
+      } else if (target?.id === "homeAccountToggle") {
+        const expanded = target.getAttribute("aria-expanded") !== "true";
+        target.setAttribute("aria-expanded", String(expanded));
+        $("#accountDetails").hidden = !expanded;
+      } else if (target?.id === "accountBtn") go("account");
+      else if (target?.id === "accountBack") go("overview");
       else if (target?.dataset.editRoom) {
         const room = activeRooms.find(item => item.id === target.dataset.editRoom);
         if (room) openRoomModal(room);
