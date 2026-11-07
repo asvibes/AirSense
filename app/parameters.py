@@ -13,14 +13,15 @@ class Parameter:
 
 PARAMETERS = (
     Parameter("CO2", "Carbon dioxide", "ppm", ("co2", "carbon dioxide", "rco2"), {"ppm": (1, 0), "ppb": (0.001, 0)}),
-    Parameter("PM1", "PM1", "ug/m3", ("pm1",), {"ug/m3": (1, 0), "mg/m3": (1000, 0)}),
-    Parameter("PM2_5", "PM2.5", "ug/m3", ("pm2.5", "pm2_5", "pm25", "pm2.5um"), {"ug/m3": (1, 0), "mg/m3": (1000, 0)}),
-    Parameter("PM10", "PM10", "ug/m3", ("pm10", "pm10.0"), {"ug/m3": (1, 0), "mg/m3": (1000, 0)}),
-    Parameter("TEMPERATURE", "Temperature", "C", ("temperature", "temp", "ambient temperature"), {"c": (1, 0), "f": (5 / 9, -32 * 5 / 9), "k": (1, -273.15)}),
-    Parameter("HUMIDITY", "Humidity", "%", ("humidity", "relative humidity", "rh"), {"%": (1, 0), "fraction": (100, 0)}),
+    Parameter("PM1", "PM1", "ug/m3", ("pm1", "pms1"), {"ug/m3": (1, 0), "mg/m3": (1000, 0)}),
+    Parameter("PM2_5", "PM2.5", "ug/m3", ("pm2.5", "pm2_5", "pm25", "pm2.5um", "pms2_5", "pms25"), {"ug/m3": (1, 0), "mg/m3": (1000, 0)}),
+    Parameter("PM10", "PM10", "ug/m3", ("pm10", "pm10.0", "pms10"), {"ug/m3": (1, 0), "mg/m3": (1000, 0)}),
+    Parameter("TEMPERATURE", "Temperature", "C", ("temperature", "temp", "ambient temperature", "t"), {"c": (1, 0), "f": (5 / 9, -32 * 5 / 9), "k": (1, -273.15)}),
+    Parameter("HUMIDITY", "Humidity", "%", ("humidity", "relative humidity", "rh", "h"), {"%": (1, 0), "fraction": (100, 0)}),
     Parameter("CO", "Carbon monoxide", "ppm", ("co", "carbon monoxide"), {"ppm": (1, 0), "ppb": (0.001, 0)}),
     Parameter("NO2", "Nitrogen dioxide", "ppm", ("no2", "nitrogen dioxide"), {"ppm": (1, 0), "ppb": (0.001, 0)}),
     Parameter("VOC", "Volatile organic compounds", "ppb", ("voc", "tvoc", "volatile organic compounds"), {"ppb": (1, 0), "ppm": (1000, 0)}),
+    Parameter("ETHANOL", "Ethyl alcohol", "ppb", ("c2h5oh", "ethanol", "ethyl alcohol"), {"ppb": (1, 0), "ppm": (1000, 0)}),
 )
 
 _ALIASES = {

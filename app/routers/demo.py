@@ -12,7 +12,7 @@ from app.models.room import Room
 from app.security.sessions import current_user, require_home_role, require_user
 from app.services.ingestion.ingest import ingest_reading
 from app.services.ingestion.rejections import record_rejection
-from app.sources.dalton_replay import parse_environmental_csv
+from app.sources.dalton_replay import is_dalton_schema, parse_environmental_csv
 from app.sources.simulator import build_simulated_reading
 from app.timestamps import format_utc
 
@@ -99,9 +99,6 @@ def submit_dalton_replay(home_id: str):
 
         csv_content = csv_file.read().decode("utf-8-sig")
         csv_headers = next(csv.reader(StringIO(csv_content)), [])
-        normalized_headers = {
-            header.strip().lstrip("\ufeff").casefold() for header in csv_headers
-        }
         dataset = parse_environmental_csv(
             StringIO(csv_content),
             room_name=room.name,
@@ -172,6 +169,7 @@ def submit_dalton_replay(home_id: str):
             imported=0,
             parameters=[],
             review_columns=dataset["review_columns"],
+            unsupported_columns=dataset["unsupported_columns"],
             duplicate_readings=duplicate_readings,
             rows_seen=dataset["rows_seen"],
             rows_skipped=dataset["rows_skipped"] + existing_duplicates_skipped,
@@ -230,13 +228,14 @@ def submit_dalton_replay(home_id: str):
         {
             "source": (
                 "dalton_replay"
-                if {"co2", "valid_co2"}.issubset(normalized_headers)
+                if is_dalton_schema(csv_headers)
                 else "environmental_csv"
             ),
             "source_file": secure_filename(csv_file.filename) or "uploaded.csv",
             "imported": len(created),
             "parameters": list(parameter_counts.values()),
             "review_columns": dataset["review_columns"],
+            "unsupported_columns": dataset["unsupported_columns"],
             "duplicate_readings": duplicate_readings,
             "rows_seen": dataset["rows_seen"],
             "rows_skipped": dataset["rows_skipped"] + existing_duplicates_skipped,

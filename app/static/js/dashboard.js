@@ -1242,12 +1242,15 @@
           const review = (details.review_columns || [])
             .map(item => `${item.column} (${item.reason})`)
             .join("; ");
+          const unsupported = (details.unsupported_columns || [])
+            .map(item => item.column)
+            .join(", ");
           const duplicates = (details.duplicate_readings || []).length;
           const duplicateMessage = duplicates
             ? ` ${duplicates} duplicate measurement${duplicates === 1 ? "" : "s"} were skipped.`
             : "";
           $("#dataset-import-status").textContent =
-            `${details.error || error.message}${duplicateMessage}${review ? ` Review columns: ${review}.` : ""}`;
+            `${details.error || error.message}${duplicateMessage}${review ? ` Review columns: ${review}.` : ""}${unsupported ? ` Unsupported columns: ${unsupported}.` : ""}`;
         }
         throw error;
       }
@@ -1261,12 +1264,15 @@
       const review = result.review_columns.length
         ? ` Review columns: ${result.review_columns.map(item => `${item.column} (${item.reason})`).join("; ")}.`
         : "";
+      const unsupported = result.unsupported_columns.length
+        ? ` Unsupported columns: ${result.unsupported_columns.map(item => item.column).join(", ")}.`
+        : "";
       const duplicates = result.duplicate_readings.length
         ? ` ${result.duplicate_readings.length} duplicate measurement${result.duplicate_readings.length === 1 ? "" : "s"} were skipped.`
         : "";
       const summary = result.imported
-        ? `Imported ${result.imported} reading${result.imported === 1 ? "" : "s"} from ${result.source_file}${importedParameters ? ` · ${importedParameters}` : ""}.${timestampMessage}${duplicates}${review}`
-        : `No readings imported from ${result.source_file}; the file contains no recognized data.${duplicates}${review}`;
+        ? `Imported ${result.imported} reading${result.imported === 1 ? "" : "s"} from ${result.source_file}${importedParameters ? ` · ${importedParameters}` : ""}.${timestampMessage}${duplicates}${review}${unsupported}`
+        : `No readings imported from ${result.source_file}; the file contains no recognized data.${duplicates}${review}${unsupported}`;
       $("#dataset-import-status").textContent = summary;
       notify(summary);
     }

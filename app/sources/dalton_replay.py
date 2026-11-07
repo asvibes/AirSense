@@ -20,6 +20,30 @@ _TIMESTAMP_COLUMNS = {
     "ts", "time", "timestamp", "datetime", "measuredat", "measurementtime",
     "recordedat", "date",
 }
+_DALTON_MARKERS = {"pms1", "pms25", "pms10", "c2h5oh"}
+_DALTON_UNITS_BY_CODE = {
+    "TEMPERATURE": "c",
+    "HUMIDITY": "%",
+    "PM1": "ug/m3",
+    "PM2_5": "ug/m3",
+    "PM10": "ug/m3",
+    "CO2": "ppm",
+    "NO2": "ppb",
+    "CO": "ppm",
+    "VOC": "ppb",
+    "ETHANOL": "ppb",
+}
+
+
+def is_dalton_schema(headers: list[str] | tuple[str, ...]) -> bool:
+    normalized = {normalize_header(header) for header in headers}
+    return (
+        "ts" in normalized
+        and (
+            bool(normalized & _DALTON_MARKERS)
+            or {"co2", "validco2"}.issubset(normalized)
+        )
+    )
 
 
 def _coerce_bool(raw_value: object) -> bool:
@@ -36,7 +60,10 @@ def _parse_timestamp(value: str) -> datetime:
         raise ValueError("Dataset timestamps must not be empty.")
     if text.endswith("Z"):
         text = f"{text[:-1]}+00:00"
-    parsed = datetime.fromisoformat(text)
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        parsed = datetime.strptime(text, "%Y/%m/%d %H:%M:%S")
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
@@ -80,6 +107,7 @@ def parse_environmental_csv(
             raise ValueError("Dataset CSV has no header row.")
         headers = [header.strip().lstrip("\ufeff") for header in reader.fieldnames]
         reader.fieldnames = headers
+        dalton_format = is_dalton_schema(headers)
 
         time_columns = [header for header in headers if normalize_header(header) in _TIMESTAMP_COLUMNS]
         if not time_columns:
@@ -115,6 +143,8 @@ def parse_environmental_csv(
 
             parameter, source_unit, base_header = resolve_column(header)
             if parameter:
+                if source_unit is None and dalton_format:
+                    source_unit = _DALTON_UNITS_BY_CODE.get(parameter.code)
                 column = {
                     "header": header,
                     "code": parameter.code,
@@ -165,7 +195,17 @@ def parse_environmental_csv(
         supported_columns = []
         for column in columns:
             parameter = column["parameter"]
-            if parameter and column["unit"] and column["unit"] not in parameter.conversions:
+            if parameter and not column["unit"]:
+                review_columns.append(
+                    {
+                        "column": str(column["header"]),
+                        "reason": (
+                            f"No source unit is specified for {parameter.name}; "
+                            "the column was not imported. Add a unit to the header."
+                        ),
+                    }
+                )
+            elif parameter and column["unit"] not in parameter.conversions:
                 review_columns.append(
                     {
                         "column": str(column["header"]),
@@ -177,7 +217,6 @@ def parse_environmental_csv(
         columns = supported_columns
 
         parsed_rows: list[dict[str, object]] = []
-        assumed_units: set[str] = set()
         skipped_rows = 0
         rows_seen = 0
         for row in reader:
@@ -214,13 +253,11 @@ def parse_environmental_csv(
                 else:
                     parameter = column["parameter"]
                     try:
-                        normalized_value, unit, assumed = normalize_value(
+                        normalized_value, unit, _assumed = normalize_value(
                             value, parameter, column["unit"]
                         )
                     except ValueError:
                         continue
-                    if assumed:
-                        assumed_units.add(header)
                 if not math.isfinite(normalized_value):
                     continue
                 location = str(row.get(location_column) or "").strip() if location_column else ""
@@ -241,21 +278,20 @@ def parse_environmental_csv(
                 if _numeric(row.get(header)) is not None:
                     unknown_value_columns.add(header)
 
-        for header in sorted(unknown_value_columns):
+        unsupported_columns = [
+            {
+                "column": header,
+                "reason": (
+                    "Unrecognized measurement column. Add an explicit supported "
+                    "unit and parameter mapping before importing."
+                ),
+            }
+            for header in sorted(unknown_value_columns)
+        ]
+        for item in unsupported_columns:
             review_columns.append(
-                {
-                    "column": header,
-                    "reason": "Unrecognized measurement column. Add an explicit supported unit and parameter mapping before importing.",
-                }
+                item.copy()
             )
-        for header in sorted(assumed_units):
-            review_columns.append(
-                {
-                    "column": header,
-                    "reason": "No unit was provided; the parameter's conventional unit was assumed. Verify against the dataset documentation.",
-                }
-            )
-
         counts = Counter(
             (str(reading["metric"]), str(reading["measured_at"]))
             for reading in parsed_rows
@@ -292,6 +328,7 @@ def parse_environmental_csv(
             "readings": parsed_rows,
             "parameters": list(parameters.values()),
             "review_columns": review_columns,
+            "unsupported_columns": unsupported_columns,
             "duplicate_readings": duplicate_readings,
             "rows_seen": rows_seen,
             "rows_skipped": skipped_rows,
@@ -311,13 +348,14 @@ def load_dalton_csv(
     handle, should_close = _open_csv(csv_source)
     try:
         reader = csv.DictReader(handle)
-        headers = {
+        headers = [
             header.strip().lstrip("\ufeff")
             for header in (reader.fieldnames or [])
-        }
-        if not {"ts", "CO2"}.issubset(headers):
+        ]
+        normalized_headers = {normalize_header(header) for header in headers}
+        if not {"ts", "co2"}.issubset(normalized_headers):
             raise ValueError("DALTON CSV must include ts and CO2 columns.")
-        if valid_co2_only and "Valid_CO2" not in headers:
+        if valid_co2_only and "validco2" not in normalized_headers:
             raise ValueError("DALTON CSV must include Valid_CO2 when validity filtering is enabled.")
         handle.seek(0)
         result = parse_environmental_csv(
