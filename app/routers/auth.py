@@ -1,4 +1,5 @@
 import uuid
+from urllib.parse import urlsplit
 
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy import select
@@ -213,6 +214,8 @@ def login():
     if request.is_json:
         return jsonify(user={"id": user.id, "email": user.email, "display_name": user.display_name})
     next_url = request.args.get("next", "")
+    if next_url and urlsplit(next_url).path == url_for("landing"):
+        next_url = ""
     if next_url.startswith("/") and not next_url.startswith("//"):
         return redirect(next_url)
     return redirect(url_for("alerts.alerts_page"))

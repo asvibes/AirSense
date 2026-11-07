@@ -31,6 +31,7 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
 body{background:var(--color-near-black);color:var(--color-almost-white);font-family:var(--font-whyte-inktrap);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:var(--page);margin:0 auto;padding:0 24px}
+.landing-brand{position:absolute;top:24px;left:clamp(20px,4vw,48px);z-index:3;font:700 19px/1 var(--font-whyte-inktrap);letter-spacing:-.06em}
 :focus-visible{outline:2px solid var(--color-lavender-mist);outline-offset:3px}
 
 /* Buttons */
@@ -183,6 +184,7 @@ footer a:hover{text-decoration:underline}
 </head>
 <body>
 
+<a class="landing-brand" href="{{ url_for('landing') }}" aria-label="AirSense landing page">AirSense</a>
 <main id="top">
   <div class="hero">
     <div class="hero-bg" id="hero-bg" aria-hidden="true"></div>

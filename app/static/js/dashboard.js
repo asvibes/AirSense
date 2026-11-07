@@ -660,7 +660,7 @@
     }));
     $("#sign-out").addEventListener("click", () => runAction(async () => {
       await api("/api/auth/logout", { method: "POST", body: "{}" });
-      window.location.assign("/login");
+      window.location.assign("/");
     }));
     $("#room-filters").addEventListener("click", event => {
       if (event.target.closest("[data-filter]")) renderRooms();

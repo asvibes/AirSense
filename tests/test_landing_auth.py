@@ -18,6 +18,11 @@ class LandingAuthTests(AirSenseTestCase):
         self.assertIn(
             b'<a class="split-flap-cta" href="/login"', response.data
         )
+        self.assertIn(
+            b'<a class="landing-brand" href="/" '
+            b'aria-label="AirSense landing page">AirSense</a>',
+            response.data,
+        )
         self.assertIn(b"Get Started", response.data)
         self.assertIn(
             b"window.addEventListener('pageshow',onPageShow)", response.data
@@ -30,7 +35,7 @@ class LandingAuthTests(AirSenseTestCase):
         self.assertEqual(len(root_rules), 1)
         self.assertEqual(root_rules[0].endpoint, "landing")
 
-    def test_login_form_preserves_next_and_success_redirects_to_dashboard(self):
+    def test_login_form_preserves_internal_next_and_success_redirects_to_dashboard(self):
         client = self.app.test_client()
         response = client.get("/login?next=/alerts")
         form_action = re.search(
@@ -61,6 +66,27 @@ class LandingAuthTests(AirSenseTestCase):
         self.assertEqual(landing.status_code, 200)
         self.assertIsNone(landing.headers.get("Location"))
 
+    def test_login_does_not_redirect_to_landing_when_next_is_root(self):
+        client = self.app.test_client()
+        next_url = "/?source=login"
+        login_page = client.get("/login", query_string={"next": next_url})
+        csrf = re.search(
+            rb'name="csrf_token" value="([^"]+)"', login_page.data
+        ).group(1).decode()
+
+        signed_in = client.post(
+            "/login",
+            query_string={"next": next_url},
+            data={
+                "csrf_token": csrf,
+                "email": "owner@example.test",
+                "password": "secure-password-123",
+            },
+        )
+
+        self.assertEqual(signed_in.status_code, 302)
+        self.assertEqual(signed_in.headers["Location"], "/alerts")
+
     def test_landing_sign_in_dashboard_and_sign_out_are_connected(self):
         client = self.app.test_client()
 
@@ -87,9 +113,23 @@ class LandingAuthTests(AirSenseTestCase):
 
         dashboard = client.get("/alerts")
         self.assertEqual(dashboard.status_code, 200)
-        self.assertIn(b"AirSense <span>Home</span>", dashboard.data)
+        self.assertIn(b'AirSense <span>Home</span></a>', dashboard.data)
+        self.assertIn(
+            b'href="/alerts?home_id=', dashboard.data
+        )
+        self.assertNotIn(
+            b'<a class="dashboard-home-link" href="/">', dashboard.data
+        )
         self.assertIn(b"AirSense Owner", dashboard.data)
         self.assertIn(b"owner@example.test", dashboard.data)
+        for path in ("/analytics", "/history", "/predictions"):
+            page = client.get(path)
+            self.assertEqual(page.status_code, 200, path)
+            self.assertIn(
+                f'href="/alerts?home_id={self.home_id}"'.encode(),
+                page.data,
+                path,
+            )
         sign_out_form = re.search(
             rb'<form class="sign-out-form" method="post" action="([^"]+)">'
             rb'<input type="hidden" name="csrf_token" value="([^"]+)">',
@@ -108,6 +148,8 @@ class LandingAuthTests(AirSenseTestCase):
         protected_dashboard = client.get("/alerts")
         self.assertEqual(protected_dashboard.status_code, 302)
         self.assertEqual(urlparse(protected_dashboard.headers["Location"]).path, "/login")
+        dashboard_script = self.client.get("/static/js/dashboard.js")
+        self.assertIn(b'window.location.assign("/")', dashboard_script.data)
 
     def test_dashboard_sidebar_account_and_banner_content(self):
         response = self.client.get("/alerts")
