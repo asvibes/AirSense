@@ -67,7 +67,9 @@ Features include:
 * **Sensor ingestion:** Submit device readings using per-sensor keys through the same alert evaluation path used by simulator readings.
 * **Alert management:** View alert history and acknowledge alerts while authenticated.
 * **Threshold configuration:** Persist per-room CO₂ threshold settings.
-* **History and export:** View history charts, a 90-day coverage heatmap, and export readings as CSV.
+* **History and export:** Filter stored readings by household, room, sensor, metric, and date range; inspect timestamped samples and gaps; export CSV or a multi-page PDF report.
+* **Analytics:** Review observed minimum, average, maximum, and change summaries; compare series by room/sensor; view actual samples or daily, weekly, and monthly averages. Empty periods are not synthesized.
+* **Predictions:** A dedicated page reports forecasts only when a per-series linear trend beats a persistence baseline by at least 5% on a later chronological holdout. Unsupported series and horizons remain unavailable; simulated readings are excluded from training.
 * **Household management:** Owners can invite members and review activity history.
 * **Simulation:** Submit simulated readings to the server-side alert pipeline.
 * **DALTON replay:** Upload a processed DALTON CSV and replay valid CO₂ samples through that same alert pipeline. Samples are labeled as recorded data; timestamps can be shifted for a current demo.
@@ -102,12 +104,17 @@ Device ingestion uses the `X-Device-Key` header for sensor authentication.
 | `GET /api/homes/{home_id}/thresholds`, `PUT /api/homes/{home_id}/thresholds` | Read or batch-update room CO₂ thresholds. |
 | `PUT /api/homes/{home_id}/thresholds/{room_id}/{metric_code}` | Update one room/metric threshold. |
 | `GET /api/homes/{home_id}/history`, `GET /api/homes/{home_id}/history.csv` | Get filtered history or export it as CSV. |
+| `GET /api/homes/{home_id}/history/options` | List stored metrics for the selected room and sensor filters. |
+| `GET /api/homes/{home_id}/history.pdf` | Export a PDF report for the selected history filters. |
+| `GET /api/homes/{home_id}/predictions` | List saved model evaluations or request a validated forecast for a stored series. |
 | `GET /api/homes/{home_id}/members`, `POST /api/homes/{home_id}/invitations` | List members or create a single-use invitation. |
 | `POST /api/invitations/accept`, `DELETE /api/homes/{home_id}/members/{user_id}` | Accept an invitation or remove a non-owner member. |
 | `GET /api/homes/{home_id}/activity` | Read the home activity log (owner only). |
 | `GET /api/dashboard?home_id=...`, `GET /api/alerts?home_id=...`, `POST /api/policies`, `POST /api/readings`, `POST /api/alerts/{alert_id}/acknowledge` | Legacy authenticated dashboard/alert routes retained for compatibility. |
 
 Authenticated mutating routes use session authentication and CSRF protection. Device ingestion is authenticated separately with the sensor key. `REQUIRE_API_TOKEN` is an optional additional gate in the legacy alerts blueprint; it does not replace session, membership, or device authentication and is not a global API gate.
+
+Forecast training is a separate offline task and is never run during page or API loading. Run `python -m app.ml.train` after adding real device or dataset readings. It evaluates each home/room/sensor/metric series with an 80/20 chronological split, compares the linear time trend with a persistence baseline, and writes model/evaluation results to `instance/forecast_models.json`. Series with fewer than 30 distinct timestamps or without the required holdout improvement are saved as unavailable, not forecast.
 
 ## Security
 

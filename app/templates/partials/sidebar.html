@@ -1,0 +1,55 @@
+<aside class="sidebar expanded" id="sidebar">
+  <a class="dashboard-home-link" href="{{ url_for('landing') }}">AirSense <span>Home</span></a>
+  <button class="dock-toggle" id="sidebarToggle" type="button" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg><span>Collapse sidebar</span></button>
+
+  <p class="nav-label">YOUR HOME</p>
+  <nav class="nav-list" aria-label="Your home">
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='overview') }}" data-tooltip="Overview" aria-label="Overview">{% else %}<button class="nav-link{% if active_nav == 'overview' %} active{% endif %}" data-view="overview" data-tooltip="Overview" aria-label="Overview">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></svg></span><span class="nav-text">Overview</span>{% if standalone %}</a>{% else %}</button>{% endif %}
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='rooms') }}" data-tooltip="Rooms" aria-label="Rooms">{% else %}<button class="nav-link{% if active_nav == 'rooms' %} active{% endif %}" data-view="rooms" data-tooltip="Rooms" aria-label="Rooms">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21V5h12v16M15 10h6v11M7 9h4M7 13h4M7 17h4M18 14h1M18 17h1M2 21h20"/></svg></span><span class="nav-text">Rooms</span>{% if standalone %}</a>{% else %}</button>{% endif %}
+  </nav>
+
+  <p class="nav-label">DEVICES</p>
+  <nav class="nav-list" aria-label="Devices">
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='sensors') }}" data-tooltip="Sensors" aria-label="Sensors">{% else %}<button class="nav-link{% if active_nav == 'sensors' %} active{% endif %}" data-view="sensors" data-tooltip="Sensors" aria-label="Sensors">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="3"/><path d="M11 7h2M11 17h2M5 8a10 10 0 0 0 0 8M19 8a10 10 0 0 1 0 8"/></svg></span><span class="nav-text">Sensors</span>{% if standalone %}</a>{% else %}</button>{% endif %}
+  </nav>
+
+  <p class="nav-label">ALERT CENTER</p>
+  <nav class="nav-list" aria-label="Alert center">
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='alerts') }}" data-tooltip="Alerts" aria-label="Alerts">{% else %}<button class="nav-link{% if active_nav == 'alerts' %} active{% endif %}" data-view="alerts" data-tooltip="Alerts" aria-label="Alerts">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg></span><span class="nav-text">Alerts</span>{% if not standalone %}<span class="count" id="navAlertCount">0</span>{% endif %}{% if standalone %}</a>{% else %}</button>{% endif %}
+  </nav>
+
+  <p class="nav-label">INSIGHTS</p>
+  <nav class="nav-list" aria-label="Insights">
+    <a class="nav-link{% if active_nav == 'analytics' %} active{% endif %}" href="{{ url_for('history.analytics_page', home_id=active_home.id) }}" data-tooltip="Analytics" aria-label="Analytics"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 5-6"/></svg></span><span class="nav-text">Analytics</span></a>
+    <a class="nav-link{% if active_nav == 'history' %} active{% endif %}" href="{{ url_for('history.history_page', home_id=active_home.id) }}" data-tooltip="History" aria-label="History"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></svg></span><span class="nav-text">History</span></a>
+    <a class="nav-link{% if active_nav == 'predictions' %} active{% endif %}" href="{{ url_for('history.predictions_page', home_id=active_home.id) }}" data-tooltip="Predictions" aria-label="Predictions"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-9"/><path d="M15 6h6v6"/></svg></span><span class="nav-text">Predictions</span></a>
+  </nav>
+
+  <p class="nav-label">SIMULATED DATA</p>
+  <nav class="nav-list" aria-label="Simulated data">
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='demo') }}" data-tooltip="Demo Lab" aria-label="Demo Lab">{% else %}<button class="nav-link{% if active_nav == 'demo' %} active{% endif %}" data-view="demo" data-tooltip="Demo Lab" aria-label="Demo Lab">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z"/></svg></span><span class="nav-text">Demo Lab</span>{% if standalone %}</a>{% else %}</button>{% endif %}
+  </nav>
+
+  <p class="nav-label">HOUSEHOLD</p>
+  <nav class="nav-list" aria-label="Household">
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='thresholds') }}" data-tooltip="Thresholds" aria-label="Thresholds">{% else %}<button class="nav-link{% if active_nav == 'thresholds' %} active{% endif %}" data-view="thresholds" data-tooltip="Thresholds" aria-label="Thresholds">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg></span><span class="nav-text">Thresholds</span>{% if standalone %}</a>{% else %}</button>{% endif %}
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='members') }}" data-tooltip="Members" aria-label="Members">{% else %}<button class="nav-link{% if active_nav == 'members' %} active{% endif %}" data-view="members" data-tooltip="Members" aria-label="Members">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5.5a3 3 0 0 1 0 5.8M18 14c2 .8 3 2.7 3 5"/></svg></span><span class="nav-text">Members</span>{% if standalone %}</a>{% else %}</button>{% endif %}
+    {% if standalone %}<a class="nav-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='account') }}" data-tooltip="Owner Details" aria-label="Owner Details">{% else %}<button class="nav-link{% if active_nav == 'account' %} active{% endif %}" data-view="account" data-tooltip="Owner Details" aria-label="Owner Details">{% endif %}<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M5 21c.4-4 3.1-6 7-6s6.6 2 7 6"/></svg></span><span class="nav-text">Owner Details</span>{% if standalone %}</a>{% else %}</button>{% endif %}
+  </nav>
+
+  <div class="side-bottom">
+    <button class="home-account-toggle" id="homeAccountToggle" type="button" aria-expanded="false" aria-controls="accountDetails">
+      <span class="home-account-mark" aria-hidden="true">{{ active_home.name[:1] }}</span>
+      <span class="home-account-copy"><small>YOUR HOME</small><strong>{{ active_home.name }}</strong></span>
+      <span class="home-account-chevron" aria-hidden="true">⌃</span>
+    </button>
+    <div class="account-details" id="accountDetails" hidden>
+      {% if standalone %}<a class="account-owner-link" href="{{ url_for('alerts.alerts_page', home_id=active_home.id, view='account') }}" aria-label="View owner details">{% else %}<button class="account-owner-link" id="accountBtn" type="button" aria-label="View account details">{% endif %}
+        <span class="user-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M5 21c.4-4 3.1-6 7-6s6.6 2 7 6"/></svg></span>
+        <span><b>{{ current_user.display_name }}</b><small>{{ active_home.role|title }} · Signed in</small></span>
+        <span class="account-chevron" aria-hidden="true">→</span>
+      {% if standalone %}</a>{% else %}</button>{% endif %}
+    </div>
+  </div>
+</aside>
+<div class="nav-backdrop" id="navBackdrop"></div>

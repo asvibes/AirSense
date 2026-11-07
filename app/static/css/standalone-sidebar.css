@@ -1,0 +1,126 @@
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 5;
+  display: flex;
+  width: 248px;
+  flex-direction: column;
+  align-items: stretch;
+  overflow-y: auto;
+  padding: 25px 17px 18px;
+  background: var(--rail);
+  border-right: 1px solid var(--line);
+  transition: width .22s ease, transform .22s ease, padding .22s ease;
+}
+.dashboard-home-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 650;
+}
+.dashboard-home-link span { color: var(--muted); font-size: 12px; }
+.dock-toggle {
+  display: flex;
+  width: 100%;
+  height: 42px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.dock-toggle svg { display: block; width: 21px; height: 21px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dock-toggle span { font-size: 12px; }
+.sidebar .nav-label { padding: 0 11px; margin: 0 0 8px; }
+.sidebar .nav-list { display: grid; width: 100%; justify-items: stretch; gap: 4px; margin: 0 0 20px; }
+.sidebar .nav-link {
+  display: flex;
+  width: 100%;
+  height: 42px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  font-size: 14px;
+}
+.sidebar .nav-link:hover { background: color-mix(in srgb,var(--accent) 10%,transparent); color: var(--text); }
+.sidebar .nav-link.active { background: color-mix(in srgb,var(--accent) 17%,transparent); color: var(--text); box-shadow: inset 3px 0 var(--accent); }
+.sidebar .nav-ico { display: grid; width: 18px; flex: none; place-items: center; }
+.sidebar .nav-ico svg { display: block; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sidebar .nav-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar .count { margin-left: auto; }
+.sidebar .side-bottom { display: block; width: 100%; margin-top: auto; padding: 0; border: 0; }
+.sidebar .home-account-toggle,.sidebar .account-owner-link { display: flex; width: 100%; align-items: center; gap: 10px; border: 0; background: transparent; color: var(--text); text-align: left; }
+.sidebar .home-account-toggle { justify-content: space-between; padding: 10px 8px; cursor: pointer; }
+.home-account-copy { display: grid; min-width: 0; gap: 2px; }
+.home-account-copy small { color: var(--muted); font: 10px/1.4 ui-monospace,Consolas,monospace; letter-spacing: .13em; }
+.home-account-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 550; }
+.home-account-mark { display: none; flex: none; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700; }
+.home-account-chevron { flex: none; color: var(--muted); font-size: 12px; transition: transform .18s ease; }
+.home-account-toggle[aria-expanded="true"] .home-account-chevron { transform: rotate(180deg); }
+.account-details { padding: 2px 0 0; }
+.sidebar .account-owner-link { justify-content: flex-start; padding: 8px; cursor: pointer; }
+.account-owner-link:hover,.home-account-toggle:hover { color: var(--accent); }
+.account-owner-link > span:nth-child(2) { min-width: 0; flex: 1; }
+.account-owner-link b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.account-owner-link small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+.account-owner-link .account-chevron { color: var(--muted); }
+.sidebar .user-avatar { flex: none; }
+.main { min-width: 0; margin-left: 248px; transition: margin-left .22s ease; }
+.sidebar:not(.expanded) { width: 78px; align-items: center; padding: 20px 12px 14px; }
+.sidebar:not(.expanded) .dashboard-home-link { width: 48px; height: 42px; justify-content: center; padding: 0; overflow: hidden; border: 0; font-size: 0; }
+.sidebar:not(.expanded) .dashboard-home-link span { display: none; }
+.sidebar:not(.expanded) .dashboard-home-link::before { content: "A"; display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: var(--text); color: var(--bg); font-size: 16px; font-weight: 750; }
+.sidebar:not(.expanded) .dock-toggle { width: 48px; justify-content: center; padding: 0; }
+.sidebar:not(.expanded) .dock-toggle span,.sidebar:not(.expanded) .nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+.sidebar:not(.expanded) .nav-list { justify-items: center; gap: 8px; margin-bottom: 18px; }
+.sidebar:not(.expanded) .nav-link { position: relative; width: 48px; height: 48px; justify-content: center; gap: 0; padding: 0; border-radius: 15px; font-size: 0; }
+.sidebar:not(.expanded) .nav-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+.sidebar:not(.expanded) .nav-link::after { position: absolute; left: 58px; z-index: 6; display: none; padding: 6px 9px; border-radius: 7px; background: var(--surface2); color: var(--text); content: attr(data-tooltip); font-size: 12px; white-space: nowrap; box-shadow: 0 3px 12px #0002; }
+.sidebar:not(.expanded) .nav-link:hover::after { display: block; }
+.sidebar:not(.expanded) .count { position: absolute; top: 1px; right: 1px; min-width: 16px; margin: 0; padding: 1px 4px; font-size: 9px; }
+.sidebar:not(.expanded) .home-account-toggle { justify-content: center; padding: 6px; }
+.sidebar:not(.expanded) .home-account-copy,.sidebar:not(.expanded) .home-account-chevron { display: none; }
+.sidebar:not(.expanded) .home-account-mark { display: grid; }
+.sidebar:not(.expanded) .account-details { display: none !important; }
+.sidebar:not(.expanded) ~ .main { margin-left: 78px; }
+.nav-backdrop { display: none; }
+.mobile-menu { display: none; width: 38px; height: 38px; place-items: center; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+.aggregation-control { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+.aggregation-control select { border: 1px solid var(--line); border-radius: 9px; background: var(--field); color: var(--text); padding: 8px; }
+@media (max-width: 720px) {
+  .sidebar,.sidebar:not(.expanded) { width: min(280px,85vw); align-items: stretch; padding: 20px 16px 14px; transform: translateX(-105%); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar:not(.expanded) .dashboard-home-link { width: 100%; justify-content: space-between; font-size: 16px; }
+  .sidebar:not(.expanded) .dashboard-home-link::before { display: none; }
+  .sidebar:not(.expanded) .dashboard-home-link span { display: inline; }
+  .sidebar:not(.expanded) .dock-toggle { width: 100%; justify-content: flex-start; padding: 0 14px; }
+  .sidebar:not(.expanded) .dock-toggle span { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .sidebar:not(.expanded) .nav-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; padding: 0 11px; }
+  .sidebar:not(.expanded) .nav-list { justify-items: stretch; }
+  .sidebar:not(.expanded) .nav-link { width: 100%; height: 42px; justify-content: flex-start; gap: 12px; padding: 0 12px; font-size: 14px; }
+  .sidebar:not(.expanded) .nav-text { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .sidebar:not(.expanded) .home-account-copy,.sidebar:not(.expanded) .home-account-chevron { display: initial; }
+  .sidebar:not(.expanded) .home-account-toggle { justify-content: space-between; }
+  .sidebar:not(.expanded) .home-account-mark { display: none; }
+  .sidebar:not(.expanded) .account-details { display: block !important; }
+  .sidebar:not(.expanded) .nav-link::after { display: none; }
+  .sidebar:not(.expanded) ~ .main,.main,.main.sidebar-expanded { width: 100%; margin-left: 0; }
+  .nav-backdrop.open { position: fixed; inset: 0; z-index: 4; display: block; background: #07121488; }
+  .mobile-menu { display: grid; flex: none; }
+  .topbar { justify-content: flex-start; }
+  .topbar .crumb { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

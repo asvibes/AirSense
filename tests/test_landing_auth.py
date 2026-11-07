@@ -1,3 +1,4 @@
+import json
 import re
 import unittest
 from html import unescape
@@ -123,6 +124,33 @@ class LandingAuthTests(AirSenseTestCase):
         self.assertIn("Owner · Signed in", dashboard)
         self.assertIn("Sign out", dashboard)
         self.assertNotIn("Ventilation support, at a glance.", dashboard)
+        self.assertIn(
+            ".sidebar:not(.expanded) .nav-text{position:absolute", dashboard
+        )
+        self.assertIn(
+            ".account-page-card{width:100%;min-width:0}", dashboard
+        )
+        config_json = re.search(
+            r'<script id="airsense-config" type="application/json">(.*?)</script>',
+            dashboard,
+        )
+        self.assertIsNotNone(config_json)
+        config = json.loads(config_json.group(1))
+        self.assertEqual(config["thresholdDefaults"]["elevated_threshold"], 1000)
+        self.assertEqual(config["thresholdDefaults"]["high_threshold"], 1500)
+        self.assertEqual(config["thresholdDefaults"]["max_reading_gap_seconds"], 120)
+        self.assertIn('id="saveThresholds"', dashboard)
+        self.assertIn('id="thresholdRows"', dashboard)
+        self.assertIn("threshold-table-wrap", dashboard)
+        self.assertIn(
+            '#room-form .ventilation-options>label input[type="checkbox"]'
+            '{width:16px;height:16px;flex:0 0 16px;margin:0}',
+            dashboard,
+        )
+        script = self.client.get("/static/js/dashboard.js")
+        self.assertEqual(script.status_code, 200)
+        self.assertIn(b"async function saveThresholds()", script.data)
+        self.assertIn(b'method: "PUT"', script.data)
 
 
 if __name__ == "__main__":

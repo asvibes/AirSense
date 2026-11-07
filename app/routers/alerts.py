@@ -81,11 +81,42 @@ def alerts_page():
         notice=request.args.get("notice"),
         high_threshold=current_app.config["HIGH_THRESHOLD"],
         elevated_threshold=current_app.config["ELEVATED_THRESHOLD"],
+        threshold_defaults={
+            "high_threshold": current_app.config["HIGH_THRESHOLD"],
+            "elevated_threshold": current_app.config["ELEVATED_THRESHOLD"],
+            "elevated_duration_seconds": current_app.config[
+                "ELEVATED_DURATION_SECONDS"
+            ],
+            "rapid_rise_per_minute": current_app.config[
+                "RAPID_RISE_PER_MINUTE"
+            ],
+            "all_clear_duration_seconds": current_app.config[
+                "ALL_CLEAR_DURATION_SECONDS"
+            ],
+            "max_reading_gap_seconds": current_app.config[
+                "MAX_READING_GAP_SECONDS"
+            ],
+        },
         api_token_required=current_app.config["REQUIRE_API_TOKEN"],
         current_user=user,
         homes=home_rows,
         active_home=selected,
         csrf_token=_csrf_token(),
+        initial_view=(
+            request.args.get("view")
+            if request.args.get("view")
+            in {
+                "overview",
+                "rooms",
+                "sensors",
+                "alerts",
+                "demo",
+                "thresholds",
+                "members",
+                "account",
+            }
+            else "overview"
+        ),
     )
 
 

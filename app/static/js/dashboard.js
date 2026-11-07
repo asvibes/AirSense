@@ -952,8 +952,16 @@
 
     function renderThresholds() {
       $("#thresholdRows").innerHTML = activeRooms.map(room => {
-        const threshold = activeThresholds.find(item => item.room_id === room.id && item.metric === "CO2");
-        return `<tr><td>${escapeHtml(room.name)}</td><td>${threshold ? `${escapeHtml(format(threshold.elevated_threshold))} ppm` : "Default"}</td><td>${threshold ? `${escapeHtml(format(threshold.high_threshold))} ppm` : "Default"}</td></tr>`;
+        const threshold = activeThresholds.find(item => item.room_id === room.id && item.metric === "CO2") || config.thresholdDefaults;
+        const elevated = escapeHtml(threshold.elevated_threshold);
+        const high = escapeHtml(threshold.high_threshold);
+        const elevatedField = config.role === "owner"
+          ? `<input type="number" min="0" step="1" inputmode="numeric" data-threshold="elevated_threshold" aria-label="${escapeHtml(room.name)} elevated threshold in ppm" value="${elevated}">`
+          : `<span>${format(threshold.elevated_threshold)} ppm</span>`;
+        const highField = config.role === "owner"
+          ? `<input type="number" min="1" step="1" inputmode="numeric" data-threshold="high_threshold" aria-label="${escapeHtml(room.name)} high threshold in ppm" value="${high}">`
+          : `<span>${format(threshold.high_threshold)} ppm</span>`;
+        return `<tr data-room-id="${escapeHtml(room.id)}"><th scope="row">${escapeHtml(room.name)}</th><td>${elevatedField}</td><td>${highField}</td></tr>`;
       }).join("") || '<tr><td colspan="3">Add a room to configure thresholds.</td></tr>';
     }
 
@@ -964,8 +972,10 @@
     }
 
     function renderHistoryChart() {
+      const chart = $(".chart");
+      if (!chart) return;
       const readings = activeRooms.map(room => ({ room, reading: latestCo2(room) })).filter(item => item.reading);
-      $(".chart").innerHTML = readings.map(({ room, reading }) =>
+      chart.innerHTML = readings.map(({ room, reading }) =>
         `<div class="bar-wrap"><div class="bar" title="${escapeHtml(room.name)}: ${escapeHtml(format(reading.value))} ppm" style="--h:${Math.min(100, Number(reading.value) / 2000 * 100)}%"></div><span class="bar-label">${escapeHtml(room.name)}</span></div>`
       ).join("") || '<p class="empty-note">No stored CO₂ readings yet.</p>';
     }
@@ -988,6 +998,52 @@
       renderSensors();
       renderThresholds();
       renderMembers();
+    }
+
+    async function saveThresholds() {
+      const rows = $$("#thresholdRows tr[data-room-id]");
+      if (!rows.length) throw new Error("Add a room before setting thresholds.");
+      const updates = rows.map(row => {
+        const values = Object.fromEntries(
+          $$("[data-threshold]", row).map(input => [input.dataset.threshold, Number(input.value)])
+        );
+        if (
+          !Number.isFinite(values.elevated_threshold) ||
+          !Number.isFinite(values.high_threshold) ||
+          values.elevated_threshold < 0 ||
+          values.high_threshold <= 0 ||
+          values.high_threshold <= values.elevated_threshold
+        ) {
+          throw new Error(`Enter valid thresholds for ${row.querySelector("th").textContent}; Elevated must be non-negative and lower than High.`);
+        }
+        const policy = activeThresholds.find(item =>
+          item.room_id === row.dataset.roomId && item.metric === "CO2"
+        ) || config.thresholdDefaults;
+        return {
+          room_id: row.dataset.roomId,
+          elevated_threshold: values.elevated_threshold,
+          high_threshold: values.high_threshold,
+          elevated_duration_seconds: policy.elevated_duration_seconds,
+          rapid_rise_per_minute: policy.rapid_rise_per_minute,
+          all_clear_duration_seconds: policy.all_clear_duration_seconds,
+          max_reading_gap_seconds: policy.max_reading_gap_seconds
+        };
+      });
+      $("#thresholdStatus").textContent = "Saving…";
+      try {
+        await api(`${homePath}/thresholds`, {
+          method: "PUT",
+          body: JSON.stringify({ thresholds: updates })
+        });
+        const result = await api(`${homePath}/thresholds`);
+        activeThresholds = result.thresholds;
+        renderThresholds();
+        $("#thresholdStatus").textContent = "Thresholds saved.";
+        notify("Thresholds saved for this home.");
+      } catch (error) {
+        $("#thresholdStatus").textContent = error.message || "Unable to save thresholds.";
+        throw error;
+      }
     }
 
     function openRoomModal(room = null) {
@@ -1094,7 +1150,7 @@
     }
 
     document.addEventListener("click", event => {
-      const target = event.target.closest("[data-view], [data-goto], [data-edit-room], [data-scenario], #run-custom-reading, #run-dalton-replay, #sidebarToggle, #homeAccountToggle, #accountBtn, #accountBack");
+      const target = event.target.closest("[data-view], [data-goto], [data-edit-room], [data-scenario], #run-custom-reading, #run-dalton-replay, #sidebarToggle, #homeAccountToggle, #accountBtn, #accountBack, #saveThresholds");
       if (target?.dataset.view) go(target.dataset.view);
       else if (target?.dataset.goto) go(target.dataset.goto);
       else if (target?.id === "sidebarToggle") {
@@ -1111,6 +1167,7 @@
         $("#accountDetails").hidden = !expanded;
       } else if (target?.id === "accountBtn") go("account");
       else if (target?.id === "accountBack") go("overview");
+      else if (target?.id === "saveThresholds") saveThresholds().catch(error => notify(error.message, "error"));
       else if (target?.dataset.editRoom) {
         const room = activeRooms.find(item => item.id === target.dataset.editRoom);
         if (room) openRoomModal(room);
@@ -1188,6 +1245,7 @@
     }).format(new Date()).toUpperCase()}`;
     $("#averageCo2Status").textContent = "Loading readings…";
     await loadDashboard().catch(error => notify(error.message || "Unable to load home data.", "error"));
+    go(config.initialView || "overview");
     window.setInterval(() => {
       if (!rotationPaused && document.visibilityState === "visible" && activeRooms.length) {
         currentRoomIndex = (currentRoomIndex + 1) % activeRooms.length;
