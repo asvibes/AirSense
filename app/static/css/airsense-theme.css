@@ -1,0 +1,319 @@
+:root {
+  color-scheme: dark;
+  --bg: #111f24;
+  --surface: #1a2b30;
+  --surface2: #22383c;
+  --surface3: #2b484b;
+  --text: #edf6f1;
+  --muted: #afc5bd;
+  --line: rgba(221,242,232,.14);
+  --accent: #83cdb8;
+  --accent2: #83c8d0;
+  --warn: #d3ad75;
+  --danger: #df8f83;
+  --bad: #df8f83;
+  --good: #83cdb8;
+  --shadow: 0 14px 38px rgba(3,18,22,.24);
+  --rail: #15262b;
+  --field: #1a2b30;
+  --card-border: var(--line);
+  --card-shadow: var(--shadow);
+}
+
+html[data-theme="day"] {
+  color-scheme: light;
+  --bg: #f4faf7;
+  --surface: #fff;
+  --surface2: #e6f2ec;
+  --surface3: #d8ebe3;
+  --text: #183b3a;
+  --muted: #5e7771;
+  --line: rgba(24,59,58,.12);
+  --accent: #438f79;
+  --accent2: #68b7ba;
+  --warn: #936b38;
+  --danger: #a94f47;
+  --bad: #a94f47;
+  --good: #438f79;
+  --shadow: 0 12px 36px rgba(24,59,58,.07);
+  --rail: #edf6f1;
+  --field: #fff;
+  --card-border: var(--line);
+  --card-shadow: var(--shadow);
+}
+
+html:not([data-theme="day"]) {
+  color-scheme: dark;
+  --bg: #050505;
+  --surface: #111;
+  --surface2: #191919;
+  --surface3: #222;
+  --text: #fff;
+  --muted: #bbb;
+  --line: rgba(255,255,255,.16);
+  --accent: #fff;
+  --accent2: #ddd;
+  --warn: #ddd;
+  --danger: #fff;
+  --good: #eee;
+  --rail: #090909;
+  --field: #111;
+  --shadow: 0 14px 38px rgba(0,0,0,.35);
+  --card-border: #333;
+  --card-shadow: 0 8px 26px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  letter-spacing: -.01em;
+}
+
+*::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--muted) 48%,transparent);
+  background-clip: padding-box;
+}
+
+.sidebar {
+  scrollbar-color: color-mix(in srgb,var(--muted) 55%,transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.sidebar.expanded {
+  overflow-y: auto;
+}
+
+.sidebar:not(.expanded) {
+  overflow: visible;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--muted) 55%,transparent);
+  background-clip: padding-box;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb,var(--accent) 72%,transparent);
+  background-clip: padding-box;
+}
+
+.insights-page .main {
+  margin-left: 248px;
+}
+
+.insights-page {
+  font: 15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  letter-spacing: -.01em;
+}
+
+.insights-page .topbar {
+  height: 68px;
+  padding: 0 clamp(18px,4vw,52px);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter: blur(15px);
+  z-index: 3;
+}
+
+.insights-page .content {
+  max-width: 1440px;
+  padding: 35px clamp(18px,4vw,52px) 48px;
+}
+
+.insights-page .heading {
+  margin: 4px 0 27px;
+}
+
+.insights-page .eyebrow {
+  margin: 0 0 9px;
+  font: 10px/1.5 ui-monospace,SFMono-Regular,monospace;
+  letter-spacing: .16em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.insights-page .heading h1 {
+  margin: 0;
+  font-size: clamp(34px,4.5vw,55px);
+  font-weight: 450;
+  letter-spacing: -.065em;
+  line-height: 1.04;
+}
+
+.insights-page .sub {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+.insights-page .card {
+  border-color: var(--card-border);
+  border-radius: 17px;
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+
+html[data-theme="day"] .insights-page,
+html[data-theme="day"] .insights-page .main,
+html[data-theme="day"] .insights-page .content,
+html[data-theme="day"] .insights-page .topbar,
+html[data-theme="day"] .insights-page .sidebar {
+  background: #fff;
+  color: #111;
+}
+
+html[data-theme="day"] .insights-page .sidebar {
+  border-color: #ddd;
+}
+
+html[data-theme="day"] .insights-page .card {
+  border-color: #ddd;
+  box-shadow: 0 8px 24px rgba(0,0,0,.043);
+}
+
+html[data-theme="day"] .insights-page .heading h1,
+html[data-theme="day"] .insights-page .card h2 {
+  color: #111;
+}
+
+html[data-theme="day"] .insights-page .nav-link.active {
+  background: #f1f1f1;
+  color: #111;
+  box-shadow: inset 3px 0 #111;
+}
+
+html[data-theme="day"] .insights-page .btn-primary,
+html[data-theme="day"] .insights-page .btn-primary:hover {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+html:not([data-theme="day"]) .insights-page .nav-link.active {
+  background: #1b1b1b;
+  color: #fff;
+  box-shadow: inset 3px 0 #fff;
+}
+
+.insights-page .card h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -.045em;
+}
+
+.insights-page .hint {
+  color: var(--muted);
+}
+
+.insights-page .btn,
+.insights-page .icon-btn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+}
+
+.insights-page .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+.insights-page .icon-btn {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 11px;
+}
+
+.insights-page .btn:hover,
+.insights-page .icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.insights-page .btn-primary,
+.insights-page .btn-primary:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.insights-page .field select,
+.insights-page .field input,
+.insights-page .table-tools input,
+.insights-page .aggregation-control select {
+  border-color: var(--line);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--text);
+}
+
+@media (max-width: 720px) {
+  .sidebar,
+  .sidebar:not(.expanded) {
+    overflow-y: auto;
+  }
+
+  .sidebar.expanded {
+    overflow-y: auto;
+  }
+
+  .insights-page .main,
+  .insights-page .main.sidebar-expanded {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .insights-page .content {
+    padding: 28px 18px 38px;
+  }
+}
+
+@media (max-width: 430px) {
+  .insights-page .card {
+    border-radius: 14px;
+  }
+}

@@ -8,8 +8,6 @@
   <script id="history-config" type="application/json">{{ {"homeId": active_home.id, "csrfToken": csrf_token, "userName": current_user.display_name, "pageMode": page_mode}|tojson }}</script>
   <script defer src="{{ url_for('static', filename='js/history.js') }}"></script>
   <style>
-    :root{color-scheme:dark;--bg:#111f24;--surface:#1a2b30;--surface2:#22383c;--text:#edf6f1;--muted:#afc5bd;--line:rgba(221,242,232,.14);--accent:#83cdb8;--accent2:#83c8d0;--warn:#d3ad75;--bad:#df8f83;--rail:#15262b;--field:#102126}
-    html[data-theme="day"]{color-scheme:light;--bg:#f4faf7;--surface:#fff;--surface2:#e6f2ec;--text:#183b3a;--muted:#5e7771;--line:rgba(24,59,58,.12);--accent:#438f79;--accent2:#68b7ba;--warn:#936b38;--bad:#a94f47;--rail:#edf6f1;--field:#fff}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{color:inherit;cursor:pointer}a{color:inherit;text-decoration:none}:focus-visible{outline:3px solid var(--accent2);outline-offset:3px}
     .shell{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:230px;padding:24px 17px;background:var(--rail);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:2}.brand{font-size:21px;font-weight:750;letter-spacing:-.06em;padding:3px 10px 24px}.brand span{color:var(--accent)}.nav-label,.eyebrow{color:var(--muted);font:10px/1.5 ui-monospace,Consolas,monospace;letter-spacing:.14em}.nav-label{padding:0 10px;margin:12px 0 8px}.nav-link{display:block;width:100%;border:0;background:transparent;text-align:left;color:var(--muted);padding:11px 12px;border-radius:10px}.nav-link:hover,.nav-link.active{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}.sidebar-bottom{margin-top:auto;border-top:1px solid var(--line);padding:15px 9px 5px;color:var(--muted);font-size:12px}.sidebar-bottom strong{display:block;color:var(--text);font-size:14px}
     main{margin-left:230px;min-height:100vh}.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,48px);border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);z-index:1}.crumb{color:var(--muted)}.crumb b{color:var(--text);font-weight:550}.top-actions{display:flex;gap:8px}.icon-btn,.btn{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:9px 12px}.btn:hover,.icon-btn:hover{border-color:var(--accent);color:var(--accent)}.btn-primary{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:650}.content{max-width:1500px;margin:auto;padding:32px clamp(18px,4vw,48px) 48px}.heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}.eyebrow{margin:0 0 6px}.heading h1{font-size:clamp(34px,4vw,48px);font-weight:450;letter-spacing:-.06em;line-height:1.05;margin:0}.sub{color:var(--muted);margin:8px 0 0}
@@ -22,9 +20,10 @@
     @media print{.sidebar,.topbar,.filter-card,.chart-toolbar,.table-tools,.pager,.export-actions{display:none!important}.main{margin:0}.content{max-width:none;padding:0}.card{break-inside:avoid;box-shadow:none;background:#fff;color:#111;border-color:#bbb}.chart-scroll{overflow:visible}.chart-panel{min-width:0}.table-wrap{overflow:visible}.table{min-width:0;font-size:8px}.table th,.table td{white-space:normal;padding:5px}.heading{margin-top:0}}
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/standalone-sidebar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/airsense-theme.css') }}">
   <script defer src="{{ url_for('static', filename='js/standalone-sidebar.js') }}"></script>
 </head>
-<body>
+<body class="insights-page">
   <div class="shell">
   {% set standalone = true %}
   {% include "partials/sidebar.html" %}
