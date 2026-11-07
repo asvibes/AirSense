@@ -10,6 +10,8 @@
   let sensors = [];
   let modelResults = [];
   let activeUnit = "";
+  let choiceRequestId = 0;
+  let forecastRequestId = 0;
 
   async function api(path) {
     const response = await fetch(path, { credentials: "same-origin" });
@@ -67,46 +69,58 @@
     select.disabled = !horizons.length;
   }
 
-  async function loadChoices() {
+  async function loadChoices(requestId) {
     const home = homePath();
-    const [roomData, sensorData, optionsData, modelData] = await Promise.all([
+    const [roomData, sensorData] = await Promise.all([
       api(`${home}/rooms`),
-      api(`${home}/sensors`),
-      api(`${home}/history/options?room_id=${encodeURIComponent($("#room").value)}&sensor_id=${encodeURIComponent($("#sensor").value)}`),
-      api(`${home}/predictions?room_id=${encodeURIComponent($("#room").value)}&sensor_id=${encodeURIComponent($("#sensor").value)}`)
+      api(`${home}/sensors`)
     ]);
+    if (requestId !== choiceRequestId) return false;
     rooms = roomData.rooms || [];
     sensors = sensorData.sensors || [];
-    modelResults = modelData.models || [];
     updateOptions($("#room"), rooms.map(room => ({ value: room.id, label: room.name })), "All rooms");
     updateOptions($("#sensor"), sensors
       .filter(sensor => !$("#room").value || sensor.room_id === $("#room").value)
       .map(sensor => ({ value: sensor.id, label: `${sensor.name} · ${sensor.room}` })), "All sensors");
+    const roomId = encodeURIComponent($("#room").value);
+    const sensorId = encodeURIComponent($("#sensor").value);
+    const [optionsData, modelData] = await Promise.all([
+      api(`${home}/history/options?room_id=${roomId}&sensor_id=${sensorId}`),
+      api(`${home}/predictions?room_id=${roomId}&sensor_id=${sensorId}`)
+    ]);
+    if (requestId !== choiceRequestId) return false;
+    modelResults = modelData.models || [];
     updateOptions($("#metric"), optionsData.metrics.map(metric => ({
       value: metric.code,
       label: `${metric.name} (${metric.code})`
     })), optionsData.metrics.length ? "Choose available parameter" : "No stored parameters");
 
-    const priorMetric = $("#metric").value;
-    if (priorMetric && optionsData.metrics.some(metric => metric.code === priorMetric)) {
-      $("#metric").value = priorMetric;
+    if (!$("#metric").value && optionsData.metrics.length) {
+      const forecastMetric = modelResults.find(model =>
+        model.available && optionsData.metrics.some(metric => metric.code === model.metric)
+      )?.metric;
+      $("#metric").value = forecastMetric || optionsData.metrics[0].code;
     }
     updateHorizonOptions($("#metric").value);
     if (!optionsData.metrics.length) {
       setStatus("No stored parameters", "No actual sensor readings are available in this household, so there is nothing to evaluate or forecast.");
-      return;
+      updatePerformance(null);
+      renderChart([], []);
+      renderRows([], []);
+      return true;
     }
     if (!modelResults.length) {
       setStatus("Coming Soon · no validated model", "There are no saved evaluation results for this selection. Forecasts are not generated while the only available data is insufficient or fails to beat the persistence baseline.");
-      return;
+    } else {
+      const availableCount = modelResults.filter(model => model.available).length;
+      setStatus(
+        availableCount ? "Validated model results available" : "No supported forecasts yet",
+        availableCount
+          ? `${availableCount} parameter series passed chronological holdout evaluation. Select a specific room, sensor, and parameter.`
+          : modelResults[0].reason || "Stored data has not produced a model that beats the persistence baseline."
+      );
     }
-    const availableCount = modelResults.filter(model => model.available).length;
-    setStatus(
-      availableCount ? "Validated model results available" : "No supported forecasts yet",
-      availableCount
-        ? `${availableCount} parameter series passed chronological holdout evaluation. Select a specific room, sensor, and parameter.`
-        : modelResults[0].reason || "Stored data has not produced a model that beats the persistence baseline."
-    );
+    return true;
   }
 
   function updatePerformance(metrics) {
@@ -176,6 +190,7 @@
   }
 
   async function loadForecast() {
+    const requestId = ++forecastRequestId;
     if (!$("#metric").value) {
       setStatus("Choose a parameter", "The selector lists only parameters with stored readings for the chosen household, room, and sensor.");
       return;
@@ -185,11 +200,13 @@
         room_id: $("#room").value,
         sensor_id: $("#sensor").value,
         metric: $("#metric").value,
-        horizon_minutes: String(Number($("#horizon").value) * 60)
+        horizon_minutes: String((Number($("#horizon").value) || 1) * 60)
       });
       const result = await api(`${homePath()}/predictions?${params}`);
+      if (requestId !== forecastRequestId) return;
       updatePerformance(result.metrics);
       if (!result.available) {
+        activeUnit = result.actual?.[0]?.unit || "";
         setStatus("Forecast unavailable", result.reason || "No validated forecast is available for this selection.");
         renderChart(result.actual || [], []);
         renderRows(result.actual || [], []);
@@ -212,11 +229,15 @@
   }
 
   async function reloadChoices(loadModel = true) {
+    const requestId = ++choiceRequestId;
+    forecastRequestId += 1;
     try {
-      await loadChoices();
-      if (loadModel && $("#metric").value) await loadForecast();
+      const loaded = await loadChoices(requestId);
+      if (loaded && requestId === choiceRequestId && loadModel && $("#metric").value) {
+        await loadForecast();
+      }
     } catch (error) {
-      setStatus("Unable to load available data", error.message, "error");
+      if (requestId === choiceRequestId) setStatus("Unable to load available data", error.message, "error");
     }
   }
 
@@ -224,17 +245,13 @@
     const url = new URL(window.location.href);
     url.searchParams.set("home_id", $("#household").value);
     window.history.replaceState(null, "", url);
-    await reloadChoices(false);
+    await reloadChoices();
   });
   $("#room").addEventListener("change", async () => {
-    const previous = $("#metric").value;
-    await reloadChoices(false);
-    if (previous) $("#metric").value = previous;
+    await reloadChoices();
   });
   $("#sensor").addEventListener("change", async () => {
-    const previous = $("#metric").value;
-    await reloadChoices(false);
-    if (previous) $("#metric").value = previous;
+    await reloadChoices();
   });
   $("#metric").addEventListener("change", async () => {
     updateHorizonOptions($("#metric").value);
@@ -251,5 +268,5 @@
     const savedTheme = localStorage.getItem("airsense-theme");
     if (savedTheme === "day" || savedTheme === "night") document.documentElement.dataset.theme = savedTheme;
   } catch { /* The default theme remains available for this page. */ }
-  reloadChoices(false);
+  reloadChoices();
 })();
