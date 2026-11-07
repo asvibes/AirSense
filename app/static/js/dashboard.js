@@ -836,9 +836,9 @@
     const homePath = `/api/homes/${encodeURIComponent(config.homeId)}`;
     const modal = $("#modalBg");
     const roomForm = $("#room-form");
-    const inviteForm = $("#invite-form");
-    const invitationResult = $("#invitation-result");
     const toast = $("#toast");
+    const roomFormMarkup = roomForm.innerHTML;
+    let modalMode = "room";
 
     function notify(message, type = "info") {
       toast.textContent = message;
@@ -1142,13 +1142,11 @@
     }
 
     function openRoomModal(room = null) {
+      modalMode = "room";
+      roomForm.innerHTML = roomFormMarkup;
       roomForm.reset();
-      roomForm.hidden = false;
-      inviteForm.hidden = true;
-      invitationResult.hidden = true;
       delete roomForm.dataset.roomId;
       $("#modalTitle").textContent = room ? "Edit room" : "Add room";
-      $("#modalDescription").textContent = "Add a room and its ventilation sources.";
       $("#modalSubmit").textContent = room ? "Save changes" : "Add room";
       if (room) {
         roomForm.dataset.roomId = room.id;
@@ -1167,40 +1165,13 @@
     }
 
     function openInviteModal() {
-      roomForm.hidden = true;
-      inviteForm.reset();
-      inviteForm.hidden = false;
-      invitationResult.hidden = true;
+      modalMode = "invite";
+      delete roomForm.dataset.roomId;
+      roomForm.innerHTML = '<label class="field" for="modalInput">Email address<input id="modalInput" name="email" type="email" placeholder="name@example.com" required maxlength="320"></label><button class="btn btn-primary" id="modalSubmit" type="submit">Create invitation</button>';
       $("#modalTitle").textContent = "Invite a member";
-      $("#modalDescription").textContent = "Create a one-time invitation link for this household.";
-      $("#inviteSubmit").disabled = false;
+      $("#modalDescription").textContent = "Create a one-time invitation link valid for seven days.";
       modal.classList.add("open");
-      $("#inviteEmail").focus();
-    }
-
-    async function createInvitation(event) {
-      event.preventDefault();
-      const email = String(new FormData(inviteForm).get("email") || "").trim();
-      const submit = $("#inviteSubmit");
-      submit.disabled = true;
-      try {
-        const result = await api(`${homePath}/invitations`, {
-          method: "POST",
-          body: JSON.stringify({ email })
-        });
-        const invitation = result.invitation;
-        const invitationUrl = new URL("/join", window.location.origin);
-        invitationUrl.searchParams.set("token", invitation.token);
-        $("#invitation-message").textContent =
-          `Invitation created for ${invitation.email}. ${invitation.delivery}`;
-        $("#invitation-link").value = invitationUrl.href;
-        inviteForm.hidden = true;
-        invitationResult.hidden = false;
-        notify("Invitation created. Copy the one-time link to share it.");
-      } catch (error) {
-        submit.disabled = false;
-        notify(error.message || "Unable to create the invitation.", "error");
-      }
+      $("#modalInput").focus();
     }
 
     async function saveRoom(event) {
@@ -1232,6 +1203,28 @@
         notify(roomId ? "Room updated." : "Room added.");
       } catch (error) {
         notify(error.message || "Unable to save this room.", "error");
+      }
+    }
+
+    async function saveInvitation(event) {
+      event.preventDefault();
+      const email = String(new FormData(roomForm).get("email") || "").trim();
+      if (!email) {
+        notify("Enter an email address.", "error");
+        return;
+      }
+      try {
+        const result = await api(`${homePath}/invitations`, {
+          method: "POST",
+          body: JSON.stringify({ email })
+        });
+        const invitation = result.invitation;
+        const inviteUrl = `${window.location.origin}/join?token=${encodeURIComponent(invitation.token)}`;
+        modal.classList.remove("open");
+        notify(`Invitation created. Copy this link: ${inviteUrl}`);
+        await loadDashboard();
+      } catch (error) {
+        notify(error.message || "Unable to create the invitation.", "error");
       }
     }
 
@@ -1320,8 +1313,8 @@
       notify(summary);
     }
 
-    document.addEventListener("click", async event => {
-      const target = event.target.closest("[data-view], [data-goto], [data-edit-room], [data-scenario], #run-custom-reading, #run-dalton-replay, #sidebarToggle, #homeAccountToggle, #accountBtn, #accountBack, #saveThresholds, #addRoomBtn, #inviteBtn, #closeModal, #copy-invitation-link, #modalBg");
+    document.addEventListener("click", event => {
+      const target = event.target.closest("[data-view], [data-goto], [data-edit-room], [data-scenario], #run-custom-reading, #run-dalton-replay, #sidebarToggle, #homeAccountToggle, #accountBtn, #accountBack, #saveThresholds");
       if (target?.dataset.view) go(target.dataset.view);
       else if (target?.dataset.goto) go(target.dataset.goto);
       else if (target?.id === "sidebarToggle") {
@@ -1348,20 +1341,7 @@
       if (target?.id === "run-dalton-replay") runDaltonReplay().catch(error => notify(error.message, "error"));
       if (event.target.closest("#addRoomBtn")) openRoomModal();
       if (event.target.closest("#inviteBtn")) openInviteModal();
-      if (event.target.closest("#closeModal") || event.target === modal) {
-        modal.classList.remove("open");
-        roomForm.hidden = false;
-        inviteForm.hidden = true;
-        invitationResult.hidden = true;
-      }
-      if (event.target.closest("#copy-invitation-link")) {
-        try {
-          await navigator.clipboard.writeText($("#invitation-link").value);
-          notify("Invitation link copied.");
-        } catch (error) {
-          notify("Copy was unavailable. Select and copy the invitation link above.", "error");
-        }
-      }
+      if (event.target.closest("#closeModal") || event.target === modal) modal.classList.remove("open");
       if (event.target.closest("#menuBtn")) {
         $("#sidebar").classList.add("open");
         $("#navBackdrop").classList.add("open");
@@ -1405,8 +1385,13 @@
       }
     });
 
-    roomForm.addEventListener("submit", saveRoom);
-    inviteForm.addEventListener("submit", createInvitation);
+    roomForm.addEventListener("submit", event => {
+      if (modalMode === "invite") {
+        saveInvitation(event);
+      } else {
+        saveRoom(event);
+      }
+    });
     document.addEventListener("submit", async event => {
       const form = event.target;
       if (!form.matches("[data-ack]")) return;
