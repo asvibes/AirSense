@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.db import get_session
 from app.models.reading import Reading
+from app.models.metric import Metric
 from app.models.room import Room
 from app.models.sensor import Sensor
 from app.models.threshold import ThresholdPolicy
@@ -92,6 +93,7 @@ def list_rooms(home_id: str):
                 "readings": [
                     {
                         "metric": reading.metric_code,
+                        "metric_name": _metric_name(db, reading.metric_code),
                         "value": reading.value,
                         "unit": _metric_unit(db, reading.metric_code),
                         "source": reading.source,
@@ -273,7 +275,10 @@ def update_room(home_id: str, room_id: str):
 
 
 def _metric_unit(db, metric_code: str) -> str:
-    from app.models.metric import Metric
-
     metric = db.get(Metric, metric_code)
     return metric.unit if metric else ""
+
+
+def _metric_name(db, metric_code: str) -> str:
+    metric = db.get(Metric, metric_code)
+    return metric.name if metric else metric_code

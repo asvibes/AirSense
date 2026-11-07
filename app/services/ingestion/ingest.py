@@ -28,6 +28,7 @@ def ingest_reading(
         home_name=home_name,
         room_name=reading["room"],
         metric_code=reading["metric"],
+        metric_name=reading["metric_name"],
         unit=reading["unit"],
         value=reading["value"],
         source=source,

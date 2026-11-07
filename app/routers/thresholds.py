@@ -61,20 +61,29 @@ def update_thresholds(home_id: str):
     db = get_session()
     try:
         updates = []
-        seen_rooms = set()
+        seen_scopes = set()
         for item in requested:
             if not isinstance(item, dict):
                 raise ValueError("Each threshold entry must be an object.")
             room_id = item.get("room_id")
-            if not isinstance(room_id, str) or not room_id or room_id in seen_rooms:
-                raise ValueError("Each room_id must be unique and valid.")
-            seen_rooms.add(room_id)
+            metric_code = item.get("metric_code", "CO2")
+            if (
+                not isinstance(room_id, str)
+                or not room_id
+                or not isinstance(metric_code, str)
+                or not metric_code
+            ):
+                raise ValueError("Each threshold requires a valid room_id and metric_code.")
+            scope = (room_id, metric_code.upper())
+            if scope in seen_scopes:
+                raise ValueError("Each room and metric threshold must be unique.")
+            seen_scopes.add(scope)
             room = db.scalar(
                 select(Room).where(Room.id == room_id, Room.home_id == home_id)
             )
-            metric = db.get(Metric, "CO2")
+            metric = db.get(Metric, metric_code.upper())
             if room is None or metric is None:
-                raise ValueError("Room or CO₂ metric was not found.")
+                raise ValueError("Room or metric was not found.")
             values = {
                 "high_threshold": _number(item, "high_threshold"),
                 "elevated_threshold": _number(item, "elevated_threshold"),

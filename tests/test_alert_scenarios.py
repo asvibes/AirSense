@@ -35,6 +35,7 @@ class AlertLifecycleTests(AirSenseTestCase):
         room="Bedroom",
         home_id=None,
         metric="CO2",
+        unit="ppm",
     ):
         home_id = home_id or self.home_id
         existing_rooms = self.client.get(f"/api/homes/{home_id}/rooms").get_json()["rooms"]
@@ -53,7 +54,7 @@ class AlertLifecycleTests(AirSenseTestCase):
                 "home_id": home_id,
                 "room": room,
                 "metric": metric,
-                "unit": "ppm",
+                "unit": unit,
                 "value": value,
                 "source": "simulated",
                 "measured_at": measured_at.isoformat(),
@@ -208,11 +209,42 @@ class AlertLifecycleTests(AirSenseTestCase):
         ).get_json()["home"]["id"]
         other_home = self.record(1600, seconds=30, home_id=other_home_id)
         other_room = self.record(1600, seconds=60, room="Kitchen")
-        other_metric = self.record(1600, seconds=90, metric="VOC")
+        self.record(100, seconds=89, metric="VOC", unit="ppb")
+        bedroom_id = next(
+            room["id"]
+            for room in self.client.get(
+                f"/api/homes/{self.home_id}/rooms"
+            ).get_json()["rooms"]
+            if room["name"] == "Bedroom"
+        )
+        configured = self.request_json(
+            "PUT",
+            f"/api/homes/{self.home_id}/thresholds/{bedroom_id}/VOC",
+            {
+                "elevated_threshold": 1000,
+                "high_threshold": 1500,
+                "elevated_duration_seconds": 120,
+                "rapid_rise_per_minute": 100000,
+                "all_clear_duration_seconds": 120,
+                "max_reading_gap_seconds": 60,
+            },
+        )
+        self.assertEqual(configured.status_code, 200, configured.get_json())
+        other_metric = self.record(1600, seconds=90, metric="VOC", unit="ppb")
 
         self.assertEqual(len(other_home.json["created"]), 1)
         self.assertEqual(len(other_room.json["created"]), 1)
         self.assertEqual(len(other_metric.json["created"]), 1)
+
+    def test_non_co2_reading_does_not_inherit_co2_threshold_defaults(self):
+        response = self.record(1600, metric="VOC", unit="ppb")
+
+        self.assertEqual(response.status_code, 201, response.json)
+        self.assertEqual(response.json["created"], [])
+        self.assertEqual(
+            self.client.get(f"/api/homes/{self.home_id}/thresholds").json["thresholds"],
+            [],
+        )
 
     def test_all_clear_alert_cannot_be_acknowledged_and_unknown_alert_is_404(self):
         alert_id = self.record(1600).json["created"][0]["id"]

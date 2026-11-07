@@ -9,11 +9,67 @@ from app.db import get_session
 from app.models.alert import Alert
 from app.models.audit import AuditLog
 from app.models.reading import Reading
-from app.sources.dalton_replay import load_dalton_csv
+from app.sources.dalton_replay import load_dalton_csv, parse_environmental_csv
 from tests.helpers import AirSenseTestCase
 
 
 class DaltonReplayTests(AirSenseTestCase):
+    def test_environmental_csv_imports_available_parameters_and_converts_units(self):
+        csv_text = (
+            "Timestamp,PM2.5 (mg/m³),Temperature (°F),RH (%),CO (ppb),Mystery\n"
+            "2024-06-10T00:00:00Z,0.035,77,45,400,123\n"
+            "2024-06-10T00:01:00Z,0.040,,46,500,124\n"
+        )
+
+        dataset = parse_environmental_csv(StringIO(csv_text), valid_only=False)
+        readings = dataset["readings"]
+        by_parameter = {}
+        for reading in readings:
+            by_parameter.setdefault(reading["metric"], []).append(reading)
+
+        self.assertEqual(set(by_parameter), {"PM2_5", "TEMPERATURE", "HUMIDITY", "CO"})
+        self.assertEqual(by_parameter["PM2_5"][0]["value"], 35)
+        self.assertEqual(by_parameter["PM2_5"][0]["unit"], "ug/m3")
+        self.assertEqual(by_parameter["TEMPERATURE"][0]["value"], 25)
+        self.assertEqual(by_parameter["HUMIDITY"][0]["value"], 45)
+        self.assertEqual(by_parameter["CO"][0]["value"], 0.4)
+        self.assertEqual(by_parameter["TEMPERATURE"][0]["measured_at"], "2024-06-10T00:00:00Z")
+        self.assertIn(
+            {"column": "Mystery", "reason": "Unrecognized measurement column. Add an explicit supported unit and parameter mapping before importing."},
+            dataset["review_columns"],
+        )
+
+    def test_environmental_csv_reports_and_skips_duplicate_measurements(self):
+        csv_text = (
+            "timestamp,PM10 (ug/m3)\n"
+            "2024-06-10T00:00:00Z,10\n"
+            "2024-06-10T00:00:00Z,11\n"
+            "2024-06-10T00:01:00Z,12\n"
+        )
+
+        dataset = parse_environmental_csv(StringIO(csv_text), valid_only=False)
+
+        self.assertEqual([reading["value"] for reading in dataset["readings"]], [12])
+        self.assertEqual(dataset["duplicate_readings"], [
+            {"metric": "PM10", "measured_at": "2024-06-10T00:00:00Z"}
+        ])
+        self.assertEqual(dataset["rows_skipped"], 2)
+
+    def test_environmental_csv_does_not_reject_dataset_for_invalid_optional_values(self):
+        csv_text = (
+            "timestamp,PM2.5 (ug/m3),Temperature (C),Humidity (%)\n"
+            "2024-06-10T00:00:00Z,-1,-5,50\n"
+            "2024-06-10T00:01:00Z,12,,\n"
+        )
+
+        dataset = parse_environmental_csv(StringIO(csv_text), valid_only=False)
+
+        self.assertEqual(
+            [(reading["metric"], reading["value"]) for reading in dataset["readings"]],
+            [("HUMIDITY", 50), ("TEMPERATURE", -5), ("PM2_5", 12)],
+        )
+        self.assertEqual(dataset["rows_skipped"], 0)
+
     def _write_csv(self, filename: str, rows):
         csv_path = Path(self.temp_dir.name) / filename
         with csv_path.open("w", newline="", encoding="utf-8") as handle:
@@ -125,6 +181,77 @@ class DaltonReplayTests(AirSenseTestCase):
         self.assertEqual(latest_reading["source"], "dataset")
         self.assertEqual(latest_reading["value"], 1100)
 
+    def test_environmental_replay_without_co2_preserves_data_and_reports_duplicates(self):
+        room = self.create_room("Bedroom")
+        csv_content = (
+            "timestamp,PM2.5 (ug/m3),Temperature (C),Unknown\n"
+            "2024-06-10T00:00:00Z,12,-5,9\n"
+            "2024-06-10T00:01:00Z,15,20,10\n"
+        )
+
+        def replay():
+            return self.client.post(
+                f"/api/homes/{self.home_id}/demo/replay",
+                data={
+                    "room_id": room["id"],
+                    "limit": "10",
+                    "shift_timestamps": "false",
+                    "csv_file": (BytesIO(csv_content.encode()), "environment.csv"),
+                },
+                headers={"X-CSRF-Token": self.csrf},
+                content_type="multipart/form-data",
+            )
+
+        response = replay()
+        self.assertEqual(response.status_code, 201, response.get_json())
+        payload = response.get_json()
+        self.assertEqual(payload["source"], "environmental_csv")
+        self.assertEqual(payload["imported"], 4)
+        self.assertEqual(
+            {parameter["code"] for parameter in payload["parameters"]},
+            {"PM2_5", "TEMPERATURE"},
+        )
+        self.assertEqual(len(payload["review_columns"]), 1)
+        self.assertEqual(payload["review_columns"][0]["column"], "Unknown")
+        self.assertEqual(payload["duplicate_readings"], [])
+        self.assertTrue(all(not result["created"] for result in payload["created"]))
+
+        duplicate_response = replay()
+        self.assertEqual(duplicate_response.status_code, 422)
+        duplicate_payload = duplicate_response.get_json()
+        self.assertEqual(duplicate_payload["imported"], 0)
+        self.assertEqual(len(duplicate_payload["duplicate_readings"]), 4)
+        self.assertIn("no new supported readings", duplicate_payload["error"])
+        with self.app.app_context():
+            readings = list(
+                get_session().scalars(
+                    select(Reading).where(
+                        Reading.home_id == self.home_id,
+                        Reading.room_id == room["id"],
+                    )
+                )
+            )
+        self.assertEqual(len(readings), 4)
+
+    def test_environmental_replay_with_only_unsupported_columns_returns_review(self):
+        room = self.create_room("Bedroom")
+        csv_content = "timestamp,unknown\n2024-06-10T00:00:00Z,123\n"
+        response = self.client.post(
+            f"/api/homes/{self.home_id}/demo/replay",
+            data={
+                "room_id": room["id"],
+                "limit": "10",
+                "shift_timestamps": "true",
+                "csv_file": (BytesIO(csv_content.encode()), "unsupported.csv"),
+            },
+            headers={"X-CSRF-Token": self.csrf},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 422, response.get_json())
+        self.assertEqual(response.get_json()["imported"], 0)
+        self.assertEqual(response.get_json()["review_columns"][0]["column"], "unknown")
+
     def test_replay_rolls_back_readings_alerts_and_audit_if_later_row_fails(self):
         room = self.create_room("Bedroom")
         first_timestamp = datetime.now(timezone.utc) - timedelta(minutes=2)
@@ -148,7 +275,7 @@ class DaltonReplayTests(AirSenseTestCase):
         )
 
         self.assertEqual(response.status_code, 400, response.get_json())
-        self.assertIn("Failed on DALTON row", response.get_json()["error"])
+        self.assertIn("Failed on dataset row", response.get_json()["error"])
         self.assertIn("cannot be in the future", response.get_json()["error"])
 
         with self.app.app_context():
@@ -202,7 +329,7 @@ class DaltonReplayTests(AirSenseTestCase):
             self.assertIsNotNone(rejection_events[0].actor_user_id)
             self.assertNotIn("1700", str(rejection_events))
 
-    def test_successful_replay_commits_alerts_and_audit_with_all_readings(self):
+    def test_successful_replay_stores_history_without_creating_live_alerts(self):
         room = self.create_room("Bedroom")
         start = datetime.now(timezone.utc) - timedelta(minutes=2)
         csv_content = (
@@ -225,7 +352,7 @@ class DaltonReplayTests(AirSenseTestCase):
 
         self.assertEqual(response.status_code, 201, response.get_json())
         self.assertEqual(response.get_json()["imported"], 2)
-        self.assertEqual(response.get_json()["created"][0]["created"][0]["level"], "high")
+        self.assertEqual(response.get_json()["created"][0]["created"], [])
         with self.app.app_context():
             session = get_session()
             readings = list(
@@ -255,10 +382,10 @@ class DaltonReplayTests(AirSenseTestCase):
                 )
             )
         self.assertEqual(len(readings), 2)
-        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts, [])
         self.assertCountEqual(
             events,
-            ["reading.ingested", "reading.ingested", "alert.created"],
+            ["reading.ingested", "reading.ingested"],
         )
 
     def test_demo_replay_shifts_timestamps_and_rejects_missing_file(self):
@@ -296,4 +423,4 @@ class DaltonReplayTests(AirSenseTestCase):
             {"room_id": room["id"]},
         )
         self.assertEqual(missing_file.status_code, 400)
-        self.assertIn("Choose a DALTON CSV", missing_file.get_json()["error"])
+        self.assertIn("Choose a CSV", missing_file.get_json()["error"])

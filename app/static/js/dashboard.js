@@ -45,7 +45,7 @@
   const latestReading = (room, metric = "CO2") =>
     room.readings.find(reading => reading.metric === metric) || null;
   const sourceLabel = source => ({
-    dataset: "Recorded · DALTON replay",
+    dataset: "Recorded dataset",
     simulated: "Simulated data",
     device: "Live sensor"
   })[source] || "Source unavailable";
@@ -69,7 +69,11 @@
       window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       throw new Error("Your session has expired. Sign in again.");
     }
-    if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status}).`);
+    if (!response.ok) {
+      const error = new Error(payload?.error || `Request failed (${response.status}).`);
+      error.payload = payload;
+      throw error;
+    }
     return payload;
   }
 
@@ -824,7 +828,9 @@
     let activeThresholds = [];
     let activeAlerts = [];
     let activeMembers = [];
+    let activeMeasurements = [];
     let currentRoomIndex = 0;
+    let selectedMetric = "CO2";
     let rotationPaused = false;
 
     const homePath = `/api/homes/${encodeURIComponent(config.homeId)}`;
@@ -855,26 +861,52 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function latestCo2(room) {
-      return (room.readings || []).find(reading => reading.metric === "CO2") || null;
+    function formatMeasurement(value) {
+      return Number(value).toLocaleString(undefined, { maximumFractionDigits: 3 });
     }
 
-    function roomAlert(room) {
+    function measurementName(reading) {
+      const names = {
+        CO2: "Carbon dioxide",
+        PM1: "PM1",
+        PM2_5: "PM2.5",
+        PM10: "PM10",
+        TEMPERATURE: "Temperature",
+        HUMIDITY: "Humidity",
+        CO: "Carbon monoxide",
+        NO2: "Nitrogen dioxide",
+        VOC: "Volatile organic compounds"
+      };
+      return reading.metric_name || names[reading.metric] || reading.metric.replaceAll("_", ".");
+    }
+
+    function latestMeasurement(room, metric = selectedMetric) {
+      return (room.readings || []).find(reading => reading.metric === metric) || null;
+    }
+
+    function roomAlert(room, metric = selectedMetric) {
       return activeAlerts.find(alert =>
-        alert.room_id === room.id && ["active", "acknowledged"].includes(alert.status)
+        alert.room_id === room.id && alert.metric === metric &&
+        ["active", "acknowledged"].includes(alert.status)
       );
     }
 
     function renderRoom(room, index, scope) {
-      const reading = latestCo2(room);
-      const alert = roomAlert(room);
-      const status = alert ? statusText(alert.level) : reading ? "Comfortable" : "Awaiting reading";
+      const readings = (room.readings || []).slice().sort((a, b) => a.metric.localeCompare(b.metric));
+      const alert = activeAlerts.find(item =>
+        item.room_id === room.id && ["active", "acknowledged"].includes(item.status)
+      );
+      const status = alert ? `${measurementName({ metric: alert.metric, metric_name: alert.metric_name })} · ${statusText(alert.level)}`
+        : readings.length ? "Measurements available" : "Awaiting readings";
       const sources = (room.ventilation_sources || []).join(" · ") || "Ventilation source not specified";
       const sensorNames = (room.sensors || []).map(sensor => sensor.name).join(", ") || "No sensor assigned";
       const editButton = config.role === "owner"
         ? `<button class="btn room-edit" type="button" data-edit-room="${escapeHtml(room.id)}">Edit room</button>`
         : "";
-      return `<article class="room room-accordion"><div class="room-toggle"><span class="room-symbol" aria-hidden="true">⌂</span><span class="room-info"><strong>${escapeHtml(room.name)}</strong><small>${escapeHtml(sources)}</small></span><span class="room-reading"><b>${reading ? `${escapeHtml(format(reading.value))} <small>${escapeHtml(reading.unit)}</small>` : "—"}</b><small>${escapeHtml(status)}</small></span><span class="pill">${escapeHtml(status)}</span></div><div class="room-details"><p>${escapeHtml(sensorNames)} · ${reading ? `Updated ${escapeHtml(dateTime(reading.measured_at))}` : "No readings received yet."}</p>${editButton}</div></article>`;
+      const measurementRows = readings.map(reading =>
+        `<div class="reading-line"><span>${escapeHtml(measurementName(reading))}</span><strong>${escapeHtml(formatMeasurement(reading.value))} <small>${escapeHtml(reading.unit)}</small></strong><small>${escapeHtml(sourceLabel(reading.source))} · ${escapeHtml(dateTime(reading.measured_at))}</small></div>`
+      ).join("") || '<p class="empty-note">No measurements recorded yet.</p>';
+      return `<article class="room room-accordion"><div class="room-toggle"><span class="room-symbol" aria-hidden="true">⌂</span><span class="room-info"><strong>${escapeHtml(room.name)}</strong><small>${escapeHtml(sources)}</small></span><span class="room-reading"><small>${escapeHtml(status)}</small></span><span class="pill">${escapeHtml(status)}</span></div><div class="room-details"><p>${escapeHtml(sensorNames)}</p><div class="reading-list">${measurementRows}</div>${editButton}</div></article>`;
     }
 
     function renderRooms() {
@@ -884,21 +916,47 @@
       $("#allRooms").innerHTML = activeRooms.map((room, index) =>
         renderRoom(room, index, "all")
       ).join("") || '<p class="empty-note">No rooms yet. Add a room to get started.</p>';
-      const readings = activeRooms.map(latestCo2).filter(Boolean);
-      const mean = readings.length
-        ? Math.round(readings.reduce((sum, reading) => sum + Number(reading.value), 0) / readings.length)
-        : null;
+      const readings = activeRooms.flatMap(room => room.readings || []);
       const recentReading = readings
         .slice()
         .sort((left, right) => new Date(right.measured_at) - new Date(left.measured_at))[0];
-      $("#snapshotStatus").textContent = mean === null ? "Waiting for readings" : mean >= 1500 ? "High reading to review" : mean >= 1000 ? "Elevated reading to review" : "Air readings available";
-      $("#snapshotDescription").textContent = mean === null
-        ? "Connect a sensor or send a simulator reading to see home conditions."
-        : `${readings.length} room${readings.length === 1 ? "" : "s"} with recent CO₂ data.`;
+      $("#snapshotStatus").textContent = readings.length ? "Measurements available" : "Waiting for readings";
+      const roomsWithReadings = activeRooms.filter(room => (room.readings || []).length);
+      const parameterCount = new Set(readings.map(reading => reading.metric)).size;
+      $("#snapshotDescription").textContent = readings.length
+        ? `${parameterCount} available parameter${parameterCount === 1 ? "" : "s"} across ${roomsWithReadings.length} room${roomsWithReadings.length === 1 ? "" : "s"}.`
+        : "Connect a sensor or upload recorded environmental measurements.";
       $("#snapshotRoomCount").textContent = `${activeRooms.length} room${activeRooms.length === 1 ? "" : "s"}`;
       $("#snapshotUpdated").textContent = recentReading ? dateTime(recentReading.measured_at) : "—";
-      $("#averageCo2Metric").innerHTML = mean === null ? `— <span class="unit">ppm</span>` : `${escapeHtml(format(mean))} <span class="unit">ppm</span>`;
-      $("#averageCo2Status").textContent = mean === null ? "Waiting for readings" : "Latest available room readings";
+      const grouped = new Map();
+      activeRooms.forEach(room => (room.readings || []).forEach(reading => {
+        const values = grouped.get(reading.metric) || [];
+        values.push({ ...reading, room: room.name });
+        grouped.set(reading.metric, values);
+      }));
+      activeMeasurements = Array.from(grouped, ([code, values]) => ({
+        code,
+        name: measurementName(values[0]),
+        unit: values[0].unit
+      })).sort((a, b) => a.name.localeCompare(b.name));
+      $("#parameterCards").innerHTML = activeMeasurements.map(parameter => {
+        const values = grouped.get(parameter.code);
+        const average = values.reduce((sum, reading) => sum + Number(reading.value), 0) / values.length;
+        return `<article class="card metric"><div class="card-top"><span class="card-label">${escapeHtml(parameter.name)}</span><span class="card-label">●</span></div><div class="metric-value">${escapeHtml(formatMeasurement(average))} <span class="unit">${escapeHtml(parameter.unit)}</span></div><span class="metric-status">Recorded average</span><span class="metric-foot">${values.length} room${values.length === 1 ? "" : "s"} · latest stored values</span></article>`;
+      }).join("");
+      const selector = $("#dashboardMetricSelect");
+      const previousMetric = selector.value || selectedMetric;
+      selector.innerHTML = activeMeasurements.map(parameter =>
+        `<option value="${escapeHtml(parameter.code)}">${escapeHtml(parameter.name)} (${escapeHtml(parameter.unit)})</option>`
+      ).join("");
+      if (activeMeasurements.some(parameter => parameter.code === previousMetric)) {
+        selectedMetric = previousMetric;
+      } else {
+        selectedMetric = activeMeasurements.some(parameter => parameter.code === "CO2")
+          ? "CO2"
+          : activeMeasurements[0]?.code || "";
+      }
+      selector.value = selectedMetric;
       $("#alertMetric").textContent = activeAlerts.filter(alert => alert.status === "active").length;
       const demoRoomSelect = $("#demo-room-select");
       const selectedDemoRoom = demoRoomSelect.value;
@@ -908,30 +966,30 @@
       if (activeRooms.some(room => room.id === selectedDemoRoom)) demoRoomSelect.value = selectedDemoRoom;
       renderRoomCycle();
       renderHistoryChart();
+      renderThresholds();
     }
 
     function renderRoomCycle() {
-      const roomsWithReadings = activeRooms.filter(latestCo2);
+      const roomsWithReadings = activeRooms.filter(room => latestMeasurement(room));
       if (!roomsWithReadings.length) {
         $("#cycleRoomName").textContent = "No readings yet";
         $("#cyclePosition").textContent = "0 / 0";
         $("#cycleValue").textContent = "—";
-        $("#cycleLevel").textContent = "Waiting";
-        $("#cycleGauge").style.width = "0%";
+        $("#cycleUnit").textContent = "";
+        $("#cycleDetail").textContent = "No stored measurement is available for this parameter.";
         return;
       }
       currentRoomIndex %= roomsWithReadings.length;
       const room = roomsWithReadings[currentRoomIndex];
-      const reading = latestCo2(room);
-      const value = Number(reading.value);
-      const level = value >= 1500 ? "high" : value >= 1000 ? "medium" : "low";
+      const reading = latestMeasurement(room);
       $("#cycleRoomName").textContent = room.name;
       $("#cyclePosition").textContent = `${currentRoomIndex + 1} / ${roomsWithReadings.length}`;
-      $("#cycleValue").textContent = format(value);
-      $("#cycleLevel").textContent = level === "low" ? "Low" : level === "medium" ? "Medium" : "High";
-      $("#cycleLevel").className = `level-pill level-${level}`;
-      $("#cycleGauge").className = `gauge-fill level-${level}`;
-      $("#cycleGauge").style.width = `${Math.min(100, Math.max(2, value / 1500 * 100))}%`;
+      $("#cycleValue").textContent = formatMeasurement(reading.value);
+      $("#cycleUnit").textContent = `${reading.unit} ${measurementName(reading)}`;
+      const alert = roomAlert(room);
+      $("#cycleDetail").textContent = alert
+        ? `${statusText(alert.level)} advisory · ${dateTime(reading.measured_at)}`
+        : `${sourceLabel(reading.source)} · ${dateTime(reading.measured_at)}`;
     }
 
     function renderAlerts() {
@@ -951,18 +1009,46 @@
     }
 
     function renderThresholds() {
+      const metricSelect = $("#thresholdMetric");
+      const available = new Map(activeMeasurements.map(parameter => [
+        parameter.code,
+        { code: parameter.code, name: parameter.name, unit: parameter.unit }
+      ]));
+      activeThresholds.forEach(policy => {
+        if (!available.has(policy.metric)) {
+          available.set(policy.metric, {
+            code: policy.metric,
+            name: policy.metric.replaceAll("_", "."),
+            unit: policy.unit
+          });
+        }
+      });
+      if (!available.has("CO2")) {
+        available.set("CO2", { code: "CO2", name: "Carbon dioxide", unit: "ppm" });
+      }
+      const priorMetric = metricSelect.value || selectedMetric || "CO2";
+      metricSelect.innerHTML = Array.from(available.values())
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(parameter => `<option value="${escapeHtml(parameter.code)}">${escapeHtml(parameter.name)}</option>`)
+        .join("");
+      const metricCode = available.has(priorMetric) ? priorMetric : "CO2";
+      metricSelect.value = metricCode;
+      const parameter = available.get(metricCode);
+      $("#thresholdMetricHeading").textContent = `${parameter.name} · ${parameter.unit}`;
+      $("#thresholdUnit").textContent = parameter.unit;
+      $("#thresholdUnitHigh").textContent = parameter.unit;
+      $("#thresholdRateUnit").textContent = `${parameter.unit}/min`;
       $("#thresholdRows").innerHTML = activeRooms.map(room => {
-        const threshold = activeThresholds.find(item => item.room_id === room.id && item.metric === "CO2") || config.thresholdDefaults;
-        const elevated = escapeHtml(threshold.elevated_threshold);
-        const high = escapeHtml(threshold.high_threshold);
-        const elevatedField = config.role === "owner"
-          ? `<input type="number" min="0" step="1" inputmode="numeric" data-threshold="elevated_threshold" aria-label="${escapeHtml(room.name)} elevated threshold in ppm" value="${elevated}">`
-          : `<span>${format(threshold.elevated_threshold)} ppm</span>`;
-        const highField = config.role === "owner"
-          ? `<input type="number" min="1" step="1" inputmode="numeric" data-threshold="high_threshold" aria-label="${escapeHtml(room.name)} high threshold in ppm" value="${high}">`
-          : `<span>${format(threshold.high_threshold)} ppm</span>`;
-        return `<tr data-room-id="${escapeHtml(room.id)}"><th scope="row">${escapeHtml(room.name)}</th><td>${elevatedField}</td><td>${highField}</td></tr>`;
-      }).join("") || '<tr><td colspan="3">Add a room to configure thresholds.</td></tr>';
+        const policy = activeThresholds.find(item =>
+          item.room_id === room.id && item.metric === metricCode
+        );
+        const defaults = metricCode === "CO2" ? config.thresholdDefaults : null;
+        const current = policy || defaults;
+        const field = (name, label, min, fallback) => config.role === "owner"
+          ? `<input type="number" min="${min}" step="any" inputmode="decimal" data-threshold="${name}" aria-label="${escapeHtml(room.name)} ${label} threshold in ${escapeHtml(parameter.unit)}" value="${current ? escapeHtml(current[name]) : ""}" placeholder="${fallback === undefined ? "Not configured" : escapeHtml(fallback)}">`
+          : `<span>${current ? `${formatMeasurement(current[name])} ${escapeHtml(parameter.unit)}` : "Not configured · alerts disabled"}</span>`;
+        return `<tr data-room-id="${escapeHtml(room.id)}"><th scope="row">${escapeHtml(room.name)}${!policy && metricCode !== "CO2" ? '<small class="threshold-status">Alerts disabled until configured</small>' : ""}</th><td>${field("elevated_threshold", "elevated", "0")}</td><td>${field("high_threshold", "high", "0")}</td><td>${field("rapid_rise_per_minute", "rapid rise", "0")}</td></tr>`;
+      }).join("") || '<tr><td colspan="4">Add a room to configure thresholds.</td></tr>';
     }
 
     function renderMembers() {
@@ -974,10 +1060,13 @@
     function renderHistoryChart() {
       const chart = $(".chart");
       if (!chart) return;
-      const readings = activeRooms.map(room => ({ room, reading: latestCo2(room) })).filter(item => item.reading);
+      const readings = activeRooms.map(room => ({
+        room,
+        reading: latestMeasurement(room)
+      })).filter(item => item.reading);
       chart.innerHTML = readings.map(({ room, reading }) =>
-        `<div class="bar-wrap"><div class="bar" title="${escapeHtml(room.name)}: ${escapeHtml(format(reading.value))} ppm" style="--h:${Math.min(100, Number(reading.value) / 2000 * 100)}%"></div><span class="bar-label">${escapeHtml(room.name)}</span></div>`
-      ).join("") || '<p class="empty-note">No stored CO₂ readings yet.</p>';
+        `<div class="bar-wrap"><div class="bar" title="${escapeHtml(room.name)}: ${escapeHtml(formatMeasurement(reading.value))} ${escapeHtml(reading.unit)}" style="--h:100%"></div><span class="bar-label">${escapeHtml(room.name)}</span></div>`
+      ).join("") || '<p class="empty-note">No stored measurements are available.</p>';
     }
 
     async function loadDashboard() {
@@ -1003,6 +1092,7 @@
     async function saveThresholds() {
       const rows = $$("#thresholdRows tr[data-room-id]");
       if (!rows.length) throw new Error("Add a room before setting thresholds.");
+      const metricCode = $("#thresholdMetric").value;
       const updates = rows.map(row => {
         const values = Object.fromEntries(
           $$("[data-threshold]", row).map(input => [input.dataset.threshold, Number(input.value)])
@@ -1010,21 +1100,24 @@
         if (
           !Number.isFinite(values.elevated_threshold) ||
           !Number.isFinite(values.high_threshold) ||
+          !Number.isFinite(values.rapid_rise_per_minute) ||
           values.elevated_threshold < 0 ||
           values.high_threshold <= 0 ||
+          values.rapid_rise_per_minute <= 0 ||
           values.high_threshold <= values.elevated_threshold
         ) {
-          throw new Error(`Enter valid thresholds for ${row.querySelector("th").textContent}; Elevated must be non-negative and lower than High.`);
+          throw new Error(`Enter valid thresholds for ${row.querySelector("th").childNodes[0].textContent.trim()}; Elevated must be non-negative and lower than High.`);
         }
         const policy = activeThresholds.find(item =>
-          item.room_id === row.dataset.roomId && item.metric === "CO2"
+          item.room_id === row.dataset.roomId && item.metric === metricCode
         ) || config.thresholdDefaults;
         return {
           room_id: row.dataset.roomId,
+          metric_code: metricCode,
           elevated_threshold: values.elevated_threshold,
           high_threshold: values.high_threshold,
           elevated_duration_seconds: policy.elevated_duration_seconds,
-          rapid_rise_per_minute: policy.rapid_rise_per_minute,
+          rapid_rise_per_minute: values.rapid_rise_per_minute,
           all_clear_duration_seconds: policy.all_clear_duration_seconds,
           max_reading_gap_seconds: policy.max_reading_gap_seconds
         };
@@ -1140,13 +1233,42 @@
       data.set("limit", String(limit));
       data.set("shift_timestamps", String($("#dalton-shift-timestamps").checked));
       data.set("csv_file", file);
-      const result = await api(`${homePath}/demo/replay`, { method: "POST", body: data });
+      let result;
+      try {
+        result = await api(`${homePath}/demo/replay`, { method: "POST", body: data });
+      } catch (error) {
+        const details = error.payload;
+        if (details) {
+          const review = (details.review_columns || [])
+            .map(item => `${item.column} (${item.reason})`)
+            .join("; ");
+          const duplicates = (details.duplicate_readings || []).length;
+          const duplicateMessage = duplicates
+            ? ` ${duplicates} duplicate measurement${duplicates === 1 ? "" : "s"} were skipped.`
+            : "";
+          $("#dataset-import-status").textContent =
+            `${details.error || error.message}${duplicateMessage}${review ? ` Review columns: ${review}.` : ""}`;
+        }
+        throw error;
+      }
       await loadDashboard();
-      go("alerts");
       const timestampMessage = result.timestamps_shifted
-        ? " Timeline shifted so the newest sample appears recent."
+        ? " Timestamps were shifted as requested."
         : " Original dataset timestamps kept.";
-      notify(`Imported ${result.imported} DALTON reading${result.imported === 1 ? "" : "s"} from ${result.source_file}.${timestampMessage}`);
+      const importedParameters = result.parameters
+        .map(parameter => `${parameter.name}: ${parameter.readings}`)
+        .join(", ");
+      const review = result.review_columns.length
+        ? ` Review columns: ${result.review_columns.map(item => `${item.column} (${item.reason})`).join("; ")}.`
+        : "";
+      const duplicates = result.duplicate_readings.length
+        ? ` ${result.duplicate_readings.length} duplicate measurement${result.duplicate_readings.length === 1 ? "" : "s"} were skipped.`
+        : "";
+      const summary = result.imported
+        ? `Imported ${result.imported} reading${result.imported === 1 ? "" : "s"} from ${result.source_file}${importedParameters ? ` · ${importedParameters}` : ""}.${timestampMessage}${duplicates}${review}`
+        : `No readings imported from ${result.source_file}; the file contains no recognized data.${duplicates}${review}`;
+      $("#dataset-import-status").textContent = summary;
+      notify(summary);
     }
 
     document.addEventListener("click", event => {
@@ -1199,6 +1321,9 @@
         event.target.textContent = rotationPaused ? "Resume rotation" : "Pause rotation";
         event.target.setAttribute("aria-pressed", String(rotationPaused));
       }
+      if (event.target.closest("#saveThresholds")) {
+        saveThresholds().catch(error => notify(error.message || "Unable to save thresholds.", "error"));
+      }
       if (event.target.closest("#themeBtn")) {
         const theme = document.documentElement.dataset.theme === "day" ? "night" : "day";
         document.documentElement.dataset.theme = theme;
@@ -1240,10 +1365,16 @@
     } catch (error) {
       console.warn("Unable to load the saved AirSense theme.", error);
     }
+    $("#dashboardMetricSelect").addEventListener("change", event => {
+      selectedMetric = event.target.value;
+      currentRoomIndex = 0;
+      renderRoomCycle();
+      renderHistoryChart();
+    });
+    $("#thresholdMetric").addEventListener("change", renderThresholds);
     $("#todayLabel").textContent = `HOME AIR · ${new Intl.DateTimeFormat(undefined, {
       weekday: "long", month: "long", day: "numeric"
     }).format(new Date()).toUpperCase()}`;
-    $("#averageCo2Status").textContent = "Loading readings…";
     await loadDashboard().catch(error => notify(error.message || "Unable to load home data.", "error"));
     go(config.initialView || "overview");
     window.setInterval(() => {

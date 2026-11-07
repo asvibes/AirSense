@@ -66,20 +66,20 @@ Features include:
 * **Sensor management:** Owner-managed sensor provisioning, key rotation, and revocation. A provisioned key is shown once; only its hash is stored.
 * **Sensor ingestion:** Submit device readings using per-sensor keys through the same alert evaluation path used by simulator readings.
 * **Alert management:** View alert history and acknowledge alerts while authenticated.
-* **Threshold configuration:** Persist per-room CO₂ threshold settings.
+* **Threshold configuration:** Persist per-room, per-metric advisory thresholds. CO₂ receives the configured defaults; other parameters have alerts disabled until a threshold is explicitly set.
 * **History and export:** Filter stored readings by household, room, sensor, metric, and date range; inspect timestamped samples and gaps; export CSV or a multi-page PDF report.
 * **Analytics:** Review observed minimum, average, maximum, and change summaries; compare series by room/sensor; view actual samples or daily, weekly, and monthly averages. Empty periods are not synthesized.
 * **Predictions:** A dedicated page reports forecasts only when a per-series linear trend beats a persistence baseline by at least 5% on a later chronological holdout. Unsupported series and horizons remain unavailable; simulated readings are excluded from training.
 * **Household management:** Owners can invite members and review activity history.
 * **Simulation:** Submit simulated readings to the server-side alert pipeline.
-* **DALTON replay:** Upload a processed DALTON CSV and replay valid CO₂ samples through that same alert pipeline. Samples are labeled as recorded data; timestamps can be shifted for a current demo.
+* **Environmental dataset replay:** Import supported timestamped measurements from a CSV, including CO₂, particulate matter, temperature, humidity, CO, NO₂, VOC, and compatible custom measurements with explicit units. Historical dataset readings retain their timestamps and do not create live alerts.
 * **Appearance:** Persist the light/dark theme preference.
 
 The browser interface uses plain HTML, CSS, and vanilla JavaScript. No separate frontend build or third-party browser package is required.
 
 Invitation links are single-use and expire after seven days. Email delivery is not configured, so invitation links must be shared manually.
 
-DALTON source data is not bundled. In the Demo Lab, upload a processed CSV (up to 16 MB) containing `ts`, `CO2`, and `Valid_CO2`. The app imports valid CO₂ rows only, up to 1,000 per replay. The default timestamp shift makes the newest sample recent while preserving the spacing between samples; turn it off to retain original timestamps. See [DALTON replay notes](docs/dalton-notes.md).
+DALTON source data is not bundled. In the Demo Lab, upload a CSV (up to 16 MB) with one timestamp column (`ts`, `timestamp`, `datetime`, or similar) and any supported measurement columns; CO₂ is optional. Common aliases and explicit units are recognized and converted only when the conversion is defined. Unitless known parameters use their conventional unit and are flagged for review; unsupported or ambiguous columns are not imported. The app imports up to 1,000 rows per replay, skips duplicate metric/timestamp pairs, and reports skipped duplicates. Original timestamps are kept by default; optional shifting moves the newest sample to the present while retaining sample spacing. Historical dataset readings are stored for dashboard, History, Analytics, and Predictions, but do not produce active alerts. See [DALTON replay notes](docs/dalton-notes.md).
 
 ## API Overview
 
@@ -100,8 +100,8 @@ Device ingestion uses the `X-Device-Key` header for sensor authentication.
 | `GET /api/homes/{home_id}/sensors`, `POST /api/homes/{home_id}/sensors` | List or provision sensors; provisioning returns a one-time device key. |
 | `POST /api/homes/{home_id}/sensors/{sensor_id}/rotate-key`, `POST /api/homes/{home_id}/sensors/{sensor_id}/revoke` | Rotate a sensor key or revoke the sensor. |
 | `POST /api/sensors/{sensor_id}/readings` | Submit a validated reading using `X-Device-Key`. |
-| `POST /api/homes/{home_id}/demo/readings`, `POST /api/homes/{home_id}/demo/replay` | Submit simulator readings or replay a processed DALTON CSV. |
-| `GET /api/homes/{home_id}/thresholds`, `PUT /api/homes/{home_id}/thresholds` | Read or batch-update room CO₂ thresholds. |
+| `POST /api/homes/{home_id}/demo/readings`, `POST /api/homes/{home_id}/demo/replay` | Submit simulator readings or replay a timestamped environmental CSV. |
+| `GET /api/homes/{home_id}/thresholds`, `PUT /api/homes/{home_id}/thresholds` | Read or batch-update per-room, per-metric thresholds. |
 | `PUT /api/homes/{home_id}/thresholds/{room_id}/{metric_code}` | Update one room/metric threshold. |
 | `GET /api/homes/{home_id}/history`, `GET /api/homes/{home_id}/history.csv` | Get filtered history or export it as CSV. |
 | `GET /api/homes/{home_id}/history/options` | List stored metrics for the selected room and sensor filters. |
@@ -177,8 +177,8 @@ The application currently implements home-scoped `owner` and `member` roles—no
 * AirSense is a ventilation-support demo, not a medical or diagnostic system.
 * Readings depend on configured sensors or submitted simulator values; the application does not measure air quality independently.
 * Threshold defaults are illustrative, not published health or safety guidelines.
-* The current dashboard supports CO₂ in ppm. Verify metric units and sensor ranges before any non-demo use.
+* The dashboard displays only measurements present in stored readings. Verify metric units and sensor ranges before any non-demo use.
 * The application does not replace a certified carbon monoxide alarm or other safety equipment.
 * Thresholds do not currently have stored authoritative citations.
-* DALTON replay requires the user to provide a processed CSV; email delivery, automatic sensor adapters, and live vendor integrations are not configured.
+* Dataset replay requires the user to provide a CSV; imported historical rows do not create live alerts. Email delivery, automatic sensor adapters, and live vendor integrations are not configured.
 * The rate limiter is process-local and is not suitable for coordinating multiple workers.

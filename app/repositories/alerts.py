@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.parameters import parameter_for_code
 from app.models.alert import Alert, AlertLevel, AlertStatus
 from app.models.home import Home
 from app.models.metric import Metric
@@ -43,6 +44,7 @@ def _ensure_scope(
     room_name: str,
     metric_code: str,
     unit: str,
+    metric_name: str | None = None,
 ) -> tuple[Home, Room, Metric]:
     home = session.get(Home, home_id)
     if home is None:
@@ -63,7 +65,14 @@ def _ensure_scope(
 
     metric = session.get(Metric, metric_code)
     if metric is None:
-        metric = Metric(code=metric_code, name=metric_code, unit=unit)
+        parameter = parameter_for_code(metric_code)
+        metric = Metric(
+            code=metric_code,
+            name=parameter.name
+            if parameter
+            else metric_name or metric_code.replace("_", "."),
+            unit=unit,
+        )
         session.add(metric)
         session.flush()
     elif metric.unit != unit:
@@ -168,8 +177,12 @@ def process_reading(
     max_future_seconds: int = 60,
     sensor_id: str | None = None,
     actor_user_id: str | None = None,
+    metric_name: str | None = None,
 ) -> dict:
-    if not math.isfinite(value) or value < 0:
+    parameter = parameter_for_code(metric_code)
+    if not math.isfinite(value) or (
+        value < 0 and not (parameter and parameter.code == "TEMPERATURE")
+    ):
         raise InvalidReading("Reading value must be a finite non-negative number.")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", home_id):
         raise InvalidReading("home_id must contain 1 to 64 letters, numbers, underscores, or hyphens.")
@@ -213,11 +226,51 @@ def process_reading(
         transaction = session.begin_nested() if session.in_transaction() else session.begin()
         with transaction:
             home, room, metric = _ensure_scope(
-                session, home_id, home_name, room_name.strip(), metric_code.upper(), unit
+                session,
+                home_id,
+                home_name,
+                room_name.strip(),
+                metric_code.upper(),
+                unit,
+                metric_name,
             )
-            policy = _policy(
-                session, home.id, room.id, metric.code, defaults
+            if source == "dataset":
+                reading = Reading(
+                    home_id=home.id,
+                    room_id=room.id,
+                    sensor_id=sensor_id,
+                    metric_code=metric.code,
+                    value=value,
+                    source=source,
+                    measured_at=measured_at,
+                    received_at=received_at,
+                )
+                session.add(reading)
+                session.flush()
+                return {
+                    "reading_id": reading.id,
+                    "home_id": home.id,
+                    "room": room.name,
+                    "metric": metric.code,
+                    "value": value,
+                    "unit": metric.unit,
+                    "source": source,
+                    "measured_at": format_utc(measured_at),
+                    "received_at": format_utc(received_at),
+                    "rapid_rise_per_minute": None,
+                    "created": [],
+                    "cleared": [],
+                    "alerts": [],
+                }
+            policy = session.scalar(
+                select(ThresholdPolicy).where(
+                    ThresholdPolicy.home_id == home.id,
+                    ThresholdPolicy.room_id == room.id,
+                    ThresholdPolicy.metric_code == metric.code,
+                )
             )
+            if policy is None and metric.code == "CO2":
+                policy = _policy(session, home.id, room.id, metric.code, defaults)
             previous = session.scalar(
                 select(Reading)
                 .where(
@@ -230,6 +283,35 @@ def process_reading(
             )
             if previous is not None and measured_at <= normalize_utc(previous.measured_at):
                 raise InvalidReading("Reading must be newer than the last reading for this room and metric.")
+
+            if policy is None:
+                reading = Reading(
+                    home_id=home.id,
+                    room_id=room.id,
+                    sensor_id=sensor_id,
+                    metric_code=metric.code,
+                    value=value,
+                    source=source,
+                    measured_at=measured_at,
+                    received_at=received_at,
+                )
+                session.add(reading)
+                session.flush()
+                return {
+                    "reading_id": reading.id,
+                    "home_id": home.id,
+                    "room": room.name,
+                    "metric": metric.code,
+                    "value": value,
+                    "unit": metric.unit,
+                    "source": source,
+                    "measured_at": format_utc(measured_at),
+                    "received_at": format_utc(received_at),
+                    "rapid_rise_per_minute": None,
+                    "created": [],
+                    "cleared": [],
+                    "alerts": [],
+                }
 
             elapsed = (
                 (measured_at - normalize_utc(previous.measured_at)).total_seconds()
