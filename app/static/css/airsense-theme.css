@@ -85,6 +85,64 @@ body {
   letter-spacing: -.01em;
 }
 
+button,
+input,
+select,
+textarea {
+  color: var(--text);
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  color: color-mix(in srgb, var(--muted) 78%, var(--surface));
+  opacity: .8;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 92%, var(--text));
+  opacity: 1;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--accent2);
+  outline-offset: 3px;
+}
+
+[role="status"],
+[role="alert"],
+.status,
+.toast,
+.info-banner,
+.error-banner,
+.notice,
+.banner {
+  color: var(--text);
+}
+
+.success,
+.success-message,
+.notice-success {
+  color: var(--good);
+}
+
+.error,
+.error-message,
+.error-banner {
+  color: var(--bad);
+}
+
+.warning,
+.warning-message {
+  color: var(--warn);
+}
+
 *::-webkit-scrollbar {
   display: block;
   width: 8px;

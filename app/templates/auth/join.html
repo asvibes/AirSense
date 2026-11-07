@@ -14,7 +14,7 @@
       color-scheme: dark;
       --air-bg: #120f17;
       --air-white: #f7f9fa;
-      --air-muted: rgba(247, 249, 250, .7);
+      --air-muted: #d7e0e5;
       --air-lilac: #c8abff;
     }
     *, *::before, *::after { box-sizing: border-box; }
@@ -138,7 +138,7 @@
     .field {
       display: grid;
       gap: 7px;
-      color: rgba(247, 249, 250, .88);
+      color: #f7f9fa;
       font-size: 12px;
       font-weight: 600;
     }
@@ -161,7 +161,8 @@
       background: #17131e;
       box-shadow: 0 0 0 3px rgba(200, 171, 255, .14);
     }
-    .field-help { color: rgba(247, 249, 250, .5); font-size: 11px; font-weight: 400; line-height: 1.45; }
+    .field input::placeholder { color: #cbd6dc; opacity: 1; }
+    .field-help { color: #cbd6dc; font-size: 11px; font-weight: 400; line-height: 1.45; }
     .password-control { position: relative; display: block; width: 100%; }
     .password-control input { padding-right: 64px; }
     .password-toggle {
@@ -172,7 +173,7 @@
       padding: 6px 2px;
       border: 0;
       background: transparent;
-      color: rgba(247, 249, 250, .7);
+      color: #d7e0e5;
       font: 500 12px/1 "Geist", ui-sans-serif, system-ui, sans-serif;
       cursor: pointer;
     }
