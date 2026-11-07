@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 def _database_url() -> str:
     value = os.environ.get("DATABASE_URL")
@@ -43,3 +45,15 @@ class Config:
     AUTO_CREATE_SCHEMA = os.environ.get("AUTO_CREATE_SCHEMA", "false").lower() == "true"
     API_TOKEN = os.environ.get("AIRSENSE_API_TOKEN", "")
     REQUIRE_API_TOKEN = os.environ.get("REQUIRE_API_TOKEN", "false").lower() == "true"
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+    MAIL_DEFAULT_SENDER = os.environ.get(
+        "MAIL_DEFAULT_SENDER", "noreply.projecthub.mail@gmail.com"
+    )
+    MAIL_DEFAULT_SENDER_NAME = os.environ.get("MAIL_DEFAULT_SENDER_NAME", "AirSense")
+    PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "")
+    EMAIL_VERIFICATION_REQUIRED = (
+        os.environ.get("EMAIL_VERIFICATION_REQUIRED", "true").lower() == "true"
+    )
+    OTP_EXPIRY_SECONDS = 10 * 60
+    OTP_RESEND_COOLDOWN_SECONDS = 60
+    OTP_MAX_ATTEMPTS = 5

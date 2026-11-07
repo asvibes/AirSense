@@ -338,7 +338,7 @@
       const x = left + index * step + (step - barWidth) / 2;
       const y = top + plotHeight - barHeight;
       const fullDate = item.date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-      return `<rect class="history-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 3)}"><title>${escapeHtml(fullDate)}: ${format(item.value)} ${escapeHtml(metric.unit)} · ${item.count} reading${item.count === 1 ? "" : "s"}</title></rect>`;
+      return `<rect class="history-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 3)}"><title>${escapeHtml(fullDate)}: ${format(item.value)} ${escapeHtml(metric.unit)} daily average · ${item.count} reading${item.count === 1 ? "" : "s"}</title></rect>`;
     }).join("");
     const ticks = [...new Set([0, Math.round((days - 1) / 4), Math.round((days - 1) / 2), Math.round((days - 1) * 3 / 4), days - 1])].map(index => {
       const x = left + index * step + step / 2;

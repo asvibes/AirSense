@@ -3,7 +3,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, current_app, jsonify, render_template, request, url_for
 from sqlalchemy import select
 
 from app.db import get_session
@@ -13,6 +13,7 @@ from app.models.user import HomeInvitation, HomeMembership, User
 from app.schemas.auth import AuthInputError, validate_email
 from app.security.sessions import current_user, list_user_homes, require_home_role, require_user
 from app.services.audit import record_event
+from app.services.email import EmailDeliveryError, send_invitation_email
 from app.timestamps import format_utc
 
 
@@ -110,6 +111,7 @@ def invite_member(home_id: str):
     except AuthInputError as error:
         return jsonify(error=str(error)), 400
     db = get_session()
+    home = db.get(Home, home_id)
     if db.scalar(
         select(HomeMembership.user_id)
         .join(User, User.id == HomeMembership.user_id)
@@ -126,7 +128,7 @@ def invite_member(home_id: str):
         token_hash=hashlib.sha256(invitation_token.encode()).hexdigest(),
         created_by=current_user().id,
         created_at=now,
-        expires_at=now + timedelta(days=7),
+        expires_at=now + timedelta(hours=24),
     )
     db.add(invitation)
     record_event(
@@ -142,7 +144,19 @@ def invite_member(home_id: str):
             "expires_at": format_utc(invitation.expires_at),
         },
     )
-    db.commit()
+    try:
+        db.flush()
+        base_url = current_app.config.get("PUBLIC_BASE_URL") or request.host_url.rstrip("/")
+        send_invitation_email(
+            recipient=email,
+            invitation_url=f"{base_url}{url_for('homes.invitation_page')}?token={invitation_token}",
+            expires_at=invitation.expires_at,
+            owner_name=current_user().display_name,
+        )
+        db.commit()
+    except EmailDeliveryError as error:
+        db.rollback()
+        return jsonify(error=str(error)), 503
     return jsonify(
         invitation={
             "id": invitation.id,
@@ -150,7 +164,7 @@ def invite_member(home_id: str):
             "role": invitation.role,
             "expires_at": format_utc(invitation.expires_at),
             "token": invitation_token,
-            "delivery": "Copy this one-time code to the invited person. Email delivery is not configured.",
+            "delivery": "Invitation email sent.",
         }
     ), 201
 

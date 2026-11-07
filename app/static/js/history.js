@@ -44,7 +44,19 @@
   }
 
   function checkedMetrics() {
-    return $$("#parameters input:checked").map(input => input.value);
+    return $$("#parameters .parameter-option.is-selected").map(option => option.dataset.metric);
+  }
+
+  function updateParameterState() {
+    const options = $$("#parameters .parameter-option");
+    options.forEach(option => {
+      const selected = option.classList.contains("is-selected");
+      option.setAttribute("aria-pressed", String(selected));
+      const input = $("input", option);
+      if (input) input.checked = selected;
+    });
+    const count = $("#parameter-count");
+    if (count) count.textContent = `${checkedMetrics().length} selected`;
   }
 
   function setDateDefaults(days = 7) {
@@ -108,12 +120,14 @@
     const wrapper = $("#parameters");
     if (!state.metrics.length) {
       wrapper.innerHTML = '<span class="empty-option">No stored parameters are available for this selection.</span>';
+      updateParameterState();
       return;
     }
-    wrapper.innerHTML = state.metrics.map((metric, index) => {
+    wrapper.innerHTML = state.metrics.map(metric => {
       const checked = priorMetrics.size ? priorMetrics.has(metric.code) : true;
-      return `<label class="parameter-option"><input type="checkbox" value="${esc(metric.code)}" ${checked ? "checked" : ""}><span>${esc(metric.name)} <small>(${esc(metric.code)} · ${esc(metric.unit)})</small></span></label>`;
+      return `<button class="parameter-option${checked ? " is-selected" : ""}" type="button" data-metric="${esc(metric.code)}" aria-pressed="${checked}"><input type="checkbox" value="${esc(metric.code)}" tabindex="-1" ${checked ? "checked" : ""}><span>${esc(metric.name)} <small>${esc(metric.code)} · ${esc(metric.unit)}</small></span></button>`;
     }).join("");
+    updateParameterState();
   }
 
   function filterParams() {
@@ -386,12 +400,26 @@
         const y = top + (1 - fraction) * plotHeight;
         return `<line class="chart-grid" x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"/><text class="chart-axis" x="${left - 7}" y="${y + 3}" text-anchor="end">${esc(numeric(minimum + fraction * (maximum - minimum)))}</text>`;
       }).join("");
+      const showDots = readings.length <= 240;
       const dots = readings.map(reading => {
         const x = left + (Date.parse(reading.measured_at) - rangeStart) / visibleSpan * plotWidth;
         const y = top + (1 - (Number(reading.value) - minimum) / (maximum - minimum)) * plotHeight;
         const sensor = state.sensors.find(item => item.id === reading.sensor_id)?.name || "Unassigned sensor";
         const title = `${formatTimestamp(reading.measured_at)} · ${numeric(Number(reading.value))} ${reading.unit} · ${sensor}${reading.aggregated ? ` · average of ${reading.sample_count} actual samples` : ""}`;
-        return `<circle class="chart-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="4" style="fill:${colors[index % colors.length]}"><title>${esc(title)}</title></circle>`;
+        const visual = showDots
+          ? `<circle class="chart-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3" style="fill:${colors[index % colors.length]}"/>`
+          : "";
+        return `<circle class="chart-hit" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="7" fill="transparent"><title>${esc(title)}</title></circle>${visual}`;
+      }).join("");
+      const linePaths = [...series.values()].map((points, seriesIndex) => {
+        const path = points
+          .filter(point => Number.isFinite(Date.parse(point.measured_at)) && Number.isFinite(Number(point.value)))
+          .map((point, pointIndex) => {
+            const x = left + (Date.parse(point.measured_at) - rangeStart) / visibleSpan * plotWidth;
+            const y = top + (1 - (Number(point.value) - minimum) / (maximum - minimum)) * plotHeight;
+            return `${pointIndex ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`;
+          }).join(" ");
+        return path ? `<path class="chart-line" d="${path}" style="stroke:${colors[(index + seriesIndex) % colors.length]}"/>` : "";
       }).join("");
       const startLabel = formatTimestamp(new Date(rangeStart).toISOString(), { hour: "2-digit", minute: "2-digit" });
       const endLabel = formatTimestamp(new Date(rangeEnd).toISOString(), { hour: "2-digit", minute: "2-digit" });
@@ -399,7 +427,7 @@
       const sampleLabel = period === "sample"
         ? `${readings.length} actual samples · median interval ${cadence === null ? "not available" : esc(duration(cadence))}${expectedLabel ? ` · configured ${esc(expectedLabel)}` : ""}`
         : `${readings.reduce((count, item) => count + item.sample_count, 0)} actual samples summarized in ${readings.length} non-empty ${period} periods`;
-      return `<div class="chart-panel"><h3 class="chart-title"><span><i class="legend-dot" style="background:${colors[index % colors.length]}"></i>${esc(metric.name)} <small>${esc(metric.code)} · ${esc(metric.unit)}${compareBy === "room-sensor" ? ` · ${esc(label)}` : ""}</small></span><small>${sampleLabel}</small></h3><svg class="history-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(metric.name)} stored samples plotted at their actual timestamps">${grid}${gaps.join("")}${dots}<text class="chart-axis" x="${left}" y="${height - 6}">${esc(startLabel)}</text><text class="chart-axis" x="${width - right}" y="${height - 6}" text-anchor="end">${esc(endLabel)}</text></svg></div>`;
+      return `<div class="chart-panel"><h3 class="chart-title"><span><i class="legend-dot" style="background:${colors[index % colors.length]}"></i>${esc(metric.name)} <small>${esc(metric.code)} · ${esc(metric.unit)}${compareBy === "room-sensor" ? ` · ${esc(label)}` : ""}</small></span><small>${sampleLabel}</small></h3><svg class="history-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(metric.name)} stored samples plotted at their actual timestamps">${grid}${gaps.join("")}${linePaths}${dots}<text class="chart-axis" x="${left}" y="${height - 6}">${esc(startLabel)}</text><text class="chart-axis" x="${width - right}" y="${height - 6}" text-anchor="end">${esc(endLabel)}</text></svg></div>`;
     }).join("");
   }
 
@@ -497,7 +525,11 @@
   });
   $("#apply-filters").addEventListener("click", loadReadings);
   $("#reset-range").addEventListener("click", () => { setDateDefaults(); loadReadings(); });
-  $("#parameters").addEventListener("change", () => {
+  $("#parameters").addEventListener("click", event => {
+    const option = event.target.closest(".parameter-option");
+    if (!option) return;
+    option.classList.toggle("is-selected");
+    updateParameterState();
     state.page = 0;
     render();
   });
@@ -516,6 +548,8 @@
       renderCharts();
     }
   });
+  $("#aggregation")?.addEventListener("change", renderCharts);
+  $("#compare-by")?.addEventListener("change", renderCharts);
   $("#export-csv").addEventListener("click", () => {
     try { window.location.assign(exportUrl("csv")); } catch (error) { setStatus(error.message, true); }
   });

@@ -25,6 +25,8 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     app.config.from_object(Config)
     if test_config is not None:
         app.config.update(test_config)
+    if app.config.get("TESTING") and "EMAIL_VERIFICATION_REQUIRED" not in (test_config or {}):
+        app.config["EMAIL_VERIFICATION_REQUIRED"] = False
     if app.config["APP_ENV"] == "production":
         if app.config["SECRET_KEY"] == "local-development-key-change-me":
             raise RuntimeError("SECRET_KEY must be configured in production.")

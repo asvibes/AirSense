@@ -150,19 +150,30 @@
       const coordinate = y(value);
       return `<line class="chart-grid" x1="${left}" y1="${coordinate}" x2="${width - right}" y2="${coordinate}"/><text class="chart-label" x="${left - 8}" y="${coordinate + 3}" text-anchor="end">${esc(value.toPrecision(4))}</text>`;
     }).join("");
-    const actualDots = actual.map(item => {
-      const time = Date.parse(item.measured_at);
-      const value = Number(item.value);
-      if (!Number.isFinite(time) || !Number.isFinite(value)) return "";
-      return `<circle class="actual-dot" cx="${x(time)}" cy="${y(value)}" r="3.5"><title>Actual ${esc(item.value)} ${esc(item.unit)} at ${esc(item.measured_at)} · ${esc(item.source)}</title></circle>`;
-    }).join("");
-    const forecastLine = forecast.map((item, index) =>
-      `${index ? "L" : "M"}${x(Date.parse(item.measured_at)).toFixed(2)},${y(Number(item.value)).toFixed(2)}`
+    const actualPoints = actual
+      .map(item => ({ ...item, time: Date.parse(item.measured_at), value: Number(item.value) }))
+      .filter(item => Number.isFinite(item.time) && Number.isFinite(item.value))
+      .sort((a, b) => a.time - b.time);
+    const actualLine = actualPoints.map((item, index) =>
+      `${index ? "L" : "M"}${x(item.time).toFixed(2)},${y(item.value).toFixed(2)}`
     ).join(" ");
-    const upper = forecast.map(item => `${x(Date.parse(item.measured_at)).toFixed(2)},${y(Number(item.upper)).toFixed(2)}`);
-    const lower = [...forecast].reverse().map(item => `${x(Date.parse(item.measured_at)).toFixed(2)},${y(Number(item.lower)).toFixed(2)}`);
-    const band = forecast.length ? `<polygon class="interval-band" points="${[...upper, ...lower].join(" ")}"/>` : "";
-    $("#chart-wrap").innerHTML = `<svg class="prediction-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Actual readings and validated sensor forecast">${grid}${band}${actualDots}${forecast.length ? `<path class="forecast-line" d="${forecastLine}"/>` : ""}<text class="chart-label" x="${left}" y="${height - 10}">${esc(new Date(minTime).toLocaleString())}</text><text class="chart-label" x="${width - right}" y="${height - 10}" text-anchor="end">${esc(new Date(maxTime).toLocaleString())}</text></svg>`;
+    const actualDots = actualPoints.map(item => {
+      return `<circle class="actual-dot" cx="${x(item.time)}" cy="${y(item.value)}" r="3"><title>Actual ${esc(item.value)} ${esc(item.unit)} at ${esc(item.measured_at)} · ${esc(item.source)}</title></circle>`;
+    }).join("");
+    const forecastPoints = forecast
+      .map(item => ({ ...item, time: Date.parse(item.measured_at), value: Number(item.value) }))
+      .filter(item => Number.isFinite(item.time) && Number.isFinite(item.value))
+      .sort((a, b) => a.time - b.time);
+    const forecastLine = forecastPoints.map((item, index) =>
+      `${index ? "L" : "M"}${x(item.time).toFixed(2)},${y(item.value).toFixed(2)}`
+    ).join(" ");
+    const forecastDots = forecastPoints.map(item =>
+      `<circle class="forecast-dot" cx="${x(item.time)}" cy="${y(item.value)}" r="3"><title>Forecast ${esc(item.value)} ${esc(item.unit)} at ${esc(item.measured_at)} · interval ${esc(item.lower)}–${esc(item.upper)}</title></circle>`
+    ).join("");
+    const upper = forecastPoints.map(item => `${x(item.time).toFixed(2)},${y(Number(item.upper)).toFixed(2)}`);
+    const lower = [...forecastPoints].reverse().map(item => `${x(item.time).toFixed(2)},${y(Number(item.lower)).toFixed(2)}`);
+    const band = forecastPoints.length ? `<polygon class="interval-band" points="${[...upper, ...lower].join(" ")}"/>` : "";
+    $("#chart-wrap").innerHTML = `<svg class="prediction-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Actual readings and validated sensor forecast">${grid}${band}${actualLine ? `<path class="actual-line" d="${actualLine}"/>` : ""}${forecastLine ? `<path class="forecast-line" d="${forecastLine}"/>` : ""}${actualDots}${forecastDots}<text class="chart-label" x="${left}" y="${height - 10}">${esc(new Date(minTime).toLocaleString())}</text><text class="chart-label" x="${width - right}" y="${height - 10}" text-anchor="end">${esc(new Date(maxTime).toLocaleString())}</text></svg>`;
   }
 
   function renderRows(actual, forecast) {

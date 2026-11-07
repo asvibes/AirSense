@@ -220,7 +220,7 @@
       <h1 id="auth-title"><span class="gradient-text"><span class="gradient-text__content">Let's get your home on the map.</span></span></h1>
       <p class="page-subtitle">Create an account, set up your first home, and start exploring your room readings.</p>
       {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
-      <form method="post" action="{{ url_for('auth.register') }}">
+      <form method="post" action="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label class="field">Your name<input name="display_name" autocomplete="name" required maxlength="120"></label>
         <label class="field">Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>

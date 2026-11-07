@@ -256,7 +256,7 @@
         <p class="notice notice-error" id="invitation-error" hidden role="alert"></p>
         <p class="notice notice-success" id="invitation-success" hidden role="status"></p>
       </form>
-      <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login_page') }}">Sign in</a></p>
+      <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login_page', next=request.full_path) }}">Sign in</a></p>
     </section>
     <aside class="auth-visual" aria-label="Animated sliced waves background">
       <div id="join-waves-root" class="join-waves-root" aria-hidden="true"></div>

@@ -115,6 +115,82 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
+/* Shared chart language: quiet grids, readable labels, and responsive plot areas. */
+.chart-grid,
+.history-gridline {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.chart-axis,
+.chart-label,
+.history-y-label,
+.history-date-label {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.history-svg,
+.prediction-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 220px;
+}
+
+.chart-line,
+.forecast-line,
+.actual-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-line {
+  stroke-width: 2;
+}
+
+.actual-line {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.forecast-line {
+  stroke: var(--accent2);
+  stroke-width: 2.5;
+  stroke-dasharray: 7 5;
+}
+
+.chart-dot,
+.actual-dot,
+.forecast-dot {
+  stroke: var(--surface2);
+  stroke-width: 1.5;
+}
+
+.chart-dot:hover,
+.actual-dot:hover,
+.forecast-dot:hover {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.interval-band {
+  fill: color-mix(in srgb, var(--accent2) 12%, transparent);
+  stroke: color-mix(in srgb, var(--accent2) 48%, transparent);
+  stroke-width: 1;
+}
+
+.history-bar {
+  fill: var(--accent);
+  opacity: .82;
+}
+
+.history-bar:hover {
+  fill: var(--accent2);
+  opacity: 1;
+}
+
 [role="status"],
 [role="alert"],
 .status,
