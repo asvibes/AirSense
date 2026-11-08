@@ -219,7 +219,7 @@ def submit_reading():
         home_id = payload.get("home_id") or session.get("home_id")
         if not isinstance(home_id, str) or not home_id:
             raise ValueError("Select a home first.")
-        require_home_role(home_id, "owner", "member")
+        require_home_role(home_id, "owner")
         home = get_session().get(Home, home_id)
         room_name = _required_text(payload, "room", 100)
         room = get_session().scalar(

@@ -3,11 +3,50 @@ from io import BytesIO
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy import select
+
 from app.db import get_session
 from app.models.user import HomeInvitation
+from app.models.alert import Alert
+from app.models.reading import Reading
 
 
 class AccessControlTests(AirSenseTestCase):
+    def test_owner_can_use_both_legacy_reading_routes(self):
+        self.create_room("Bedroom")
+        payload = {
+            "home_id": self.home_id,
+            "room": "Bedroom",
+            "metric": "CO2",
+            "unit": "ppm",
+            "value": 700,
+        }
+        api_response = self.client.post(
+            "/api/readings",
+            json=payload,
+            headers={"X-CSRF-Token": self.csrf},
+        )
+        self.assertEqual(api_response.status_code, 201, api_response.get_json())
+
+        html_response = self.client.post(
+            "/readings",
+            data={**payload, "csrf_token": self.csrf},
+        )
+        self.assertEqual(html_response.status_code, 302)
+
+    def test_unauthenticated_legacy_reading_routes_are_rejected(self):
+        anonymous = self.app.test_client()
+        for endpoint in ("/api/readings", "/readings"):
+            response = anonymous.post(
+                endpoint,
+                json={
+                    "home_id": self.home_id,
+                    "room": "Bedroom",
+                    "value": 700,
+                },
+            )
+            self.assertEqual(response.status_code, 401)
+
     def test_room_photo_requires_membership_and_supports_authorized_upload(self):
         self.app.config["PRIVATE_UPLOAD_FOLDER"] = str(
             Path(self.temp_dir.name) / "private_uploads"
@@ -74,6 +113,40 @@ class AccessControlTests(AirSenseTestCase):
             headers={"X-CSRF-Token": member_csrf},
         )
         self.assertEqual(response.status_code, 403)
+        for endpoint in ("/api/readings", "/readings"):
+            response = member_client.post(
+                endpoint,
+                json={
+                    "home_id": self.home_id,
+                    "room": "Bedroom",
+                    "metric": "CO2",
+                    "unit": "ppm",
+                    "value": 1800,
+                },
+                headers={"X-CSRF-Token": member_csrf},
+            )
+            self.assertEqual(response.status_code, 403)
+
+        with self.app.app_context():
+            db = get_session()
+            self.assertEqual(
+                db.scalar(
+                    select(Reading.id).where(
+                        Reading.home_id == self.home_id,
+                        Reading.value == 1800,
+                    )
+                ),
+                None,
+            )
+            self.assertEqual(
+                db.scalar(
+                    select(Alert.id).where(
+                        Alert.home_id == self.home_id,
+                        Alert.level == "high",
+                    )
+                ),
+                None,
+            )
         response = member_client.post(
             f"/api/homes/{self.home_id}/rooms",
             json={"name": "Unauthorized room"},
