@@ -655,6 +655,62 @@ class EmailFlowTests(AirSenseTestCase):
             lifetime = invitation.expires_at - invitation.created_at
             self.assertEqual(lifetime.total_seconds(), 24 * 60 * 60)
 
+    def test_duplicate_active_invitation_does_not_send_a_second_email(self):
+        with patch("app.routers.homes.send_invitation_email") as send:
+            first = self.request_json(
+                "POST",
+                f"/api/homes/{self.home_id}/invitations",
+                {"email": "repeat@example.test"},
+            )
+            second = self.request_json(
+                "POST",
+                f"/api/homes/{self.home_id}/invitations",
+                {"email": "repeat@example.test"},
+            )
+
+        self.assertEqual(first.status_code, 201, first.get_json())
+        self.assertEqual(second.status_code, 409, second.get_json())
+        self.assertIn("active invitation", second.get_json()["error"])
+        send.assert_called_once()
+        with self.app.app_context():
+            invitations = list(
+                get_session().scalars(
+                    select(HomeInvitation).where(
+                        HomeInvitation.home_id == self.home_id,
+                        HomeInvitation.email == "repeat@example.test",
+                    )
+                )
+            )
+        self.assertEqual(len(invitations), 1)
+
+    def test_expired_invitation_allows_a_legitimate_new_invitation(self):
+        with patch("app.routers.homes.send_invitation_email") as send:
+            first = self.request_json(
+                "POST",
+                f"/api/homes/{self.home_id}/invitations",
+                {"email": "again@example.test"},
+            )
+            self.assertEqual(first.status_code, 201, first.get_json())
+            with self.app.app_context():
+                invitation = get_session().get(
+                    HomeInvitation, first.get_json()["invitation"]["id"]
+                )
+                invitation.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+                get_session().commit()
+
+            second = self.request_json(
+                "POST",
+                f"/api/homes/{self.home_id}/invitations",
+                {"email": "again@example.test"},
+            )
+
+        self.assertEqual(second.status_code, 201, second.get_json())
+        self.assertNotEqual(
+            first.get_json()["invitation"]["id"],
+            second.get_json()["invitation"]["id"],
+        )
+        self.assertEqual(send.call_count, 2)
+
 
 def challenge_hash(token, app):
     import hashlib

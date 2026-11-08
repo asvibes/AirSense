@@ -119,7 +119,11 @@ def invite_member(home_id: str):
     except AuthInputError as error:
         return jsonify(error=str(error)), 400
     db = get_session()
-    home = db.get(Home, home_id)
+    # Serialize invitations for this home so concurrent submissions cannot
+    # both pass the active-invitation check on databases with row locking.
+    home = db.scalar(
+        select(Home).where(Home.id == home_id).with_for_update()
+    )
     if db.scalar(
         select(HomeMembership.user_id)
         .join(User, User.id == HomeMembership.user_id)
@@ -127,6 +131,22 @@ def invite_member(home_id: str):
     ):
         return jsonify(error="This person is already a member of the home."), 409
     now = datetime.now(timezone.utc)
+    active_invitation_id = db.scalar(
+        select(HomeInvitation.id)
+        .where(
+            HomeInvitation.home_id == home_id,
+            HomeInvitation.email == email,
+            HomeInvitation.accepted_at.is_(None),
+            HomeInvitation.expires_at > now,
+        )
+        .limit(1)
+    )
+    if active_invitation_id is not None:
+        db.rollback()
+        return jsonify(
+            error="An active invitation has already been sent to this address."
+        ), 409
+
     invitation_token = secrets.token_urlsafe(32)
     invitation = HomeInvitation(
         id=str(uuid.uuid4()),
