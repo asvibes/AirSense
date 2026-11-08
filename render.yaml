@@ -35,6 +35,6 @@ services:
         sync: false
       # Use the canonical HTTPS URL; invitation links use this value.
       - key: EMAIL_VERIFICATION_REQUIRED
-        value: "true"
+        value: "false"
       - key: SESSION_COOKIE_SECURE
         value: "true"

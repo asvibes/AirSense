@@ -5,12 +5,38 @@ from html import unescape
 from urllib.parse import urlparse
 
 from flask import request
+from sqlalchemy import select
 
+from app.db import get_session
 from app.main import create_app
+from app.models.user import User
 from helpers import AirSenseTestCase
 
 
 class LandingAuthTests(AirSenseTestCase):
+    def test_registration_signs_in_without_email_verification(self):
+        client = self.app.test_client()
+        csrf = self.prepare_csrf(client)
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "email": "direct-registration@example.test",
+                "display_name": "Direct Registration",
+                "password": "secure-password-123",
+            },
+            headers={"X-CSRF-Token": csrf},
+        )
+
+        self.assertEqual(response.status_code, 201, response.get_json())
+        self.assertEqual(client.get("/alerts").status_code, 200)
+        with self.app.app_context():
+            user = get_session().scalar(
+                select(User).where(
+                    User.email == "direct-registration@example.test"
+                )
+            )
+            self.assertIsNotNone(user.email_verified_at)
+
     def test_forwarded_headers_are_ignored_without_explicit_trust(self):
         proxy_app = create_app(
             {

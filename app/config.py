@@ -59,7 +59,7 @@ class Config:
     MAIL_DEFAULT_SENDER_NAME = os.environ.get("MAIL_DEFAULT_SENDER_NAME", "AirSense")
     PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "")
     EMAIL_VERIFICATION_REQUIRED = (
-        os.environ.get("EMAIL_VERIFICATION_REQUIRED", "true").lower() == "true"
+        os.environ.get("EMAIL_VERIFICATION_REQUIRED", "false").lower() == "true"
     )
     OTP_EXPIRY_SECONDS = 10 * 60
     OTP_RESEND_COOLDOWN_SECONDS = 60
