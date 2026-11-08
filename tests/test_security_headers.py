@@ -31,7 +31,7 @@ class SecurityHeaderAndProxyTests(AirSenseTestCase):
 
     def test_render_https_forwarded_proto_emits_hsts_and_preserves_other_headers(self):
         proxy_app = self.create_security_app(
-            app_env="production", trusted_proxy_hops=1, name="render-proxy"
+            app_env="production", trusted_proxy_hops=0, name="render-proxy"
         )
         try:
             response = proxy_app.test_client().get(
@@ -48,12 +48,12 @@ class SecurityHeaderAndProxyTests(AirSenseTestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json()["scheme"], "https")
-            self.assertEqual(response.get_json()["remote_addr"], "203.0.113.24")
+            self.assertEqual(response.get_json()["remote_addr"], "10.0.0.8")
             self.assertEqual(response.get_json()["host"], "localhost")
             self.assertEqual(response.get_json()["script_root"], "")
             self.assertEqual(
                 response.headers["Strict-Transport-Security"],
-                "max-age=31536000; includeSubDomains",
+                "max-age=31536000",
             )
             self.assertEqual(
                 response.headers["Content-Security-Policy"],

@@ -47,7 +47,7 @@ class ErrorHandlerTests(AirSenseTestCase):
             response = app.test_client().get("/", base_url="https://airsense.test")
             self.assertEqual(
                 response.headers["Strict-Transport-Security"],
-                "max-age=31536000; includeSubDomains",
+                "max-age=31536000",
             )
         finally:
             app.extensions["airsense_engine"].dispose()

@@ -39,11 +39,16 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     trusted_proxy_hops = app.config["TRUSTED_PROXY_HOPS"]
     if trusted_proxy_hops < 0:
         raise RuntimeError("TRUSTED_PROXY_HOPS must be zero or greater.")
-    if trusted_proxy_hops:
+    # Render terminates TLS at one load-balancer hop. Trust only that hop for
+    # the original scheme in production, independently of client-IP settings.
+    trusted_proto_hops = (
+        1 if app.config["APP_ENV"] == "production" else trusted_proxy_hops
+    )
+    if trusted_proxy_hops or trusted_proto_hops:
         app.wsgi_app = ProxyFix(
             app.wsgi_app,
             x_for=trusted_proxy_hops,
-            x_proto=trusted_proxy_hops,
+            x_proto=trusted_proto_hops,
             x_host=0,
             x_port=0,
             x_prefix=0,
@@ -69,10 +74,9 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
             "font-src 'self' https://fonts.gstatic.com",
         )
         if app.config["APP_ENV"] == "production" and request.is_secure:
-            response.headers.setdefault(
-                "Strict-Transport-Security",
-                "max-age=31536000; includeSubDomains",
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
+        else:
+            response.headers.pop("Strict-Transport-Security", None)
         return response
 
     for blueprint in (
