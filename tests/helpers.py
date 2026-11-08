@@ -2,6 +2,7 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from app.main import create_app
 
@@ -17,9 +18,19 @@ class AirSenseTestCase(unittest.TestCase):
                 "DATABASE_URL": f"sqlite:///{database.as_posix()}",
                 "AUTO_CREATE_SCHEMA": True,
                 "REQUIRE_API_TOKEN": False,
+                "BREVO_API_KEY": "test-brevo-api-key",
+                "MAIL_DEFAULT_SENDER": "notifications@example.test",
+                "MAIL_DEFAULT_SENDER_NAME": "AirSense Test",
                 **getattr(self, "config_overrides", {}),
             }
         )
+        brevo_response = MagicMock(status=201)
+        brevo_response.__enter__.return_value = brevo_response
+        self._brevo_urlopen_patch = patch(
+            "app.services.email.urllib.request.urlopen",
+            return_value=brevo_response,
+        )
+        self._brevo_urlopen_patch.start()
         self.client = self.app.test_client()
         self.csrf = self.prepare_csrf(self.client)
         response = self.client.post(
@@ -36,6 +47,7 @@ class AirSenseTestCase(unittest.TestCase):
         self.home_id = response.get_json()["home"]["id"]
 
     def tearDown(self):
+        self._brevo_urlopen_patch.stop()
         self.app.extensions["airsense_engine"].dispose()
         self.temp_dir.cleanup()
 
