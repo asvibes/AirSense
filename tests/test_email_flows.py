@@ -553,6 +553,40 @@ class EmailFlowTests(AirSenseTestCase):
         )
         self.assertEqual(login.status_code, 200)
 
+    def test_password_reset_redirects_to_login_without_authenticating_session(self):
+        client = self.app.test_client()
+        csrf = self.prepare_csrf(client)
+        with patch("app.routers.auth.send_otp_email") as send:
+            requested = client.post(
+                "/api/auth/forgot-password",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": csrf},
+            )
+            self.assertEqual(requested.status_code, 200)
+            verified = client.post(
+                "/api/auth/verify-reset",
+                json={
+                    "email": "owner@example.test",
+                    "otp": send.call_args.kwargs["otp"],
+                },
+                headers={"X-CSRF-Token": csrf},
+            )
+        reset = client.post(
+            "/reset-password",
+            data={
+                "csrf_token": csrf,
+                "reset_token": verified.get_json()["reset_token"],
+                "password": "new-secure-password-123",
+            },
+            follow_redirects=False,
+        )
+        self.assertEqual(reset.status_code, 302)
+        self.assertEqual(reset.headers["Location"], "/login")
+        with client.session_transaction() as browser_session:
+            self.assertNotIn("user_id", browser_session)
+            self.assertNotIn("session_version", browser_session)
+        self.assertEqual(client.get("/alerts").status_code, 302)
+
     def test_reset_token_reuse_is_rejected_from_a_fresh_client(self):
         with patch("app.routers.auth.send_otp_email") as send:
             self.client.post(

@@ -30,6 +30,14 @@ _logger = logging.getLogger(__name__)
 _DUMMY_PASSWORD_HASH = generate_password_hash("not-a-real-account-password", method="scrypt")
 
 
+def _start_authenticated_session(user: User) -> None:
+    session.clear()
+    session["user_id"] = user.id
+    session["session_version"] = user.session_version
+    session.permanent = True
+    csrf_token()
+
+
 def _record_user_auth_event(
     db,
     user_id: str,
@@ -393,11 +401,7 @@ def register():
                 next=request.args.get("next", ""),
             )
         )
-    session.clear()
-    session["user_id"] = user.id
-    session["session_version"] = user.session_version
-    session.permanent = True
-    csrf_token()
+    _start_authenticated_session(user)
     if request.is_json:
         return jsonify(user={"id": user.id, "email": user.email, "display_name": user.display_name}, home={"id": home.id, "name": home.name}), 201
     return redirect(url_for("alerts.alerts_page"))
@@ -446,11 +450,7 @@ def verify_email():
         return _auth_error(str(error), 400)
     if request.is_json:
         return jsonify(verified=True)
-    session.clear()
-    session["user_id"] = user.id
-    session["session_version"] = user.session_version
-    session.permanent = True
-    csrf_token()
+    _start_authenticated_session(user)
     next_url = request.form.get("next", "")
     if next_url and next_url.startswith("/") and not next_url.startswith("//"):
         return redirect(next_url)
@@ -717,11 +717,7 @@ def login():
         db, user.id, "account.login_succeeded", actor_user_id=user.id
     )
     db.commit()
-    session.clear()
-    session["user_id"] = user.id
-    session["session_version"] = user.session_version
-    session.permanent = True
-    csrf_token()
+    _start_authenticated_session(user)
     if request.is_json:
         return jsonify(user={"id": user.id, "email": user.email, "display_name": user.display_name})
     next_url = request.args.get("next", "")

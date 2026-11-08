@@ -37,6 +37,65 @@ class LandingAuthTests(AirSenseTestCase):
             )
             self.assertIsNotNone(user.email_verified_at)
 
+    def test_login_redirects_to_dashboard_and_session_survives_requests(self):
+        client = self.app.test_client()
+        client.get("/logout")
+        login_page = client.get("/login")
+        csrf = re.search(
+            rb'name="csrf_token" value="([^"]+)"', login_page.data
+        ).group(1).decode()
+
+        response = client.post(
+            "/login",
+            data={
+                "csrf_token": csrf,
+                "email": "owner@example.test",
+                "password": "secure-password-123",
+            },
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"AirSense Owner", response.data)
+        self.assertEqual(client.get("/alerts").status_code, 200)
+        self.assertEqual(client.get("/history").status_code, 200)
+
+    def test_invalid_login_and_unauthenticated_dashboard_are_rejected(self):
+        client = self.app.test_client()
+        login_page = client.get("/login")
+        csrf = re.search(
+            rb'name="csrf_token" value="([^"]+)"', login_page.data
+        ).group(1).decode()
+        invalid = client.post(
+            "/login",
+            data={
+                "csrf_token": csrf,
+                "email": "owner@example.test",
+                "password": "wrong-password-123",
+            },
+        )
+        self.assertEqual(invalid.status_code, 401)
+        self.assertEqual(client.get("/alerts").status_code, 302)
+        self.assertIn("/login", client.get("/alerts").headers["Location"])
+
+    def test_authenticated_login_page_redirects_to_dashboard(self):
+        client = self.app.test_client()
+        login_page = client.get("/login")
+        csrf = re.search(
+            rb'name="csrf_token" value="([^"]+)"', login_page.data
+        ).group(1).decode()
+        signed_in = client.post(
+            "/login",
+            data={
+                "csrf_token": csrf,
+                "email": "owner@example.test",
+                "password": "secure-password-123",
+            },
+        )
+        self.assertEqual(signed_in.status_code, 302)
+        self.assertEqual(client.get("/login").status_code, 302)
+        self.assertEqual(client.get("/login").headers["Location"], "/alerts")
+
     def test_forwarded_headers_are_ignored_without_explicit_trust(self):
         proxy_app = create_app(
             {
