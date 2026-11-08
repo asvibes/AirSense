@@ -3,7 +3,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from flask import Blueprint, current_app, jsonify, render_template, request, url_for
+from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy import select
 
 from app.db import get_session
@@ -15,6 +15,7 @@ from app.security.sessions import current_user, list_user_homes, require_home_ro
 from app.security.rate_limit import allow_persistent
 from app.services.audit import record_event
 from app.services.email import EmailDeliveryError, send_invitation_email
+from app.services.invitations import accept_invitation_for_user, valid_invitation_hash
 from app.timestamps import format_utc
 
 
@@ -22,11 +23,33 @@ homes = Blueprint("homes", __name__)
 
 
 @homes.get("/join")
-@require_user(api=False)
 def invitation_page():
+    token = request.args.get("token")
+    if isinstance(token, str) and token and len(token) <= 200:
+        session["pending_invitation_hash"] = hashlib.sha256(token.encode()).hexdigest()
+
+    pending_hash = session.get("pending_invitation_hash")
+    if not valid_invitation_hash(pending_hash):
+        pending_hash = None
+        session.pop("pending_invitation_hash", None)
+
+    user = current_user()
+    if user is None or not user.is_active:
+        return redirect(url_for("auth.login_page", next=url_for("homes.invitation_page")))
+
+    error_messages = {
+        "wrong-account": "This invitation was sent to a different email address. Sign out and sign in with the invited account.",
+        "expired": "This invitation has expired.",
+        "invalid": "This invitation is invalid or has already been used.",
+        "already-member": "You are already a member of this home.",
+    }
+    error = error_messages.get(request.args.get("error"))
     return render_template(
         "auth/join.html",
-        token=request.args.get("token", ""),
+        token="",
+        auto_accept=bool(pending_hash and user is not None and not error),
+        invitation_error=error,
+        show_switch_account=bool(error == "wrong-account" and user is not None),
         csrf_token=_csrf_token(),
     )
 
@@ -208,44 +231,27 @@ def invite_member(home_id: str):
 def accept_invitation():
     payload = require_json_object()
     token = payload.get("token")
-    if not isinstance(token, str) or not token or len(token) > 200:
+    if token is None:
+        token_hash = session.get("pending_invitation_hash")
+        if not valid_invitation_hash(token_hash):
+            return jsonify(error="A valid invitation token is required."), 400
+    elif isinstance(token, str) and token and len(token) <= 200:
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+    else:
         return jsonify(error="A valid invitation token is required."), 400
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
-    db = get_session()
-    invitation = db.scalar(
-        select(HomeInvitation)
-        .where(HomeInvitation.token_hash == token_hash)
-        .with_for_update()
+
+    result, error, status = accept_invitation_for_user(
+        get_session(), user=current_user(), token_hash=token_hash
     )
-    if invitation is None or invitation.accepted_at is not None:
-        return jsonify(error="This invitation is invalid or has already been used."), 404
-    expires = invitation.expires_at
-    if expires.tzinfo is None:
-        expires = expires.replace(tzinfo=timezone.utc)
-    if expires <= datetime.now(timezone.utc):
-        return jsonify(error="This invitation has expired."), 410
-    user = current_user()
-    if user.email != invitation.email:
-        return jsonify(error="Sign in with the email address this invitation was sent to."), 403
-    if db.get(HomeMembership, (invitation.home_id, user.id)) is not None:
-        return jsonify(error="You are already a member of this home."), 409
-    db.add(
-        HomeMembership(
-            home_id=invitation.home_id, user_id=user.id, role=invitation.role
-        )
-    )
-    invitation.accepted_at = datetime.now(timezone.utc)
-    record_event(
-        db,
-        home_id=invitation.home_id,
-        actor_user_id=user.id,
-        event_type="member.joined",
-        entity_type="user",
-        entity_id=user.id,
-        details={"role": invitation.role},
-    )
-    db.commit()
-    return jsonify(home_id=invitation.home_id, role=invitation.role)
+    if result is None:
+        if status != 403 and session.get("pending_invitation_hash") == token_hash:
+            session.pop("pending_invitation_hash", None)
+        return jsonify(error=error), status
+
+    if session.get("pending_invitation_hash") == token_hash:
+        session.pop("pending_invitation_hash", None)
+    session["home_id"] = result["home_id"]
+    return jsonify(**result)
 
 
 @homes.delete("/api/homes/<home_id>/members/<user_id>")

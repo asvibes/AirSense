@@ -23,6 +23,7 @@ from app.security.rate_limit import (
 from app.security.sessions import current_user, csrf_token
 from app.services.audit import record_event
 from app.services.email import EmailDeliveryError, send_otp_email
+from app.services.invitations import accept_invitation_for_user, valid_invitation_hash
 
 
 auth = Blueprint("auth", __name__)
@@ -31,7 +32,10 @@ _DUMMY_PASSWORD_HASH = generate_password_hash("not-a-real-account-password", met
 
 
 def _start_authenticated_session(user: User) -> None:
+    pending_invitation_hash = session.get("pending_invitation_hash")
     session.clear()
+    if valid_invitation_hash(pending_invitation_hash):
+        session["pending_invitation_hash"] = pending_invitation_hash
     session["user_id"] = user.id
     session["session_version"] = user.session_version
     session.permanent = True
@@ -261,6 +265,8 @@ def _verify_challenge(db, *, email: str, purpose: str, otp: str) -> EmailChallen
 @auth.get("/login")
 def login_page():
     if current_user():
+        if valid_invitation_hash(session.get("pending_invitation_hash")):
+            return redirect(url_for("homes.invitation_page"))
         return redirect(url_for("alerts.alerts_page"))
     return render_template(
         "auth/login.html",
@@ -720,6 +726,20 @@ def login():
     _start_authenticated_session(user)
     if request.is_json:
         return jsonify(user={"id": user.id, "email": user.email, "display_name": user.display_name})
+    pending_invitation_hash = session.get("pending_invitation_hash")
+    if valid_invitation_hash(pending_invitation_hash):
+        result, _error, status = accept_invitation_for_user(
+            db, user=user, token_hash=pending_invitation_hash
+        )
+        if result is not None:
+            session.pop("pending_invitation_hash", None)
+            session["home_id"] = result["home_id"]
+            return redirect(url_for("alerts.alerts_page", home_id=result["home_id"]))
+        if status == 403:
+            return redirect(url_for("homes.invitation_page", error="wrong-account"))
+        session.pop("pending_invitation_hash", None)
+        error = "expired" if status == 410 else "already-member" if status == 409 else "invalid"
+        return redirect(url_for("homes.invitation_page", error=error))
     next_url = request.args.get("next", "")
     if next_url and urlsplit(next_url).path == url_for("landing"):
         next_url = ""
@@ -742,7 +762,14 @@ def logout():
         db, user.id, "account.logged_out", actor_user_id=user.id
     )
     db.commit()
+    pending_invitation_hash = session.get("pending_invitation_hash")
     session.clear()
+    if valid_invitation_hash(pending_invitation_hash):
+        session["pending_invitation_hash"] = pending_invitation_hash
     if request.is_json or request.path.startswith("/api/"):
         return jsonify(status="signed_out")
+    if valid_invitation_hash(pending_invitation_hash):
+        return redirect(
+            url_for("auth.login_page", next=url_for("homes.invitation_page"))
+        )
     return redirect(url_for("landing"))
