@@ -52,9 +52,7 @@ class Config:
     API_TOKEN = os.environ.get("AIRSENSE_API_TOKEN", "")
     REQUIRE_API_TOKEN = os.environ.get("REQUIRE_API_TOKEN", "false").lower() == "true"
     BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
-    MAIL_DEFAULT_SENDER = os.environ.get(
-        "MAIL_DEFAULT_SENDER", "noreply.projecthub.mail@gmail.com"
-    )
+    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "")
     MAIL_DEFAULT_SENDER_NAME = os.environ.get("MAIL_DEFAULT_SENDER_NAME", "AirSense")
     PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "")
     EMAIL_VERIFICATION_REQUIRED = (

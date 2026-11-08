@@ -24,6 +24,7 @@ services:
         value: "false"
       - key: AIRSENSE_DEVICE_KEY_PEPPER
         sync: false
+      # Set after verifying the sender/domain and DNS authentication in Brevo.
       - key: BREVO_API_KEY
         sync: false
       - key: MAIL_DEFAULT_SENDER
@@ -32,6 +33,7 @@ services:
         value: AirSense
       - key: PUBLIC_BASE_URL
         sync: false
+      # Use the canonical HTTPS URL; invitation links use this value.
       - key: EMAIL_VERIFICATION_REQUIRED
         value: "true"
       - key: SESSION_COOKIE_SECURE

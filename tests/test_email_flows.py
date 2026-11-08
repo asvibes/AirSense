@@ -1,16 +1,91 @@
+import json
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from sqlalchemy import select
 
 from app.db import get_session
 from app.models.user import EmailChallenge, HomeInvitation, HomeMembership, RateLimitBucket, User
 from app.security.rate_limit import allow_persistent
-from app.services.email import send_invitation_email, send_otp_email
+from app.services.email import (
+    EmailDeliveryError,
+    send_invitation_email,
+    send_otp_email,
+    send_transactional_email,
+)
 from helpers import AirSenseTestCase
 
 
 class EmailFlowTests(AirSenseTestCase):
+    def test_missing_brevo_configuration_never_succeeds_silently(self):
+        with self.app.app_context():
+            self.app.config.update(
+                BREVO_API_KEY="",
+                MAIL_DEFAULT_SENDER="",
+                MAIL_DEFAULT_SENDER_NAME="",
+            )
+            with self.assertRaises(EmailDeliveryError):
+                send_transactional_email(
+                    recipient="user@example.test",
+                    subject="Test",
+                    html_content="<p>Test</p>",
+                )
+
+    def test_registration_reports_missing_email_configuration(self):
+        self.app.config.update(
+            BREVO_API_KEY="",
+            MAIL_DEFAULT_SENDER="",
+            EMAIL_VERIFICATION_REQUIRED=True,
+        )
+        response = self.client.post(
+            "/api/auth/register",
+            json={
+                "email": "delivery-unconfigured@example.test",
+                "display_name": "Unconfigured Delivery",
+                "password": "secure-password-123",
+            },
+            headers={"X-CSRF-Token": self.csrf},
+        )
+
+        self.assertEqual(response.status_code, 503)
+        with self.app.app_context():
+            self.assertIsNone(
+                get_session().scalar(
+                    select(User).where(
+                        User.email == "delivery-unconfigured@example.test"
+                    )
+                )
+            )
+
+    def test_brevo_delivery_uses_configured_sender(self):
+        self.app.config.update(
+            BREVO_API_KEY="test-brevo-key",
+            MAIL_DEFAULT_SENDER="notifications@example.test",
+            MAIL_DEFAULT_SENDER_NAME="AirSense Notifications",
+        )
+        response = MagicMock(status=201)
+        response.__enter__.return_value = response
+        with self.app.app_context():
+            with patch(
+                "app.services.email.urllib.request.urlopen", return_value=response
+            ) as send:
+                send_transactional_email(
+                    recipient="user@example.test",
+                    subject="Test",
+                    html_content="<p>Test</p>",
+                )
+
+        request = send.call_args.args[0]
+        self.assertEqual(request.get_header("Api-key"), "test-brevo-key")
+        payload = json.loads(request.data)
+        self.assertEqual(
+            payload["sender"],
+            {
+                "name": "AirSense Notifications",
+                "email": "notifications@example.test",
+            },
+        )
+
     def test_email_copy_uses_encoded_signoff_and_dynamic_names(self):
         with patch("app.services.email.send_transactional_email") as send:
             send_otp_email(
@@ -269,6 +344,7 @@ class EmailFlowTests(AirSenseTestCase):
             self.assertTrue(allow_persistent(db, key, limit=2, window_seconds=60))
 
     def test_invitation_sends_email_and_expires_in_24_hours(self):
+        self.app.config["PUBLIC_BASE_URL"] = "https://airsense.example.test"
         with patch("app.routers.homes.send_invitation_email") as send:
             response = self.request_json(
                 "POST",
@@ -278,6 +354,11 @@ class EmailFlowTests(AirSenseTestCase):
         self.assertEqual(response.status_code, 201, response.get_json())
         send.assert_called_once()
         self.assertEqual(send.call_args.kwargs["owner_name"], "AirSense Owner")
+        self.assertTrue(
+            send.call_args.kwargs["invitation_url"].startswith(
+                "https://airsense.example.test/join?token="
+            )
+        )
         with self.app.app_context():
             invitation = get_session().query(HomeInvitation).filter_by(
                 email="member@example.test"

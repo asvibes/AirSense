@@ -154,7 +154,13 @@ def invite_member(home_id: str):
     )
     try:
         db.flush()
-        base_url = current_app.config.get("PUBLIC_BASE_URL") or request.host_url.rstrip("/")
+        base_url = current_app.config.get("PUBLIC_BASE_URL")
+        if not base_url:
+            if current_app.config.get("APP_ENV") == "production":
+                raise EmailDeliveryError(
+                    "PUBLIC_BASE_URL must be configured for invitation links."
+                )
+            base_url = request.host_url.rstrip("/")
         send_invitation_email(
             recipient=email,
             invitation_url=f"{base_url}{url_for('homes.invitation_page')}?token={invitation_token}",

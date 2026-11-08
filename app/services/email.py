@@ -22,15 +22,17 @@ def send_transactional_email(
     html_content: str,
 ) -> None:
     api_key = current_app.config.get("BREVO_API_KEY", "")
-    if not api_key:
-        if current_app.testing:
-            return
-        raise EmailDeliveryError("Email delivery is not configured.")
+    sender = current_app.config.get("MAIL_DEFAULT_SENDER", "")
+    sender_name = current_app.config.get("MAIL_DEFAULT_SENDER_NAME", "")
+    if not api_key or not sender or not sender_name:
+        raise EmailDeliveryError(
+            "Email delivery requires a Brevo API key and verified sender configuration."
+        )
     payload = json.dumps(
         {
             "sender": {
                 "name": current_app.config["MAIL_DEFAULT_SENDER_NAME"],
-                "email": current_app.config["MAIL_DEFAULT_SENDER"],
+                "email": sender,
             },
             "to": [{"email": recipient}],
             "subject": subject,
