@@ -174,6 +174,37 @@ class EmailFlowTests(AirSenseTestCase):
         )
         self.assertEqual(reused.status_code, 400)
 
+    def test_registration_verification_starts_authenticated_onboarding_not_password_recovery(self):
+        self.app.config["EMAIL_VERIFICATION_REQUIRED"] = True
+        client = self.app.test_client()
+        csrf = self.prepare_csrf(client)
+        with patch("app.routers.auth.send_otp_email") as send:
+            registered = client.post(
+                "/register",
+                data={
+                    "csrf_token": csrf,
+                    "email": "onboarding@example.test",
+                    "display_name": "Onboarding User",
+                    "password": "secure-password-123",
+                },
+            )
+        self.assertEqual(registered.status_code, 302)
+        self.assertIn("/verify-email", registered.location)
+        csrf = self.current_csrf(client)
+        verified = client.post(
+            "/verify-email",
+            data={
+                "csrf_token": csrf,
+                "email": "onboarding@example.test",
+                "otp": send.call_args.kwargs["otp"],
+            },
+        )
+        self.assertEqual(verified.status_code, 302)
+        self.assertTrue(verified.location.endswith("/alerts"))
+        with client.session_transaction() as browser_session:
+            self.assertIn("user_id", browser_session)
+        self.assertNotIn("/reset-password", verified.location)
+
     def test_verification_does_not_reactivate_disabled_account(self):
         self.app.config["EMAIL_VERIFICATION_REQUIRED"] = True
         with patch("app.routers.auth.send_otp_email") as send:

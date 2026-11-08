@@ -24,7 +24,7 @@ def send_transactional_email(
     api_key = current_app.config.get("BREVO_API_KEY", "")
     sender = current_app.config.get("MAIL_DEFAULT_SENDER", "")
     sender_name = current_app.config.get("MAIL_DEFAULT_SENDER_NAME", "")
-    if not api_key or not sender or not sender_name:
+    if not api_key.strip() or not sender.strip() or not sender_name.strip():
         _logger.warning("Transactional email delivery unavailable: sender configuration is incomplete")
         raise EmailDeliveryError(
             "Email delivery requires a Brevo API key and verified sender configuration."
@@ -54,7 +54,17 @@ def send_transactional_email(
                     response.status,
                 )
                 raise EmailDeliveryError("Email provider rejected the message.")
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as error:
+            response_body = response.read()
+            try:
+                provider_result = json.loads(response_body) if response_body else {}
+            except (TypeError, ValueError):
+                provider_result = {}
+            message_id = provider_result.get("messageId")
+            if message_id:
+                _logger.info("Transactional email accepted by provider: message_id=%s", message_id)
+            else:
+                _logger.info("Transactional email accepted by provider without a message id")
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError, TimeoutError) as error:
         _logger.warning("Transactional email delivery failed: %s", type(error).__name__)
         raise EmailDeliveryError("Email delivery failed. Please try again later.") from error
 

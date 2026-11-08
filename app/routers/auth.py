@@ -440,8 +440,15 @@ def verify_email():
         return _auth_error(str(error), 400)
     if request.is_json:
         return jsonify(verified=True)
+    session.clear()
+    session["user_id"] = user.id
+    session["session_version"] = user.session_version
+    session.permanent = True
+    csrf_token()
     next_url = request.form.get("next", "")
-    return redirect(url_for("auth.login_page", next=next_url) if next_url else url_for("auth.login_page"))
+    if next_url and next_url.startswith("/") and not next_url.startswith("//"):
+        return redirect(next_url)
+    return redirect(url_for("alerts.alerts_page"))
 
 
 @auth.post("/api/auth/verify-email/resend")
