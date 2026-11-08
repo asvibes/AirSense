@@ -64,6 +64,7 @@ def ingest_sensor_reading(sensor_id: str):
             source="device",
             defaults=_policy_defaults(),
             max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
+            max_age_seconds=current_app.config["MAX_LIVE_READING_AGE_SECONDS"],
             actor_user_id=None,
             sensor_id=sensor.id,
         )

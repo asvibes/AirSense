@@ -24,6 +24,20 @@ PARAMETERS = (
     Parameter("ETHANOL", "Ethyl alcohol", "ppb", ("c2h5oh", "ethanol", "ethyl alcohol"), {"ppb": (1, 0), "ppm": (1000, 0)}),
 )
 
+# Broad engineering sanity bounds, not health or regulatory thresholds.
+PLAUSIBLE_RANGES = {
+    "CO2": (0.0, 100_000.0),
+    "PM1": (0.0, 1_000_000.0),
+    "PM2_5": (0.0, 1_000_000.0),
+    "PM10": (0.0, 1_000_000.0),
+    "TEMPERATURE": (-100.0, 100.0),
+    "HUMIDITY": (0.0, 100.0),
+    "CO": (0.0, 100_000.0),
+    "NO2": (0.0, 100_000.0),
+    "VOC": (0.0, 1_000_000.0),
+    "ETHANOL": (0.0, 1_000_000.0),
+}
+
 _ALIASES = {
     re.sub(r"[^a-z0-9]", "", alias.lower()): parameter
     for parameter in PARAMETERS
@@ -79,6 +93,10 @@ def parameter_for_code(code: str) -> Parameter | None:
     if code.strip().lower().replace(" ", "") in {"pm1.0", "pm1_0"}:
         return _ALIASES["pm1"]
     return _ALIASES.get(normalize_header(code))
+
+
+def plausible_range_for(code: str) -> tuple[float, float] | None:
+    return PLAUSIBLE_RANGES.get(canonical_metric_code(code))
 
 
 def canonical_metric_code(code: str) -> str:

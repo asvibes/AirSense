@@ -14,6 +14,26 @@ from tests.helpers import AirSenseTestCase
 
 
 class DaltonReplayTests(AirSenseTestCase):
+    def test_dalton_zero_gap_values_are_discarded(self):
+        dataset = parse_environmental_csv(
+            StringIO(
+                "ts,CO2,Valid_CO2,T,H\n"
+                "2023/06/10 12:05:29,0,1,0,0\n"
+                "2023/06/10 12:05:30,450,1,24,40\n"
+            ),
+            room_name="Dataset room",
+        )
+
+        self.assertEqual(
+            [(reading["metric"], reading["value"]) for reading in dataset["readings"]],
+            [
+                ("CO2", 450),
+                ("HUMIDITY", 40),
+                ("TEMPERATURE", 24),
+            ],
+        )
+        self.assertEqual(dataset["rows_skipped"], 1)
+
     def test_replay_rejects_non_csv_files(self):
         room = self.create_room("CSV validation room")
         response = self.client.post(

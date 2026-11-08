@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 
+from app.models.alert import Alert
 from app.db import get_session
 from app.models.audit import AuditLog
 from app.models.reading import Reading
@@ -297,6 +298,69 @@ class IngestionTests(AirSenseTestCase):
         )
         self.assertNotIn(key, str(events))
         self.assertNotIn("not-the-device-key", str(events))
+
+    def test_device_rejects_out_of_range_reading_without_alert_or_persistence(self):
+        room = self.create_room()
+        provisioned = self.request_json(
+            "POST",
+            f"/api/homes/{self.home_id}/sensors",
+            {"name": "Range sensor", "room_id": room["id"]},
+        ).get_json()
+        response = self.client.post(
+            f"/api/sensors/{provisioned['sensor']['id']}/readings",
+            json={
+                "room": room["name"],
+                "metric": "CO2",
+                "unit": "ppm",
+                "value": 100001,
+            },
+            headers={"X-Device-Key": provisioned["device_key"]},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        with self.app.app_context():
+            db = get_session()
+            self.assertIsNone(
+                db.scalar(
+                    select(Reading.id).where(
+                        Reading.home_id == self.home_id,
+                        Reading.value == 100001,
+                    )
+                )
+            )
+            self.assertIsNone(
+                db.scalar(
+                    select(Alert.id).where(Alert.home_id == self.home_id)
+                )
+            )
+
+    def test_device_rejects_stale_reading_without_persistence(self):
+        room = self.create_room()
+        provisioned = self.request_json(
+            "POST",
+            f"/api/homes/{self.home_id}/sensors",
+            {"name": "Stale sensor", "room_id": room["id"]},
+        ).get_json()
+        stale = datetime.now(timezone.utc) - timedelta(days=2)
+        response = self.client.post(
+            f"/api/sensors/{provisioned['sensor']['id']}/readings",
+            json={
+                "room": room["name"],
+                "metric": "CO2",
+                "unit": "ppm",
+                "value": 700,
+                "measured_at": stale.isoformat(),
+            },
+            headers={"X-Device-Key": provisioned["device_key"]},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("too old", response.get_json()["error"])
+        with self.app.app_context():
+            self.assertEqual(
+                get_session().scalar(select(Reading.id).where(Reading.value == 700)),
+                None,
+            )
 
     def test_client_cannot_spoof_received_at_and_measured_at_remains_independent(self):
         room = self.create_room()

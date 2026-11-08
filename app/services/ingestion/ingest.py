@@ -18,10 +18,17 @@ def ingest_reading(
     max_future_seconds: int,
     actor_user_id: str | None,
     sensor_id: str | None = None,
+    max_age_seconds: int | None = None,
     commit: bool = True,
 ) -> dict:
     received_at = datetime.now(timezone.utc)
     reading = validate_reading(payload)
+    if max_age_seconds is not None:
+        age_seconds = (
+            datetime.now(timezone.utc) - reading["measured_at"]
+        ).total_seconds()
+        if age_seconds > max_age_seconds:
+            raise ValueError("Reading timestamp is too old for live ingestion.")
     result = process_reading(
         session,
         home_id=home_id,

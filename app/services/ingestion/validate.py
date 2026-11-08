@@ -2,7 +2,13 @@ import math
 import re
 from datetime import datetime, timezone
 
-from app.parameters import canonical_metric_code, normalize_value, parameter_for_code, parse_unit
+from app.parameters import (
+    canonical_metric_code,
+    normalize_value,
+    parameter_for_code,
+    parse_unit,
+    plausible_range_for,
+)
 
 
 class ReadingValidationError(ValueError):
@@ -47,6 +53,12 @@ def validate_reading(payload: object) -> dict:
             raise ReadingValidationError(str(error)) from error
     elif number < 0:
         raise ReadingValidationError("value must be a finite non-negative number.")
+    value_range = plausible_range_for(canonical_metric)
+    if value_range and not value_range[0] <= number <= value_range[1]:
+        raise ReadingValidationError(
+            f"{canonical_metric} value must be between "
+            f"{value_range[0]:g} and {value_range[1]:g} {unit}."
+        )
     metric_name = parameter.name if parameter else payload.get("metric_name", canonical_metric)
     if not isinstance(metric_name, str) or not metric_name.strip() or len(metric_name.strip()) > 80:
         raise ReadingValidationError("metric_name must contain 1 to 80 characters.")

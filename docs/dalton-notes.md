@@ -14,6 +14,10 @@ The DALTON header mapping and units follow the [dataset's published column defin
 
 Rows with missing or malformed timestamps, invalid/non-finite measurement values, or false validity flags are skipped. By default, timestamps are preserved; optionally shift all timestamps together so the newest sample is current while sample spacing is preserved.
 
+Processed DALTON files replace missing segments longer than 15 minutes with zero
+values. AirSense discards those zero-filled values for DALTON-format columns;
+zero is not treated as a measured environmental value in that format.
+
 ## Data handling
 
 - Confirm the dataset's provenance, licence/terms, and permitted use before importing.

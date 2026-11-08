@@ -11,6 +11,7 @@ from app.parameters import (
     is_metadata_column,
     normalize_header,
     normalize_value,
+    plausible_range_for,
     resolve_column,
 )
 from app.timestamps import format_utc
@@ -259,6 +260,11 @@ def parse_environmental_csv(
                     except ValueError:
                         continue
                 if not math.isfinite(normalized_value):
+                    continue
+                if dalton_format and normalized_value == 0:
+                    continue
+                value_range = plausible_range_for(code)
+                if value_range and not value_range[0] <= normalized_value <= value_range[1]:
                     continue
                 location = str(row.get(location_column) or "").strip() if location_column else ""
                 parsed_rows.append(
