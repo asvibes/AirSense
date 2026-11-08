@@ -44,6 +44,9 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
             app.wsgi_app,
             x_for=trusted_proxy_hops,
             x_proto=trusted_proxy_hops,
+            x_host=0,
+            x_port=0,
+            x_prefix=0,
         )
     init_db(app)
 

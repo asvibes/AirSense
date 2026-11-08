@@ -24,7 +24,15 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
-    TRUSTED_PROXY_HOPS = int(os.environ.get("TRUSTED_PROXY_HOPS", "0"))
+    # Render terminates TLS at one load-balancer hop before forwarding to the
+    # web service. Trust that hop in production so X-Forwarded-Proto reflects
+    # the browser-facing scheme; never trust forwarded headers by default in
+    # local development.
+    TRUSTED_PROXY_HOPS = int(
+        os.environ.get(
+            "TRUSTED_PROXY_HOPS", "1" if APP_ENV == "production" else "0"
+        )
+    )
     PERMANENT_SESSION_LIFETIME = 60 * 60 * 24 * 14
     MAX_CONTENT_LENGTH = 17 * 1024 * 1024
     MAX_CSV_UPLOAD_BYTES = 16 * 1024 * 1024
