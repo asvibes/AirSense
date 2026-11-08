@@ -26,6 +26,8 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     app.config.from_object(Config)
     if test_config is not None:
         app.config.update(test_config)
+    if app.config.get("MAX_LIVE_READING_AGE_SECONDS") is None:
+        app.config["MAX_LIVE_READING_AGE_SECONDS"] = 24 * 60 * 60
     if app.config.get("TESTING") and "EMAIL_VERIFICATION_REQUIRED" not in (test_config or {}):
         app.config["EMAIL_VERIFICATION_REQUIRED"] = False
     if app.config["APP_ENV"] == "production":

@@ -29,6 +29,7 @@ class DatabaseWorkflowTests(unittest.TestCase):
                 "SECRET_KEY": "workflow-test-secret",
                 "DATABASE_URL": f"sqlite:///{database.as_posix()}",
                 "AUTO_CREATE_SCHEMA": True,
+                "MAX_LIVE_READING_AGE_SECONDS": 24 * 60 * 60,
                 "HIGH_THRESHOLD": 1000,
                 "ELEVATED_THRESHOLD": 800,
                 "ELEVATED_DURATION_SECONDS": 300,

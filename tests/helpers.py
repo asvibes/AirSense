@@ -18,6 +18,7 @@ class AirSenseTestCase(unittest.TestCase):
                 "DATABASE_URL": f"sqlite:///{database.as_posix()}",
                 "AUTO_CREATE_SCHEMA": True,
                 "REQUIRE_API_TOKEN": False,
+                "MAX_LIVE_READING_AGE_SECONDS": 24 * 60 * 60,
                 "BREVO_API_KEY": "test-brevo-api-key",
                 "MAIL_DEFAULT_SENDER": "notifications@example.test",
                 "MAIL_DEFAULT_SENDER_NAME": "AirSense Test",
