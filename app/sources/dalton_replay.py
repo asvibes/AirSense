@@ -1,6 +1,7 @@
 import csv
 import math
 import re
+from time import perf_counter
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -95,6 +96,7 @@ def parse_environmental_csv(
     room_name: str | None = None,
     limit: int | None = None,
     valid_only: bool = True,
+    phase_timings: dict[str, float] | None = None,
 ) -> dict[str, object]:
     if limit is not None and (
         isinstance(limit, bool) or not isinstance(limit, int) or limit < 1
@@ -220,6 +222,7 @@ def parse_environmental_csv(
         parsed_rows: list[dict[str, object]] = []
         skipped_rows = 0
         rows_seen = 0
+        normalization_started = perf_counter()
         for row in reader:
             if limit is not None and rows_seen >= limit:
                 break
@@ -283,6 +286,10 @@ def parse_environmental_csv(
             for header in unknown_columns:
                 if _numeric(row.get(header)) is not None:
                     unknown_value_columns.add(header)
+        if phase_timings is not None:
+            phase_timings["reading_normalization_ms"] = (
+                perf_counter() - normalization_started
+            ) * 1000
 
         unsupported_columns = [
             {

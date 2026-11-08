@@ -3,18 +3,69 @@ from datetime import datetime, timedelta, timezone
 from io import BytesIO, StringIO
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import event, select
 
 from app.db import get_session
 from app.models.alert import Alert
 from app.models.audit import AuditLog
 from app.models.reading import Reading
 from app.models.user import RateLimitBucket
+from app.services.ingestion.ingest import ingest_dataset_batch
 from app.sources.dalton_replay import load_dalton_csv, parse_environmental_csv
 from tests.helpers import AirSenseTestCase
 
 
 class DaltonReplayTests(AirSenseTestCase):
+    def test_dataset_batch_uses_bounded_scope_queries_and_one_reading_insert(self):
+        room = self.create_room("Batch query room")
+        start = datetime.now(timezone.utc) - timedelta(minutes=10)
+        payloads = [
+            {
+                "room": room["name"],
+                "metric": "CO2",
+                "value": 400 + index,
+                "unit": "ppm",
+                "measured_at": (start + timedelta(seconds=index)).isoformat(),
+            }
+            for index in range(40)
+        ]
+        statements = []
+        engine = self.app.extensions["airsense_engine"]
+
+        def capture(_connection, _cursor, statement, _parameters, _context, _many):
+            normalized = " ".join(statement.lower().split())
+            if any(table in normalized for table in ("homes", "rooms", "metrics", "air_readings")):
+                statements.append(normalized)
+
+        event.listen(engine, "before_cursor_execute", capture)
+        try:
+            with self.app.app_context():
+                result = ingest_dataset_batch(
+                    get_session(),
+                    home_id=self.home_id,
+                    room_id=room["id"],
+                    payloads=payloads,
+                    actor_user_id=None,
+                    max_future_seconds=self.app.config["MAX_FUTURE_SECONDS"],
+                    defaults={
+                        "high_threshold": self.app.config["HIGH_THRESHOLD"],
+                        "elevated_threshold": self.app.config["ELEVATED_THRESHOLD"],
+                        "rapid_rise_per_minute": self.app.config["RAPID_RISE_PER_MINUTE"],
+                        "elevated_duration_seconds": self.app.config["ELEVATED_DURATION_SECONDS"],
+                        "all_clear_duration_seconds": self.app.config["ALL_CLEAR_DURATION_SECONDS"],
+                        "max_reading_gap_seconds": self.app.config["MAX_READING_GAP_SECONDS"],
+                    },
+                )
+                get_session().commit()
+        finally:
+            event.remove(engine, "before_cursor_execute", capture)
+
+        self.assertEqual(len(result), 40)
+        self.assertEqual(sum(" from homes " in sql for sql in statements), 1)
+        self.assertEqual(sum(" from rooms " in sql for sql in statements), 1)
+        self.assertEqual(sum(" from metrics " in sql for sql in statements), 1)
+        self.assertEqual(sum("insert into air_readings" in sql for sql in statements), 1)
+
     def test_dalton_zero_gap_values_are_discarded(self):
         dataset = parse_environmental_csv(
             StringIO(
@@ -555,11 +606,9 @@ class DaltonReplayTests(AirSenseTestCase):
             )
             events = list(
                 session.scalars(
-                    select(AuditLog.event_type).where(
+                    select(AuditLog.entity_id).where(
                         AuditLog.home_id == self.home_id,
-                        AuditLog.event_type.in_(
-                            ("reading.ingested", "alert.created")
-                        ),
+                        AuditLog.event_type == "reading.ingested",
                     )
                 )
             )
@@ -567,7 +616,7 @@ class DaltonReplayTests(AirSenseTestCase):
         self.assertEqual(alerts, [])
         self.assertCountEqual(
             events,
-            ["reading.ingested", "reading.ingested"],
+            [str(reading.id) for reading in readings],
         )
 
     def test_demo_replay_shifts_timestamps_and_rejects_missing_file(self):

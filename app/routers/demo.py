@@ -11,7 +11,7 @@ from app.models.reading import Reading
 from app.models.room import Room
 from app.security.sessions import current_user, require_home_role, require_user
 from app.security.rate_limit import allow_persistent
-from app.services.ingestion.ingest import ingest_reading
+from app.services.ingestion.ingest import ingest_dataset_batch, ingest_reading
 from app.services.ingestion.rejections import record_rejection
 from app.sources.dalton_replay import is_dalton_schema, parse_environmental_csv
 from app.sources.simulator import build_simulated_reading
@@ -219,20 +219,15 @@ def submit_dalton_replay(home_id: str):
     created = []
     try:
         with session.begin_nested():
-            for row in rows:
-                created.append(
-                    ingest_reading(
-                        session,
-                        home_id=home_id,
-                        home_name="",
-                        payload=row,
-                        source="dataset",
-                        defaults=_policy_defaults(),
-                        max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
-                        actor_user_id=current_user().id,
-                        commit=False,
-                    )
-                )
+            created = ingest_dataset_batch(
+                session,
+                home_id=home_id,
+                room_id=room.id,
+                payloads=rows,
+                actor_user_id=current_user().id,
+                max_future_seconds=current_app.config["MAX_FUTURE_SECONDS"],
+                defaults=_policy_defaults(),
+            )
         session.commit()
     except ValueError as error:
         session.rollback()

@@ -1,7 +1,9 @@
 import math
 import re
 import uuid
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
+from time import perf_counter
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -81,6 +83,60 @@ def _ensure_scope(
         )
 
     return home, room, metric
+
+
+def prepare_replay_scope(
+    session: Session,
+    *,
+    home_id: str,
+    home_name: str,
+    room_name: str,
+    metric_specs: dict[str, tuple[str, str | None]],
+) -> dict[str, tuple[Home, Room, Metric]]:
+    home = session.get(Home, home_id)
+    if home is None:
+        home = Home(id=home_id, name=home_name)
+        session.add(home)
+
+    room = session.scalar(
+        select(Room).where(
+            Room.home_id == home_id,
+            func.lower(Room.name) == room_name.casefold(),
+        )
+    )
+    if room is None:
+        room = Room(id=_room_id(home_id, room_name), home_id=home_id, name=room_name)
+        session.add(room)
+
+    codes = {code.upper() for code in metric_specs}
+    metrics = {
+        metric.code: metric
+        for metric in session.scalars(select(Metric).where(Metric.code.in_(codes)))
+    }
+    for code, (unit, metric_name) in metric_specs.items():
+        normalized_code = code.upper()
+        metric = metrics.get(normalized_code)
+        if metric is None:
+            parameter = parameter_for_code(normalized_code)
+            metric = Metric(
+                code=normalized_code,
+                name=parameter.name
+                if parameter
+                else metric_name or normalized_code.replace("_", "."),
+                unit=unit,
+            )
+            session.add(metric)
+            metrics[normalized_code] = metric
+        elif metric.unit != unit:
+            raise InvalidReading(
+                f"Metric {normalized_code} uses {metric.unit}, not the submitted {unit}."
+            )
+
+    session.flush()
+    return {
+        code.upper(): (home, room, metrics[code.upper()])
+        for code in metric_specs
+    }
 
 
 def _policy(
@@ -178,6 +234,10 @@ def process_reading(
     sensor_id: str | None = None,
     actor_user_id: str | None = None,
     metric_name: str | None = None,
+    phase_timings: dict[str, float] | None = None,
+    scope_cache: dict[str, tuple[Home, Room, Metric]] | None = None,
+    manage_transaction: bool = True,
+    defer_flush: bool = False,
 ) -> dict:
     parameter = parameter_for_code(metric_code)
     if not math.isfinite(value) or (
@@ -223,17 +283,32 @@ def process_reading(
         raise InvalidReading("Reading timestamp cannot be in the future.")
 
     try:
-        transaction = session.begin_nested() if session.in_transaction() else session.begin()
+        transaction = (
+            session.begin_nested() if session.in_transaction() else session.begin()
+        ) if manage_transaction else nullcontext()
         with transaction:
-            home, room, metric = _ensure_scope(
-                session,
-                home_id,
-                home_name,
-                room_name.strip(),
-                metric_code.upper(),
-                unit,
-                metric_name,
-            )
+            scope_started = perf_counter()
+            if scope_cache is not None:
+                try:
+                    home, room, metric = scope_cache[metric_code.upper()]
+                except KeyError as error:
+                    raise InvalidReading(
+                        f"Metric {metric_code.upper()} was not prepared for replay."
+                    ) from error
+            else:
+                home, room, metric = _ensure_scope(
+                    session,
+                    home_id,
+                    home_name,
+                    room_name.strip(),
+                    metric_code.upper(),
+                    unit,
+                    metric_name,
+                )
+            if phase_timings is not None:
+                phase_timings["scope_validation_ms"] = phase_timings.get(
+                    "scope_validation_ms", 0.0
+                ) + (perf_counter() - scope_started) * 1000
             if source == "dataset":
                 reading = Reading(
                     home_id=home.id,
@@ -246,8 +321,14 @@ def process_reading(
                     received_at=received_at,
                 )
                 session.add(reading)
-                session.flush()
-                return {
+                if not defer_flush:
+                    flush_started = perf_counter()
+                    session.flush()
+                    if phase_timings is not None:
+                        phase_timings["database_flush_ms"] = phase_timings.get(
+                            "database_flush_ms", 0.0
+                        ) + (perf_counter() - flush_started) * 1000
+                result = {
                     "reading_id": reading.id,
                     "home_id": home.id,
                     "room": room.name,
@@ -262,6 +343,9 @@ def process_reading(
                     "cleared": [],
                     "alerts": [],
                 }
+                if defer_flush:
+                    result["_reading"] = reading
+                return result
             policy = session.scalar(
                 select(ThresholdPolicy).where(
                     ThresholdPolicy.home_id == home.id,
@@ -477,7 +561,7 @@ def process_reading(
                 ],
         }
     except IntegrityError:
-        if transaction.is_active:
+        if manage_transaction and transaction.is_active:
             transaction.rollback()
         raise
 
