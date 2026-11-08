@@ -4,10 +4,63 @@ import unittest
 from html import unescape
 from urllib.parse import urlparse
 
+from flask import request
+
+from app.main import create_app
 from helpers import AirSenseTestCase
 
 
 class LandingAuthTests(AirSenseTestCase):
+    def test_forwarded_headers_are_ignored_without_explicit_trust(self):
+        proxy_app = create_app(
+            {
+                "TESTING": True,
+                "SECRET_KEY": "proxy-test-secret",
+                "DATABASE_URL": f"sqlite:///{self.temp_dir.name}\\no-proxy.sqlite3",
+                "AUTO_CREATE_SCHEMA": True,
+                "TRUSTED_PROXY_HOPS": 0,
+            }
+        )
+        proxy_app.add_url_rule(
+            "/_test-client-ip",
+            endpoint="_test_client_ip",
+            view_func=lambda: {"ip": request.remote_addr},
+        )
+        try:
+            response = proxy_app.test_client().get(
+                "/_test-client-ip",
+                environ_base={"REMOTE_ADDR": "198.51.100.10"},
+                headers={"X-Forwarded-For": "203.0.113.10"},
+            )
+            self.assertEqual(response.json["ip"], "198.51.100.10")
+        finally:
+            proxy_app.extensions["airsense_engine"].dispose()
+
+    def test_configured_proxy_hop_is_applied(self):
+        database = self.temp_dir.name + "\\proxy.sqlite3"
+        proxy_app = create_app(
+            {
+                "TESTING": True,
+                "SECRET_KEY": "proxy-test-secret",
+                "DATABASE_URL": f"sqlite:///{database}",
+                "AUTO_CREATE_SCHEMA": True,
+                "TRUSTED_PROXY_HOPS": 1,
+            }
+        )
+        try:
+            proxy_app.add_url_rule(
+                "/_test-client-ip",
+                endpoint="_test_client_ip",
+                view_func=lambda: {"ip": request.remote_addr},
+            )
+            response = proxy_app.test_client().get(
+                "/_test-client-ip",
+                environ_base={"REMOTE_ADDR": "198.51.100.10"},
+                headers={"X-Forwarded-For": "203.0.113.10"},
+            )
+            self.assertEqual(response.json["ip"], "203.0.113.10")
+        finally:
+            proxy_app.extensions["airsense_engine"].dispose()
     def test_root_serves_landing_without_redirecting_unauthenticated_users(self):
         client = self.app.test_client()
 

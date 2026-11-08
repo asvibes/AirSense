@@ -14,6 +14,19 @@ from tests.helpers import AirSenseTestCase
 
 
 class DaltonReplayTests(AirSenseTestCase):
+    def test_replay_rejects_non_csv_files(self):
+        room = self.create_room("CSV validation room")
+        response = self.client.post(
+            f"/api/homes/{self.home_id}/demo/replay",
+            data={
+                "room_id": room["id"],
+                "limit": "10",
+                "csv_file": (BytesIO(b"ts,CO2\n2023-01-01T00:00:00Z,500\n"), "data.json"),
+            },
+            headers={"X-CSRF-Token": self.csrf},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(response.status_code, 400)
     def test_dalton_processed_csv_imports_documented_parameters_and_timestamps(self):
         room = self.create_room("Study Desk")
         csv_content = (

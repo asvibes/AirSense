@@ -12,6 +12,7 @@ from app.models.home import Home
 from app.models.user import HomeInvitation, HomeMembership, User
 from app.schemas.auth import AuthInputError, validate_email
 from app.security.sessions import current_user, list_user_homes, require_home_role, require_user
+from app.security.rate_limit import allow_persistent
 from app.services.audit import record_event
 from app.services.email import EmailDeliveryError, send_invitation_email
 from app.timestamps import format_utc
@@ -105,6 +106,13 @@ def list_members(home_id: str):
 @require_user()
 def invite_member(home_id: str):
     require_home_role(home_id, "owner")
+    if not allow_persistent(
+        get_session(),
+        f"invite:home:{home_id}:user:{current_user().id}",
+        limit=20,
+        window_seconds=900,
+    ):
+        return jsonify(error="Invitation rate limit exceeded."), 429
     payload = require_json_object()
     try:
         email = validate_email(payload.get("email"))

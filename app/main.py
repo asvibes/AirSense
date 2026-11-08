@@ -1,6 +1,7 @@
 from typing import Any
 
-from flask import Flask
+from flask import Flask, request
+from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy import text
 
 from app.config import Config
@@ -16,7 +17,7 @@ from app.routers.rooms import rooms
 from app.routers.sensor_readings import sensor_readings
 from app.routers.sensors import sensors
 from app.routers.thresholds import thresholds
-from app.security.rate_limit import InMemoryRateLimiter
+from app.routers.uploads import uploads
 from .error_handlers import register_error_handlers
 
 def create_app(test_config: dict[str, Any] | None = None) -> Flask:
@@ -33,8 +34,42 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         if not app.config["DEVICE_KEY_PEPPER"]:
             raise RuntimeError("AIRSENSE_DEVICE_KEY_PEPPER must be configured in production.")
         app.config["SESSION_COOKIE_SECURE"] = True
+    trusted_proxy_hops = app.config["TRUSTED_PROXY_HOPS"]
+    if trusted_proxy_hops < 0:
+        raise RuntimeError("TRUSTED_PROXY_HOPS must be zero or greater.")
+    if trusted_proxy_hops:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=trusted_proxy_hops,
+            x_proto=trusted_proxy_hops,
+        )
     init_db(app)
-    app.extensions["airsense_rate_limiter"] = InMemoryRateLimiter()
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        )
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
+            "form-action 'self'; img-src 'self' data:; connect-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com",
+        )
+        if app.config["APP_ENV"] == "production" and request.is_secure:
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains",
+            )
+        return response
+
     for blueprint in (
         auth,
         homes,
@@ -47,6 +82,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         audit,
         demo,
         alerts,
+        uploads,
     ):
         app.register_blueprint(blueprint)
 

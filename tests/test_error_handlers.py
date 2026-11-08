@@ -2,10 +2,56 @@ import unittest
 
 from werkzeug.exceptions import HTTPException
 
+from app.main import create_app
 from helpers import AirSenseTestCase
 
 
 class ErrorHandlerTests(AirSenseTestCase):
+    def test_security_headers_are_present_without_forcing_hsts_on_http(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response.headers["X-Frame-Options"], "DENY")
+        self.assertEqual(
+            response.headers["Referrer-Policy"],
+            "strict-origin-when-cross-origin",
+        )
+        self.assertIn("frame-ancestors 'none'", response.headers["Content-Security-Policy"])
+        self.assertIn("object-src 'none'", response.headers["Content-Security-Policy"])
+        self.assertNotIn("Strict-Transport-Security", response.headers)
+
+    def test_security_headers_apply_to_normal_api_and_error_responses(self):
+        for response in (
+            self.client.get("/"),
+            self.client.get("/api/health"),
+            self.client.get("/missing-security-test-page"),
+        ):
+            with self.subTest(status=response.status_code):
+                self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+                self.assertEqual(response.headers["X-Frame-Options"], "DENY")
+                self.assertIn("frame-ancestors 'none'", response.headers["Content-Security-Policy"])
+
+    def test_hsts_requires_production_and_https(self):
+        app = create_app(
+            {
+                "TESTING": True,
+                "APP_ENV": "production",
+                "SECRET_KEY": "production-test-secret",
+                "DEVICE_KEY_PEPPER": "production-test-pepper",
+                "DATABASE_URL": f"sqlite:///{self.temp_dir.name}\\hsts.sqlite3",
+                "AUTO_CREATE_SCHEMA": True,
+                "SESSION_COOKIE_SECURE": True,
+            }
+        )
+        try:
+            response = app.test_client().get("/", base_url="https://airsense.test")
+            self.assertEqual(
+                response.headers["Strict-Transport-Security"],
+                "max-age=31536000; includeSubDomains",
+            )
+        finally:
+            app.extensions["airsense_engine"].dispose()
+
     def test_http_errors_render_error_template_and_home_links_use_landing_route(self):
         client = self.app.test_client()
 

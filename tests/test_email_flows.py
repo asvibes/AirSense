@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
+from sqlalchemy import select
+
 from app.db import get_session
-from app.models.user import EmailChallenge, HomeInvitation, RateLimitBucket, User
+from app.models.user import EmailChallenge, HomeInvitation, HomeMembership, RateLimitBucket, User
 from app.security.rate_limit import allow_persistent
 from app.services.email import send_invitation_email, send_otp_email
 from helpers import AirSenseTestCase
@@ -53,6 +55,15 @@ class EmailFlowTests(AirSenseTestCase):
                 email="new@example.test", purpose="email_verification"
             ).one()
             self.assertNotEqual(challenge.otp_hash, send.call_args.kwargs["otp"])
+            user = get_session().query(User).filter_by(email="new@example.test").one()
+            self.assertTrue(user.is_active)
+            self.assertIsNone(user.email_verified_at)
+            self.assertEqual(
+                get_session().scalar(
+                    select(HomeMembership.home_id).where(HomeMembership.user_id == user.id)
+                ),
+                None,
+            )
 
     def test_email_verification_is_single_use_and_attempt_limited(self):
         self.app.config["EMAIL_VERIFICATION_REQUIRED"] = True
@@ -87,6 +98,35 @@ class EmailFlowTests(AirSenseTestCase):
             headers={"X-CSRF-Token": self.csrf},
         )
         self.assertEqual(reused.status_code, 400)
+
+    def test_verification_does_not_reactivate_disabled_account(self):
+        self.app.config["EMAIL_VERIFICATION_REQUIRED"] = True
+        with patch("app.routers.auth.send_otp_email") as send:
+            response = self.client.post(
+                "/api/auth/register",
+                json={
+                    "email": "disabled@example.test",
+                    "display_name": "Disabled User",
+                    "password": "secure-password-123",
+                },
+                headers={"X-CSRF-Token": self.csrf},
+            )
+        self.assertEqual(response.status_code, 202)
+        with self.app.app_context():
+            db = get_session()
+            user = db.scalar(select(User).where(User.email == "disabled@example.test"))
+            user.is_active = False
+            db.commit()
+        verification = self.client.post(
+            "/api/auth/verify-email",
+            json={"email": "disabled@example.test", "otp": send.call_args.kwargs["otp"]},
+            headers={"X-CSRF-Token": self.csrf},
+        )
+        self.assertEqual(verification.status_code, 400)
+        with self.app.app_context():
+            user = get_session().scalar(select(User).where(User.email == "disabled@example.test"))
+            self.assertFalse(user.is_active)
+            self.assertIsNone(user.email_verified_at)
 
     def test_otp_failures_persist_and_lock_the_challenge(self):
         self.app.config["EMAIL_VERIFICATION_REQUIRED"] = True
@@ -228,14 +268,6 @@ class EmailFlowTests(AirSenseTestCase):
             db.commit()
             self.assertTrue(allow_persistent(db, key, limit=2, window_seconds=60))
 
-
-def challenge_hash(token, app):
-    import hashlib
-
-    return hashlib.sha256(
-        f"{app.config['SECRET_KEY']}:reset:{token}".encode()
-    ).hexdigest()
-
     def test_invitation_sends_email_and_expires_in_24_hours(self):
         with patch("app.routers.homes.send_invitation_email") as send:
             response = self.request_json(
@@ -252,3 +284,11 @@ def challenge_hash(token, app):
             ).one()
             lifetime = invitation.expires_at - invitation.created_at
             self.assertEqual(lifetime.total_seconds(), 24 * 60 * 60)
+
+
+def challenge_hash(token, app):
+    import hashlib
+
+    return hashlib.sha256(
+        f"{app.config['SECRET_KEY']}:reset:{token}".encode()
+    ).hexdigest()

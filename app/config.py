@@ -24,9 +24,15 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    TRUSTED_PROXY_HOPS = int(os.environ.get("TRUSTED_PROXY_HOPS", "0"))
     PERMANENT_SESSION_LIFETIME = 60 * 60 * 24 * 14
     MAX_CONTENT_LENGTH = 17 * 1024 * 1024
+    MAX_CSV_UPLOAD_BYTES = 16 * 1024 * 1024
     DATABASE_URL = _database_url()
+    PRIVATE_UPLOAD_FOLDER = os.environ.get(
+        "PRIVATE_UPLOAD_FOLDER",
+        str(Path(__file__).resolve().parent.parent / "instance" / "private_uploads"),
+    )
     HIGH_THRESHOLD = float(os.environ.get("AIRSENSE_HIGH_THRESHOLD", "1500"))
     ELEVATED_THRESHOLD = float(os.environ.get("AIRSENSE_ELEVATED_THRESHOLD", "1000"))
     ELEVATED_DURATION_SECONDS = int(

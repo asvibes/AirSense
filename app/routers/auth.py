@@ -14,7 +14,7 @@ from app.models.home import Home
 from app.models.user import EmailChallenge, HomeMembership, User
 from app.schemas.auth import AuthInputError, validate_display_name, validate_email
 from app.security.passwords import hash_password, validate_password, verify_password
-from app.security.rate_limit import InMemoryRateLimiter, allow_persistent
+from app.security.rate_limit import allow_persistent
 from app.security.sessions import current_user, csrf_token
 from app.services.audit import record_event
 from app.services.email import EmailDeliveryError, send_otp_email
@@ -64,21 +64,24 @@ def _csrf(payload: dict) -> None:
     verify_csrf()
 
 
-def _rate_limit(action: str, limit: int = 10) -> bool:
-    limiter: InMemoryRateLimiter = current_app.extensions["airsense_rate_limiter"]
-    return limiter.allow(
-        f"auth:{action}:{request.remote_addr or 'unknown'}",
+def _client_ip() -> str:
+    return request.remote_addr or "unknown"
+
+
+def _ip_rate_limit(action: str, *, limit: int) -> bool:
+    return allow_persistent(
+        get_session(),
+        f"auth:{action}:ip:{_client_ip()}",
         limit=limit,
-        window_seconds=900,
+        window_seconds=current_app.config["AUTH_RATE_LIMIT_WINDOW_SECONDS"],
     )
 
 
 def _email_rate_limit(action: str, email: str | None, *, ip_limit: int, email_limit: int) -> bool:
     db = get_session()
-    remote = request.remote_addr or "unknown"
     if not allow_persistent(
         db,
-        f"auth:{action}:ip:{remote}",
+        f"auth:{action}:ip:{_client_ip()}",
         limit=ip_limit,
         window_seconds=current_app.config["AUTH_RATE_LIMIT_WINDOW_SECONDS"],
     ):
@@ -247,8 +250,6 @@ def me():
 @auth.post("/api/auth/register")
 @auth.post("/register")
 def register():
-    if not _rate_limit("register", 8):
-        return _auth_error("Too many registration attempts. Try again later.", 429)
     try:
         payload = _payload()
         _csrf(payload)
@@ -259,6 +260,9 @@ def register():
     except (AuthInputError, ValueError, TypeError) as error:
         return _auth_error(str(error))
 
+    if not _email_rate_limit("register", email, ip_limit=8, email_limit=3):
+        return _auth_error("Too many registration attempts. Try again later.", 429)
+
     db = get_session()
     if db.scalar(select(User.id).where(User.email == email)):
         return _auth_error("Unable to create the account with those details.", 409)
@@ -267,25 +271,33 @@ def register():
         email=email,
         display_name=name,
         password_hash=hash_password(password),
-        is_active=not current_app.config["EMAIL_VERIFICATION_REQUIRED"],
+        is_active=True,
+        email_verified_at=(
+            datetime.now(timezone.utc)
+            if not current_app.config["EMAIL_VERIFICATION_REQUIRED"]
+            else None
+        ),
     )
-    home = Home(id=str(uuid.uuid4()), name=f"{name}'s home")
-    db.add_all(
-        [
-            user,
-            home,
-            HomeMembership(home_id=home.id, user_id=user.id, role="owner"),
-        ]
-    )
+    db.add(user)
+    home = None
+    if not current_app.config["EMAIL_VERIFICATION_REQUIRED"]:
+        home = Home(id=str(uuid.uuid4()), name=f"{name}'s home")
+        db.add_all(
+            [
+                home,
+                HomeMembership(home_id=home.id, user_id=user.id, role="owner"),
+            ]
+        )
     db.flush()
-    record_event(
-        db,
-        home_id=home.id,
-        actor_user_id=user.id,
-        event_type="account.registered",
-        entity_type="home",
-        entity_id=home.id,
-    )
+    if home is not None:
+        record_event(
+            db,
+            home_id=home.id,
+            actor_user_id=user.id,
+            event_type="account.registered",
+            entity_type="home",
+            entity_id=home.id,
+        )
     try:
         challenge = None
         if current_app.config["EMAIL_VERIFICATION_REQUIRED"]:
@@ -344,7 +356,28 @@ def verify_email():
         user = db.get(User, challenge.user_id)
         if user is None:
             raise AuthInputError("That code is invalid or has expired.")
-        user.is_active = True
+        if not user.is_active:
+            raise AuthInputError("This account is disabled. Contact an administrator.")
+        user.email_verified_at = datetime.now(timezone.utc)
+        if not db.scalar(
+            select(HomeMembership.home_id).where(HomeMembership.user_id == user.id)
+        ):
+            home = Home(id=str(uuid.uuid4()), name=f"{user.display_name}'s home")
+            db.add_all(
+                [
+                    home,
+                    HomeMembership(home_id=home.id, user_id=user.id, role="owner"),
+                ]
+            )
+            db.flush()
+            record_event(
+                db,
+                home_id=home.id,
+                actor_user_id=user.id,
+                event_type="account.registered",
+                entity_type="home",
+                entity_id=home.id,
+            )
         db.commit()
     except (AuthInputError, ValueError, TypeError) as error:
         get_session().rollback()
@@ -365,7 +398,13 @@ def resend_verification():
         if not _email_rate_limit("resend-verification", email, ip_limit=10, email_limit=5):
             return jsonify(message="If the account can be verified, a new code has been sent.")
         db = get_session()
-        user = db.scalar(select(User).where(User.email == email, User.is_active.is_(False)))
+        user = db.scalar(
+            select(User).where(
+                User.email == email,
+                User.is_active.is_(True),
+                User.email_verified_at.is_(None),
+            )
+        )
         if user is None:
             return jsonify(message="If the account can be verified, a new code has been sent.")
         _, otp = _new_challenge(db, user=user, email=email, purpose="email_verification")
@@ -494,8 +533,6 @@ def reset_password():
 @auth.post("/api/auth/login")
 @auth.post("/login")
 def login():
-    if not _rate_limit("login", 10):
-        return _auth_error("Too many sign-in attempts. Try again later.", 429)
     try:
         payload = _payload()
         _csrf(payload)
@@ -506,6 +543,9 @@ def login():
     except (AuthInputError, ValueError, TypeError):
         check_password_hash(_DUMMY_PASSWORD_HASH, "invalid")
         return _auth_error("Email or password is incorrect.", 401)
+
+    if not _email_rate_limit("login", email, ip_limit=10, email_limit=10):
+        return _auth_error("Too many sign-in attempts. Try again later.", 429)
 
     user = get_session().scalar(select(User).where(User.email == email))
     if user is None or not verify_password(
@@ -521,6 +561,8 @@ def login():
             get_session().commit()
         return _auth_error("Email or password is incorrect.", 401)
     if not user.is_active:
+        return _auth_error("This account is disabled.", 403)
+    if current_app.config["EMAIL_VERIFICATION_REQUIRED"] and user.email_verified_at is None:
         return _auth_error(
             "Verify your email before signing in. Request a new code if needed.",
             403,

@@ -332,6 +332,11 @@ class AlertLifecycleTests(AirSenseTestCase):
             self.client.get("/api/dashboard?home_id=another-home").status_code, 404
         )
 
+    def test_dashboard_api_does_not_shadow_flask_session(self):
+        response = self.client.get(f"/api/dashboard?home_id={self.home_id}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["home_id"], self.home_id)
+
     def test_browser_forms_use_html_routes_and_redirect(self):
         self.create_room("Kitchen")
         response = self.client.post(

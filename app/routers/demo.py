@@ -10,6 +10,7 @@ from app.db import get_session
 from app.models.reading import Reading
 from app.models.room import Room
 from app.security.sessions import current_user, require_home_role, require_user
+from app.security.rate_limit import allow_persistent
 from app.services.ingestion.ingest import ingest_reading
 from app.services.ingestion.rejections import record_rejection
 from app.sources.dalton_replay import is_dalton_schema, parse_environmental_csv
@@ -23,7 +24,14 @@ demo = Blueprint("demo", __name__)
 @demo.post("/api/homes/<home_id>/demo/readings")
 @require_user()
 def submit_demo_reading(home_id: str):
-    require_home_role(home_id, "owner", "member")
+    require_home_role(home_id, "owner")
+    if not allow_persistent(
+        get_session(),
+        f"demo-reading:{home_id}:user:{current_user().id}",
+        limit=120,
+        window_seconds=60,
+    ):
+        return jsonify(error="Demo reading rate limit exceeded."), 429
     payload = request.get_json(silent=True)
     if payload is None:
         payload = request.form
@@ -72,7 +80,14 @@ def submit_demo_reading(home_id: str):
 @demo.post("/api/homes/<home_id>/demo/replay")
 @require_user()
 def submit_dalton_replay(home_id: str):
-    require_home_role(home_id, "owner", "member")
+    require_home_role(home_id, "owner")
+    if not allow_persistent(
+        get_session(),
+        f"demo-replay:{home_id}:user:{current_user().id}",
+        limit=10,
+        window_seconds=900,
+    ):
+        return jsonify(error="Replay rate limit exceeded."), 429
     payload = request.get_json(silent=True)
     if payload is None:
         payload = request.form
@@ -88,6 +103,12 @@ def submit_dalton_replay(home_id: str):
     csv_file = request.files.get("csv_file")
     if csv_file is None or not csv_file.filename:
         return jsonify(error="Choose a CSV file to import."), 400
+    filename = csv_file.filename.strip().lower()
+    if not filename.endswith((".csv", ".txt")):
+        return jsonify(error="Replay files must use a .csv or .txt extension."), 400
+    content_type = (csv_file.mimetype or "").split(";", 1)[0].strip().lower()
+    if content_type not in {"", "text/csv", "text/plain", "application/csv", "application/vnd.ms-excel"}:
+        return jsonify(error="Replay files must be uploaded as CSV text."), 400
 
     try:
         raw_limit = payload.get("limit", "250")
@@ -97,7 +118,10 @@ def submit_dalton_replay(home_id: str):
         if str(raw_limit).strip() != str(limit) or not 1 <= limit <= 1000:
             raise ValueError("limit must be a whole number between 1 and 1000.")
 
-        csv_content = csv_file.read().decode("utf-8-sig")
+        csv_bytes = csv_file.read(current_app.config["MAX_CSV_UPLOAD_BYTES"] + 1)
+        if len(csv_bytes) > current_app.config["MAX_CSV_UPLOAD_BYTES"]:
+            raise ValueError("Replay files must be 16 MB or smaller.")
+        csv_content = csv_bytes.decode("utf-8-sig")
         csv_headers = next(csv.reader(StringIO(csv_content)), [])
         dataset = parse_environmental_csv(
             StringIO(csv_content),

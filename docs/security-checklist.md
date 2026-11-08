@@ -7,6 +7,10 @@ This checklist separates controls present in the local application from controls
 - [x] Passwords are validated and hashed using Werkzeug's scrypt password-hashing implementation; plaintext passwords are not stored.
 - [x] Flask session cookies are configured HttpOnly and SameSite; session lifetime is configured. Secure-cookie mode is enabled for production configuration.
 - [x] Session-authenticated mutations require CSRF validation.
+- [x] Security response headers include content-type protection, clickjacking protection, referrer policy, permissions policy, and a CSP; HSTS is conditional on secure production requests.
+- [x] Authentication, device, invitation, simulator, and replay abuse limits use persistent database-backed buckets shared across workers.
+- [x] Forwarded client headers are ignored by default; `TRUSTED_PROXY_HOPS` must explicitly configure a known proxy chain before proxy-derived client data is trusted.
+- [x] Email verification state is stored separately from account activation; the migration backfills only legacy active users and never reactivates inactive accounts.
 - [x] Home-scoped routes enforce membership and owner/member permissions server-side. Selected access-control tests cover unauthenticated access, home isolation, and member restrictions.
 - [x] Each provisioned sensor has a separate random device key; only a peppered hash is stored. Owners can rotate keys and revoke sensors. The one-time key response is secret.
 - [x] Reading payloads are validated for expected structure, metric/unit syntax, finite non-negative value, timestamp format/timezone, future timestamps, sensor identity, and room match. Database uniqueness prevents duplicate home/room/metric/timestamp readings.
@@ -35,7 +39,7 @@ This checklist separates controls present in the local application from controls
 - [ ] Store signing, database, and device secrets in protected deployment configuration; verify there are no real credentials in the Git index.
 - [ ] Use a least-privilege hosted database identity and restrict database network access to required application sources.
 - [ ] Keep any Blob Storage container private and grant scoped/time-limited access. Blob integration is not implemented.
-- [ ] Configure and verify security response headers (including CSP, HSTS, and frame/content-type protections) and review CORS. No active security-header middleware/configuration is present in the repository.
+- [ ] Verify HTTPS, HSTS behavior, CSP compatibility, and CORS policy on the deployed host.
 - [ ] Verify the production host's session-cookie, proxy, rate-limiting, request-size, backup, and recovery settings.
 - [ ] If hosted PostgreSQL or Azure SQL is selected, run compatibility and migration checks against that actual backend. No PostgreSQL or cloud integration test has passed as part of the current evidence.
 - [ ] If Power BI is delivered, use a controlled/read-only data connection and verify report access and data handling.

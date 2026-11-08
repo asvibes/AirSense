@@ -31,7 +31,7 @@ python -m alembic upgrade head
 python -m flask --app "app.main:create_app()" run
 ```
 
-Open `http://127.0.0.1:5000/register` to create the first account and home. The root route (`/`) redirects to the dashboard, which requires sign-in.
+Open `http://127.0.0.1:5000/` for the landing page, then use Sign in or Register to access the dashboard.
 
 The default database is SQLite at `instance\airsense.sqlite3`. Set `DATABASE_URL` to use another supported SQLAlchemy database URL.
 
@@ -51,9 +51,10 @@ Keep real values in an ignored local `.env` or protected environment settings, n
 
 Set `SECRET_KEY` and `AIRSENSE_DEVICE_KEY_PEPPER` to strong, private values before production use. Production mode refuses to start without them.
 
-Sessions use HttpOnly, SameSite cookies, and mutation requests require a CSRF token. Home-scoped routes enforce owner/member membership. Device ingestion uses per-sensor keys whose peppered hashes are stored in the database. The included rate limiter is process-local; use a shared limiter before running multiple workers.
+Sessions use HttpOnly, SameSite cookies, and mutation requests require a CSRF token. Home-scoped routes enforce owner/member membership. Device ingestion uses per-sensor keys whose peppered hashes are stored in the database.
+Authentication and abuse-sensitive routes use database-backed rate-limit buckets shared across workers. Set `TRUSTED_PROXY_HOPS` only when the deployment has a known proxy chain; leave it at `0` to ignore forwarded client headers.
 
-HTTPS, security headers, production database network restrictions, and cloud secret configuration are not established by the local application and must be configured and verified before public deployment.
+The application emits content-type, clickjacking, referrer, permissions, and CSP headers. HSTS is emitted only for secure production requests. HTTPS, production database network restrictions, and cloud secret configuration must still be configured and verified before public deployment.
 
 ## Dashboard
 
@@ -77,7 +78,7 @@ Features include:
 
 The browser interface uses plain HTML, CSS, and vanilla JavaScript. No separate frontend build or third-party browser package is required.
 
-Invitation links are single-use and expire after seven days. Email delivery is not configured, so invitation links must be shared manually.
+Invitation links are single-use and expire after 24 hours. Email delivery is configured through the Brevo adapter when deployment credentials and a verified sender are supplied.
 
 DALTON source data is not bundled. In the Demo Lab, upload a CSV (up to 16 MB) with one timestamp column (`ts`, `timestamp`, `datetime`, or similar) and any supported measurement columns; CO₂ is optional. Common aliases and explicit units are recognized and converted only when the conversion is defined. The documented DALTON headers and units are applied only to files matching the DALTON schema; other unitless or ambiguous columns are reported for review and not imported. The app imports up to 1,000 rows per replay, skips duplicate metric/timestamp pairs, and reports skipped duplicates. Original timestamps are kept by default; optional shifting moves the newest sample to the present while retaining sample spacing. Historical dataset readings are stored for dashboard, History, Analytics, and Predictions, but do not produce active alerts. See [DALTON replay notes](docs/dalton-notes.md).
 
@@ -181,4 +182,4 @@ The application currently implements home-scoped `owner` and `member` roles—no
 * The application does not replace a certified carbon monoxide alarm or other safety equipment.
 * Thresholds do not currently have stored authoritative citations.
 * Dataset replay requires the user to provide a CSV; imported historical rows do not create live alerts. Email delivery, automatic sensor adapters, and live vendor integrations are not configured.
-* The rate limiter is process-local and is not suitable for coordinating multiple workers.
+* Authentication and ingestion abuse limits use persistent database-backed buckets; verify database locking and cleanup behavior on the deployment database.

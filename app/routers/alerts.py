@@ -136,11 +136,11 @@ def api_dashboard():
         require_home_role(home_id, "owner", "member")
     except ValueError as error:
         return _request_error(str(error), 400)
-    session = get_session()
+    db = get_session()
     return jsonify(
         home_id=home_id,
-        readings=list_latest_readings(session, home_id),
-        alerts=list_alerts(session, home_id),
+        readings=list_latest_readings(db, home_id),
+        alerts=list_alerts(db, home_id),
     )
 
 
@@ -150,7 +150,7 @@ def api_alerts():
     home_id = request.args.get("home_id") or session.get("home_id")
     if not home_id:
         return jsonify(error="Select a home first."), 400
-    require_home_role(home_id, "owner", "member")
+    require_home_role(home_id, "owner")
     return jsonify(alerts=list_alerts(get_session(), home_id))
 
 

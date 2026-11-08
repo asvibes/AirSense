@@ -5,6 +5,7 @@ from app.db import get_session
 from app.models.metric import Metric
 from app.models.sensor import Sensor
 from app.security.device_keys import verify_device_key
+from app.security.rate_limit import allow_persistent
 from app.services.audit import record_event
 from app.services.ingestion.ingest import ingest_reading
 from app.services.ingestion.rejections import record_rejection
@@ -16,9 +17,9 @@ sensor_readings = Blueprint("sensor_readings", __name__)
 
 @sensor_readings.post("/api/sensors/<sensor_id>/readings")
 def ingest_sensor_reading(sensor_id: str):
-    limiter = current_app.extensions["airsense_rate_limiter"]
-    if not limiter.allow(
-        f"device:{sensor_id}:{request.remote_addr or 'unknown'}",
+    if not allow_persistent(
+        get_session(),
+        f"device:{sensor_id}:ip:{request.remote_addr or 'unknown'}",
         limit=120,
         window_seconds=60,
     ):

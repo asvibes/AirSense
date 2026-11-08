@@ -21,7 +21,7 @@ The active ORM tables are `homes`, `users`, `home_memberships`, `home_invitation
 ## Local trust boundaries and controls
 
 - **Browser to Flask:** Same-origin session cookies, HttpOnly and SameSite settings, CSRF checks on authenticated mutations, server-side membership/role checks, and input validation are implemented. HTTPS is not provided by the local development server.
-- **Sensor to ingestion API:** The `X-Device-Key` is checked against a stored peppered hash; sensors can be revoked and keys rotated. The configured limiter is process-local, and unknown or revoked devices are rejected.
+- **Sensor to ingestion API:** The `X-Device-Key` is checked against a stored peppered hash; sensors can be revoked and keys rotated. Device limits use persistent database-backed buckets, and unknown or revoked devices are rejected.
 - **Flask to database:** SQLAlchemy/ORM expressions are used by the active application. SQLite foreign-key enforcement is enabled for application SQLite connections. Back up data before any migration.
 - **Relational scope:** Foreign keys ensure referenced homes, rooms, sensors, and metrics exist, but separate `home_id` and `room_id` FKs do not guarantee they refer to the same home. Application paths enforce scope; the active schema lacks the composite same-home FKs used in the separate SQL Server target.
 - **Audit:** Selected account, membership/invitation, room, sensor, threshold, reading, and alert events are recorded. There is no role-change feature; failed logins for unknown accounts cannot be written to a home-scoped log.
