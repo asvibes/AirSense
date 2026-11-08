@@ -252,6 +252,83 @@ class ReadingReceivedAtMigrationTests(unittest.TestCase):
             finally:
                 engine.dispose()
 
+
+class EmailVerificationStateMigrationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.repository_root = Path(__file__).resolve().parents[1]
+
+    def _upgrade(self, database_path, revision):
+        config = Config(str(self.repository_root / "alembic.ini"))
+        config.set_main_option(
+            "script_location", str(self.repository_root / "migrations")
+        )
+        database_url = f"sqlite:///{database_path.as_posix()}"
+        with patch.dict(os.environ, {"DATABASE_URL": database_url}):
+            command.upgrade(config, revision)
+
+    def _downgrade(self, database_path, revision):
+        config = Config(str(self.repository_root / "alembic.ini"))
+        config.set_main_option(
+            "script_location", str(self.repository_root / "migrations")
+        )
+        database_url = f"sqlite:///{database_path.as_posix()}"
+        with patch.dict(os.environ, {"DATABASE_URL": database_url}):
+            command.downgrade(config, revision)
+
+    def test_active_users_are_backfilled_without_reactivating_inactive_users(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database_path = Path(directory) / "email-verification.sqlite3"
+            self._upgrade(database_path, "20261108_0007")
+            engine = create_engine(f"sqlite:///{database_path.as_posix()}")
+            try:
+                with engine.begin() as connection:
+                    connection.execute(
+                        text(
+                            "INSERT INTO users "
+                            "(id, email, display_name, password_hash, is_active) "
+                            "VALUES (:active_id, :active_email, 'Active', 'hash', 1), "
+                            "(:inactive_id, :inactive_email, 'Inactive', 'hash', 0)"
+                        ),
+                        {
+                            "active_id": str(uuid.uuid4()),
+                            "active_email": "migration-active@example.test",
+                            "inactive_id": str(uuid.uuid4()),
+                            "inactive_email": "migration-inactive@example.test",
+                        },
+                    )
+                self._upgrade(database_path, "20261108_0008")
+                with engine.connect() as connection:
+                    rows = connection.execute(
+                        text(
+                            "SELECT email, is_active, email_verified_at "
+                            "FROM users WHERE email LIKE 'migration-%' "
+                            "ORDER BY email"
+                        )
+                    ).all()
+                    by_email = {row.email: row for row in rows}
+                    self.assertEqual(len(by_email), 2)
+                    self.assertEqual(
+                        by_email["migration-inactive@example.test"].is_active, 0
+                    )
+                    self.assertIsNone(
+                        by_email["migration-inactive@example.test"].email_verified_at
+                    )
+                    self.assertEqual(
+                        by_email["migration-active@example.test"].is_active, 1
+                    )
+                    self.assertIsNotNone(
+                        by_email["migration-active@example.test"].email_verified_at
+                    )
+
+                self._downgrade(database_path, "20261108_0007")
+                self.assertNotIn(
+                    "email_verified_at",
+                    {column["name"] for column in inspect(engine).get_columns("users")},
+                )
+            finally:
+                engine.dispose()
+
     def test_downgrade_and_reupgrade_received_at_on_disposable_database(self):
         with tempfile.TemporaryDirectory() as directory:
             database_path = Path(directory) / "downgrade-upgrade.sqlite3"
