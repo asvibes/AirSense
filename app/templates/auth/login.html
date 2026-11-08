@@ -251,6 +251,10 @@
       <p class="page-subtitle">Your home has updates. Your rooms have readings. Curious? Let's get you in.</p>
       <p class="auth-switch"><a href="{{ url_for('landing') }}">Back to AirSense home</a></p>
       {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
+      {% if resend_verification_email %}
+      <button class="button button-dark" id="resend-verification" type="button">Resend verification code</button>
+      <p id="resend-verification-status" class="auth-switch" role="status"></p>
+      {% endif %}
       <form method="post" action="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label class="field">Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
@@ -260,6 +264,37 @@
       <p class="auth-switch">New to AirSense? <a href="{{ url_for('auth.register_page') }}">Join the family</a></p>
       <p class="auth-switch"><a href="{{ url_for('auth.forgot_password_page') }}">Forgot your password?</a></p>
       <p class="disclaimer">Readings depend on configured sensors or simulator data. AirSense doesn't measure air itself.</p>
+      {% if resend_verification_email %}
+      <script>
+        const resendButton = document.getElementById("resend-verification");
+        const resendStatus = document.getElementById("resend-verification-status");
+        resendButton.addEventListener("click", async () => {
+          resendButton.disabled = true;
+          resendButton.textContent = "Sending...";
+          try {
+            const response = await fetch("{{ url_for('auth.resend_verification') }}", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ csrf_token }}"
+              },
+              body: JSON.stringify({
+                email: {{ resend_verification_email|tojson }},
+                csrf_token: "{{ csrf_token }}"
+              })
+            });
+            const result = await response.json();
+            resendStatus.textContent = result.message || result.error || "Unable to resend the verification code.";
+          } catch (_error) {
+            resendStatus.textContent = "Unable to resend the verification code. Please try again later.";
+          }
+          window.setTimeout(() => {
+            resendButton.disabled = false;
+            resendButton.textContent = "Resend verification code";
+          }, 60000);
+        });
+      </script>
+      {% endif %}
     </section>
     </div>
   </main>

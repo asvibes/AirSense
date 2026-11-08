@@ -138,7 +138,12 @@ def _record_login_failure(email: str) -> bool:
     return ip_allowed and email_allowed
 
 
-def _auth_error(message: str, status: int = 400):
+def _auth_error(
+    message: str,
+    status: int = 400,
+    *,
+    resend_verification_email: str = "",
+):
     if request.is_json or request.path.startswith("/api/"):
         return jsonify(error=message), status
     template = "auth/login.html"
@@ -159,6 +164,7 @@ def _auth_error(message: str, status: int = 400):
         email=request.form.get("email", ""),
         token=request.form.get("token", ""),
         next_url=request.args.get("next", ""),
+        resend_verification_email=resend_verification_email,
     ), status
 
 
@@ -704,6 +710,7 @@ def login():
         return _auth_error(
             "Verify your email before signing in. Request a new code if needed.",
             403,
+            resend_verification_email=email,
         )
     db = get_session()
     _record_user_auth_event(

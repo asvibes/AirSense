@@ -437,6 +437,122 @@ class EmailFlowTests(AirSenseTestCase):
                 self.assertIsNotNone(challenge.reset_token_used_at)
         self.assertEqual(self.client.get("/api/me").status_code, 401)
 
+    def test_password_reset_preserves_unverified_state_until_verification_then_allows_login(self):
+        self.app.config["EMAIL_VERIFICATION_REQUIRED"] = True
+        client = self.app.test_client()
+        csrf = self.prepare_csrf(client)
+        with patch("app.routers.auth.send_otp_email") as send:
+            registered = client.post(
+                "/api/auth/register",
+                json={
+                    "email": "recovery-unverified@example.test",
+                    "display_name": "Recovery User",
+                    "password": "old-secure-password-123",
+                },
+                headers={"X-CSRF-Token": csrf},
+            )
+            self.assertEqual(registered.status_code, 202)
+            verification_otp = send.call_args.kwargs["otp"]
+            reset = client.post(
+                "/api/auth/forgot-password",
+                json={"email": "recovery-unverified@example.test"},
+                headers={"X-CSRF-Token": csrf},
+            )
+            self.assertEqual(reset.status_code, 200)
+            reset_otp = send.call_args.kwargs["otp"]
+        verified_reset = client.post(
+            "/api/auth/verify-reset",
+            json={
+                "email": "recovery-unverified@example.test",
+                "otp": reset_otp,
+            },
+            headers={"X-CSRF-Token": csrf},
+        )
+        self.assertEqual(verified_reset.status_code, 200)
+        reset_response = client.post(
+            "/api/auth/reset-password",
+            json={
+                "reset_token": verified_reset.get_json()["reset_token"],
+                "password": "new-secure-password-123",
+            },
+            headers={"X-CSRF-Token": csrf},
+        )
+        self.assertEqual(reset_response.status_code, 200)
+        with self.app.app_context():
+            user = get_session().scalar(
+                select(User).where(
+                    User.email == "recovery-unverified@example.test"
+                )
+            )
+            self.assertIsNone(user.email_verified_at)
+        login = client.post(
+            "/api/auth/login",
+            json={
+                "email": "recovery-unverified@example.test",
+                "password": "new-secure-password-123",
+            },
+            headers={"X-CSRF-Token": csrf},
+        )
+        self.assertEqual(login.status_code, 403)
+        login_page = client.post(
+            "/login",
+            data={
+                "csrf_token": csrf,
+                "email": "recovery-unverified@example.test",
+                "password": "new-secure-password-123",
+            },
+        )
+        self.assertEqual(login_page.status_code, 403)
+        self.assertIn(b"Resend verification code", login_page.data)
+        with self.app.app_context():
+            verification_challenge = get_session().scalar(
+                select(EmailChallenge).where(
+                    EmailChallenge.email == "recovery-unverified@example.test",
+                    EmailChallenge.purpose == "email_verification",
+                )
+            )
+            verification_challenge.last_sent_at = datetime.now(timezone.utc) - timedelta(
+                minutes=2
+            )
+            get_session().commit()
+        with patch("app.routers.auth.send_otp_email") as resend_send:
+            resend = client.post(
+                "/api/auth/verify-email/resend",
+                json={"email": "recovery-unverified@example.test"},
+                headers={"X-CSRF-Token": csrf},
+            )
+        self.assertEqual(resend.status_code, 200)
+        resend_otp = resend_send.call_args.kwargs["otp"]
+        with self.app.app_context():
+            verification_otp_hash = get_session().scalar(
+                select(EmailChallenge.otp_hash).where(
+                    EmailChallenge.email == "recovery-unverified@example.test",
+                    EmailChallenge.purpose == "email_verification",
+                ).order_by(EmailChallenge.created_at.desc())
+            )
+        with patch(
+            "app.routers.auth._challenge_hash",
+            return_value=verification_otp_hash,
+        ):
+            verification = client.post(
+                "/api/auth/verify-email",
+                json={
+                    "email": "recovery-unverified@example.test",
+                    "otp": resend_otp,
+                },
+                headers={"X-CSRF-Token": csrf},
+            )
+        self.assertEqual(verification.status_code, 200)
+        login = client.post(
+            "/api/auth/login",
+            json={
+                "email": "recovery-unverified@example.test",
+                "password": "new-secure-password-123",
+            },
+            headers={"X-CSRF-Token": csrf},
+        )
+        self.assertEqual(login.status_code, 200)
+
     def test_reset_token_reuse_is_rejected_from_a_fresh_client(self):
         with patch("app.routers.auth.send_otp_email") as send:
             self.client.post(
