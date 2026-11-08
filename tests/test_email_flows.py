@@ -255,6 +255,114 @@ class EmailFlowTests(AirSenseTestCase):
         self.assertEqual(unknown.status_code, 200)
         self.assertEqual(unknown.get_json()["message"], response.get_json()["message"])
 
+    def test_password_reset_delivery_failure_is_explicit_and_does_not_commit_challenge(self):
+        with patch(
+            "app.routers.auth.send_otp_email",
+            side_effect=EmailDeliveryError("provider unavailable"),
+        ):
+            response = self.client.post(
+                "/api/auth/forgot-password",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("otp", response.get_json())
+        with self.app.app_context():
+            self.assertIsNone(
+                get_session().scalar(
+                    select(EmailChallenge).where(
+                        EmailChallenge.email == "owner@example.test",
+                        EmailChallenge.purpose == "password_reset",
+                    )
+                )
+            )
+
+    def test_password_reset_resend_delivers_and_invalidates_previous_code(self):
+        with patch("app.routers.auth.send_otp_email") as send:
+            first = self.client.post(
+                "/api/auth/forgot-password",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            self.assertEqual(first.status_code, 200)
+            with self.app.app_context():
+                challenge = get_session().scalar(
+                    select(EmailChallenge).where(
+                        EmailChallenge.email == "owner@example.test",
+                        EmailChallenge.purpose == "password_reset",
+                    )
+                )
+                challenge.last_sent_at = datetime.now(timezone.utc) - timedelta(minutes=2)
+                get_session().commit()
+            resent = self.client.post(
+                "/api/auth/forgot-password/resend",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+        self.assertEqual(resent.status_code, 200)
+        self.assertEqual(send.call_count, 2)
+        with self.app.app_context():
+            challenges = get_session().scalars(
+                select(EmailChallenge)
+                .where(
+                    EmailChallenge.email == "owner@example.test",
+                    EmailChallenge.purpose == "password_reset",
+                )
+                .order_by(EmailChallenge.created_at)
+            ).all()
+            self.assertEqual(len(challenges), 2)
+            self.assertIsNotNone(challenges[0].consumed_at)
+            self.assertIsNotNone(challenges[0].reset_token_used_at)
+
+    def test_password_reset_resend_failure_preserves_previous_code(self):
+        with patch("app.routers.auth.send_otp_email") as send:
+            first = self.client.post(
+                "/api/auth/forgot-password",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            self.assertEqual(first.status_code, 200)
+            with self.app.app_context():
+                challenge = get_session().scalar(
+                    select(EmailChallenge).where(
+                        EmailChallenge.email == "owner@example.test",
+                        EmailChallenge.purpose == "password_reset",
+                    )
+                )
+                challenge.last_sent_at = datetime.now(timezone.utc) - timedelta(minutes=2)
+                get_session().commit()
+            send.side_effect = EmailDeliveryError("provider unavailable")
+            resent = self.client.post(
+                "/api/auth/forgot-password/resend",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+        self.assertEqual(resent.status_code, 503)
+        with self.app.app_context():
+            challenge = get_session().scalar(
+                select(EmailChallenge).where(
+                    EmailChallenge.email == "owner@example.test",
+                    EmailChallenge.purpose == "password_reset",
+                )
+            )
+            self.assertIsNone(challenge.consumed_at)
+
+    def test_password_reset_resend_observes_cooldown(self):
+        with patch("app.routers.auth.send_otp_email") as send:
+            first = self.client.post(
+                "/api/auth/forgot-password",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            self.assertEqual(first.status_code, 200)
+            resent = self.client.post(
+                "/api/auth/forgot-password/resend",
+                json={"email": "owner@example.test"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+        self.assertEqual(resent.status_code, 400)
+        send.assert_called_once()
+
     def test_password_reset_token_is_expiring_single_use_and_invalidates_sessions(self):
         with patch("app.routers.auth.send_otp_email") as send:
             response = self.client.post(

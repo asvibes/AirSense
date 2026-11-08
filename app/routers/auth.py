@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -25,6 +26,7 @@ from app.services.email import EmailDeliveryError, send_otp_email
 
 
 auth = Blueprint("auth", __name__)
+_logger = logging.getLogger(__name__)
 _DUMMY_PASSWORD_HASH = generate_password_hash("not-a-real-account-password", method="scrypt")
 
 
@@ -198,6 +200,20 @@ def _new_challenge(db, *, user: User | None, email: str, purpose: str) -> tuple[
     db.add(challenge)
     db.flush()
     return challenge, otp
+
+
+def _invalidate_previous_challenges(db, *, email: str, challenge_id: str) -> None:
+    now = datetime.now(timezone.utc)
+    db.execute(
+        update(EmailChallenge)
+        .where(
+            EmailChallenge.email == email,
+            EmailChallenge.purpose == "password_reset",
+            EmailChallenge.id != challenge_id,
+            EmailChallenge.reset_token_used_at.is_(None),
+        )
+        .values(consumed_at=now, reset_token_used_at=now)
+    )
 
 
 def _aware(value: datetime) -> datetime:
@@ -474,21 +490,94 @@ def forgot_password():
         db = get_session()
         user = db.scalar(select(User).where(User.email == email))
         if user is not None:
-            _, otp = _new_challenge(db, user=user, email=email, purpose="password_reset")
+            challenge, otp = _new_challenge(
+                db, user=user, email=email, purpose="password_reset"
+            )
             send_otp_email(
                 recipient=email,
                 otp=otp,
                 purpose="password_reset",
                 user_name=user.display_name,
             )
+            _invalidate_previous_challenges(
+                db, email=email, challenge_id=challenge.id
+            )
             db.commit()
     except (AuthInputError, ValueError, TypeError, EmailDeliveryError) as error:
         get_session().rollback()
         if isinstance(error, EmailDeliveryError):
-            return jsonify(error="Unable to send the reset email. Please try again later."), 503
+            _logger.warning("Password reset email delivery failed safely")
+            if request.is_json:
+                return jsonify(error="Unable to send the reset email. Please try again later."), 503
+            return render_template(
+                "auth/forgot_password.html",
+                csrf_token=csrf_token(),
+                error="Unable to send the reset email. Please try again later.",
+            ), 503
     if request.is_json:
         return jsonify(message=generic)
     return render_template("auth/verify_reset.html", csrf_token=csrf_token(), error=None, message=generic)
+
+
+@auth.post("/api/auth/forgot-password/resend")
+@auth.post("/forgot-password/resend")
+def resend_password_reset():
+    generic = "If an account matches that email, a reset code has been sent."
+    try:
+        payload = _payload()
+        _csrf(payload)
+        email = validate_email(payload.get("email"))
+        if not _email_rate_limit("forgot-password", email, ip_limit=10, email_limit=3):
+            return _reset_resend_response(generic)
+        db = get_session()
+        user = db.scalar(select(User).where(User.email == email))
+        if user is not None:
+            challenge, otp = _new_challenge(
+                db, user=user, email=email, purpose="password_reset"
+            )
+            send_otp_email(
+                recipient=email,
+                otp=otp,
+                purpose="password_reset",
+                user_name=user.display_name,
+            )
+            _invalidate_previous_challenges(
+                db, email=email, challenge_id=challenge.id
+            )
+            db.commit()
+    except (AuthInputError, ValueError, TypeError, EmailDeliveryError) as error:
+        get_session().rollback()
+        if isinstance(error, EmailDeliveryError):
+            _logger.warning("Password reset resend delivery failed safely")
+            return _reset_resend_error_response(
+                "Unable to send the reset email. Please try again later.", 503
+            )
+        return _reset_resend_error_response(str(error), 400)
+    return _reset_resend_response(generic)
+
+
+def _reset_resend_response(message: str):
+    if request.is_json or request.path.startswith("/api/"):
+        return jsonify(message=message)
+    return render_template(
+        "auth/verify_reset.html",
+        csrf_token=csrf_token(),
+        error=None,
+        message=message,
+        email=request.form.get("email", ""),
+    )
+
+
+def _reset_resend_error_response(message: str, status: int):
+    if request.is_json or request.path.startswith("/api/"):
+        return jsonify(error=message), status
+    return render_template(
+        "auth/verify_reset.html",
+        csrf_token=csrf_token(),
+        error=message,
+        message="",
+        email=request.form.get("email", ""),
+    ), status
 
 
 @auth.post("/api/auth/verify-reset")
