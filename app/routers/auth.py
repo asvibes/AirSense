@@ -14,7 +14,11 @@ from app.models.home import Home
 from app.models.user import EmailChallenge, HomeMembership, User
 from app.schemas.auth import AuthInputError, validate_display_name, validate_email
 from app.security.passwords import hash_password, validate_password, verify_password
-from app.security.rate_limit import allow_persistent
+from app.security.rate_limit import (
+    allow_persistent,
+    is_persistent_rate_limited,
+    record_persistent_failure,
+)
 from app.security.sessions import current_user, csrf_token
 from app.services.audit import record_event
 from app.services.email import EmailDeliveryError, send_otp_email
@@ -94,6 +98,42 @@ def _email_rate_limit(action: str, email: str | None, *, ip_limit: int, email_li
             window_seconds=current_app.config["AUTH_RATE_LIMIT_WINDOW_SECONDS"],
         )
     return True
+
+
+def _login_failure_rate_limited(email: str) -> bool:
+    db = get_session()
+    window_seconds = current_app.config["AUTH_RATE_LIMIT_WINDOW_SECONDS"]
+    if is_persistent_rate_limited(
+        db,
+        f"auth:login-failure:ip:{_client_ip()}",
+        limit=10,
+        window_seconds=window_seconds,
+    ):
+        return True
+    return is_persistent_rate_limited(
+        db,
+        f"auth:login-failure:email:{email}",
+        limit=10,
+        window_seconds=window_seconds,
+    )
+
+
+def _record_login_failure(email: str) -> bool:
+    db = get_session()
+    window_seconds = current_app.config["AUTH_RATE_LIMIT_WINDOW_SECONDS"]
+    ip_allowed = record_persistent_failure(
+        db,
+        f"auth:login-failure:ip:{_client_ip()}",
+        limit=10,
+        window_seconds=window_seconds,
+    )
+    email_allowed = record_persistent_failure(
+        db,
+        f"auth:login-failure:email:{email}",
+        limit=10,
+        window_seconds=window_seconds,
+    )
+    return ip_allowed and email_allowed
 
 
 def _auth_error(message: str, status: int = 400):
@@ -544,13 +584,15 @@ def login():
         check_password_hash(_DUMMY_PASSWORD_HASH, "invalid")
         return _auth_error("Email or password is incorrect.", 401)
 
-    if not _email_rate_limit("login", email, ip_limit=10, email_limit=10):
+    if _login_failure_rate_limited(email):
         return _auth_error("Too many sign-in attempts. Try again later.", 429)
 
     user = get_session().scalar(select(User).where(User.email == email))
     if user is None or not verify_password(
         user.password_hash if user else _DUMMY_PASSWORD_HASH, password
     ):
+        if not _record_login_failure(email):
+            return _auth_error("Too many sign-in attempts. Try again later.", 429)
         if user is not None:
             _record_user_auth_event(
                 get_session(),
