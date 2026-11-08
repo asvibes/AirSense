@@ -71,6 +71,7 @@
     }
     if (!response.ok) {
       const error = new Error(payload?.error || `Request failed (${response.status}).`);
+      error.status = response.status;
       error.payload = payload;
       throw error;
     }
@@ -794,6 +795,22 @@
   }
 
   async function runDaltonReplay() {
+    const replayButton = $("#run-dalton-replay");
+    if (replayButton.dataset.submitting === "true") return;
+    replayButton.dataset.submitting = "true";
+    replayButton.disabled = true;
+    replayButton.textContent = "Importing…";
+    $("#dataset-import-status").textContent = "Importing DALTON readings…";
+    try {
+      await runDaltonReplayRequest();
+    } finally {
+      delete replayButton.dataset.submitting;
+      replayButton.disabled = rooms.length === 0;
+      replayButton.textContent = "Import readings";
+    }
+  }
+
+  async function runDaltonReplayRequest() {
     const room = rooms.find(item => item.id === $("#demo-room-select").value);
     if (!room) throw new Error("Add a room before replaying DALTON data.");
     const csvFile = $("#dalton-csv-file").files[0];
@@ -1208,10 +1225,18 @@
 
     async function saveInvitation(event) {
       event.preventDefault();
+      if (roomForm.dataset.submitting === "true") return;
+      roomForm.dataset.submitting = "true";
+      const submit = roomForm.querySelector('button[type="submit"]');
       const email = String(new FormData(roomForm).get("email") || "").trim();
       if (!email) {
         notify("Enter an email address.", "error");
+        delete roomForm.dataset.submitting;
         return;
+      }
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = "Creating invitation…";
       }
       try {
         const result = await api(`${homePath}/invitations`, {
@@ -1225,6 +1250,12 @@
         await loadDashboard();
       } catch (error) {
         notify(error.message || "Unable to create the invitation.", "error");
+      } finally {
+        delete roomForm.dataset.submitting;
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = "Create invitation";
+        }
       }
     }
 
@@ -1255,62 +1286,80 @@
     }
 
     async function runDaltonReplay() {
-      const roomId = $("#demo-room-select").value;
-      const file = $("#dalton-csv-file").files[0];
-      const limit = Number($("#dalton-limit").value || 250);
-      if (!roomId) throw new Error("Add a room before replaying DALTON data.");
-      if (!file) throw new Error("Choose a DALTON CSV file before replaying.");
-      if (file.size > 16 * 1024 * 1024) throw new Error("Choose a DALTON CSV smaller than 16 MB.");
-      if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
-        throw new Error("Choose a sample limit between 1 and 1000.");
-      }
-      const data = new FormData();
-      data.set("room_id", roomId);
-      data.set("limit", String(limit));
-      data.set("shift_timestamps", String($("#dalton-shift-timestamps").checked));
-      data.set("csv_file", file);
-      let result;
+      const replayButton = $("#run-dalton-replay");
+      if (replayButton.dataset.submitting === "true") return;
+      replayButton.dataset.submitting = "true";
+      replayButton.disabled = true;
+      replayButton.textContent = "Importing...";
+      $("#dataset-import-status").textContent = "Importing DALTON readings...";
       try {
-        result = await api(`${homePath}/demo/replay`, { method: "POST", body: data });
-      } catch (error) {
-        const details = error.payload;
-        if (details) {
-          const review = (details.review_columns || [])
-            .map(item => `${item.column} (${item.reason})`)
-            .join("; ");
-          const unsupported = (details.unsupported_columns || [])
-            .map(item => item.column)
-            .join(", ");
-          const duplicates = (details.duplicate_readings || []).length;
-          const duplicateMessage = duplicates
-            ? ` ${duplicates} duplicate measurement${duplicates === 1 ? "" : "s"} were skipped.`
-            : "";
-          $("#dataset-import-status").textContent =
-            `${details.error || error.message}${duplicateMessage}${review ? ` Review columns: ${review}.` : ""}${unsupported ? ` Unsupported columns: ${unsupported}.` : ""}`;
+        const roomId = $("#demo-room-select").value;
+        const file = $("#dalton-csv-file").files[0];
+        const limit = Number($("#dalton-limit").value || 250);
+        if (!roomId) throw new Error("Add a room before replaying DALTON data.");
+        if (!file) throw new Error("Choose a DALTON CSV file before replaying.");
+        if (file.size > 16 * 1024 * 1024) throw new Error("Choose a DALTON CSV smaller than 16 MB.");
+        if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+          throw new Error("Choose a sample limit between 1 and 1000.");
         }
-        throw error;
+        const data = new FormData();
+        data.set("room_id", roomId);
+        data.set("limit", String(limit));
+        data.set("shift_timestamps", String($("#dalton-shift-timestamps").checked));
+        data.set("csv_file", file);
+        let result;
+        try {
+          result = await api(`${homePath}/demo/replay`, { method: "POST", body: data });
+        } catch (error) {
+          const message = error.status === 429
+            ? "Replay is temporarily rate-limited. Please wait 15 minutes before trying again."
+            : error.message;
+          const details = error.payload;
+          if (details) {
+            const review = (details.review_columns || [])
+              .map(item => `${item.column} (${item.reason})`)
+              .join("; ");
+            const unsupported = (details.unsupported_columns || [])
+              .map(item => item.column)
+              .join(", ");
+            const duplicates = (details.duplicate_readings || []).length;
+            const duplicateMessage = duplicates
+              ? ` ${duplicates} duplicate measurement${duplicates === 1 ? "" : "s"} were skipped.`
+              : "";
+            const detailMessage = error.status === 429 ? message : (details.error || message);
+            $("#dataset-import-status").textContent =
+              `${detailMessage}${duplicateMessage}${review ? ` Review columns: ${review}.` : ""}${unsupported ? ` Unsupported columns: ${unsupported}.` : ""}`;
+          } else {
+            $("#dataset-import-status").textContent = message;
+          }
+          throw new Error(message);
+        }
+        await loadDashboard();
+        const timestampMessage = result.timestamps_shifted
+          ? " Timestamps were shifted as requested."
+          : " Original dataset timestamps kept.";
+        const importedParameters = result.parameters
+          .map(parameter => `${parameter.name}: ${parameter.readings}`)
+          .join(", ");
+        const review = result.review_columns.length
+          ? ` Review columns: ${result.review_columns.map(item => `${item.column} (${item.reason})`).join("; ")}.`
+          : "";
+        const unsupported = result.unsupported_columns.length
+          ? ` Unsupported columns: ${result.unsupported_columns.map(item => item.column).join(", ")}.`
+          : "";
+        const duplicates = result.duplicate_readings.length
+          ? ` ${result.duplicate_readings.length} duplicate measurement${result.duplicate_readings.length === 1 ? "" : "s"} were skipped.`
+          : "";
+        const summary = result.imported
+          ? `Imported ${result.imported} reading${result.imported === 1 ? "" : "s"} from ${result.source_file}${importedParameters ? ` · ${importedParameters}` : ""}.${timestampMessage}${duplicates}${review}${unsupported}`
+          : `No readings imported from ${result.source_file}; the file contains no recognized data.${duplicates}${review}${unsupported}`;
+        $("#dataset-import-status").textContent = summary;
+        notify(summary);
+      } finally {
+        delete replayButton.dataset.submitting;
+        replayButton.disabled = activeRooms.length === 0;
+        replayButton.textContent = "Import readings";
       }
-      await loadDashboard();
-      const timestampMessage = result.timestamps_shifted
-        ? " Timestamps were shifted as requested."
-        : " Original dataset timestamps kept.";
-      const importedParameters = result.parameters
-        .map(parameter => `${parameter.name}: ${parameter.readings}`)
-        .join(", ");
-      const review = result.review_columns.length
-        ? ` Review columns: ${result.review_columns.map(item => `${item.column} (${item.reason})`).join("; ")}.`
-        : "";
-      const unsupported = result.unsupported_columns.length
-        ? ` Unsupported columns: ${result.unsupported_columns.map(item => item.column).join(", ")}.`
-        : "";
-      const duplicates = result.duplicate_readings.length
-        ? ` ${result.duplicate_readings.length} duplicate measurement${result.duplicate_readings.length === 1 ? "" : "s"} were skipped.`
-        : "";
-      const summary = result.imported
-        ? `Imported ${result.imported} reading${result.imported === 1 ? "" : "s"} from ${result.source_file}${importedParameters ? ` · ${importedParameters}` : ""}.${timestampMessage}${duplicates}${review}${unsupported}`
-        : `No readings imported from ${result.source_file}; the file contains no recognized data.${duplicates}${review}${unsupported}`;
-      $("#dataset-import-status").textContent = summary;
-      notify(summary);
     }
 
     document.addEventListener("click", event => {

@@ -304,6 +304,23 @@ class AlertLifecycleTests(AirSenseTestCase):
             'if (target.id === "run-custom-reading") runAction(runCustomReading);',
             script_text,
         )
+        replay_functions = [
+            match.start()
+            for match in re.finditer(r"async function runDaltonReplay\(\)", script_text)
+        ]
+        self.assertEqual(len(replay_functions), 2)
+        active_replay = script_text[replay_functions[1]:script_text.index(
+            'document.addEventListener("click", event => {', replay_functions[1]
+        )]
+        self.assertIn('if (replayButton.dataset.submitting === "true") return;', active_replay)
+        self.assertIn('replayButton.textContent = "Importing...";', active_replay)
+        self.assertIn('Replay is temporarily rate-limited. Please wait 15 minutes before trying again.', active_replay)
+        self.assertIn('delete replayButton.dataset.submitting;', active_replay)
+        self.assertIn('await loadDashboard();', active_replay)
+        self.assertIn('error.status === 429', active_replay)
+        self.assertIn('error.status = response.status;', script_text)
+        self.assertIn('if (roomForm.dataset.submitting === "true") return;', script_text)
+        self.assertIn('delete roomForm.dataset.submitting;', script_text)
         template = Path(__file__).resolve().parents[1] / "app" / "templates" / "alerts.html"
         self.assertRegex(
             template.read_text(encoding="utf-8"),

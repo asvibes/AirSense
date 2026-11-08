@@ -9,6 +9,7 @@ from app.db import get_session
 from app.models.alert import Alert
 from app.models.audit import AuditLog
 from app.models.reading import Reading
+from app.models.user import RateLimitBucket
 from app.sources.dalton_replay import load_dalton_csv, parse_environmental_csv
 from tests.helpers import AirSenseTestCase
 
@@ -332,6 +333,35 @@ class DaltonReplayTests(AirSenseTestCase):
         latest_reading = dashboard.get_json()["readings"][0]
         self.assertEqual(latest_reading["source"], "dataset")
         self.assertEqual(latest_reading["value"], 1100)
+
+    def test_demo_replay_rate_limit_returns_429_after_ten_requests(self):
+        room = self.create_room("Rate limited replay room")
+        with self.client.session_transaction() as browser_session:
+            user_id = browser_session["user_id"]
+        with self.app.app_context():
+            db = get_session()
+            db.add(
+                RateLimitBucket(
+                    key=f"demo-replay:{self.home_id}:user:{user_id}",
+                    window_started_at=datetime.now(timezone.utc),
+                    count=10,
+                )
+            )
+            db.commit()
+
+        response = self.client.post(
+            f"/api/homes/{self.home_id}/demo/replay",
+            data={
+                "room_id": room["id"],
+                "limit": "1",
+                "csv_file": (BytesIO(b"ts,CO2\n2023-01-01T00:00:00Z,500\n"), "data.csv"),
+            },
+            headers={"X-CSRF-Token": self.csrf},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.get_json()["error"], "Replay rate limit exceeded.")
 
     def test_environmental_replay_without_co2_preserves_data_and_reports_duplicates(self):
         room = self.create_room("Bedroom")
