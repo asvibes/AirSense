@@ -42,6 +42,27 @@ class AuthenticationRateLimitTests(AirSenseTestCase):
             self.assertEqual(ip_bucket.count, 1)
             self.assertEqual(email_bucket.count, 1)
 
+    def test_subsequent_failed_login_increments_each_bucket_once(self):
+        for expected_count in (1, 2):
+            response = self._login(email=" OWNER@EXAMPLE.TEST ")
+            self.assertEqual(response.status_code, 401)
+            with self.app.app_context():
+                db = get_session()
+                self.assertEqual(
+                    db.get(
+                        RateLimitBucket,
+                        "auth:login-failure:ip:127.0.0.1",
+                    ).count,
+                    expected_count,
+                )
+                self.assertEqual(
+                    db.get(
+                        RateLimitBucket,
+                        "auth:login-failure:email:owner@example.test",
+                    ).count,
+                    expected_count,
+                )
+
     def test_successful_login_does_not_consume_failed_login_capacity(self):
         response = self._login(password="secure-password-123")
 

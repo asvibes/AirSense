@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from sqlalchemy import select, text
+from sqlalchemy import MetaData, inspect, select, text
 
 from app.db import get_session
 from app.main import create_app
@@ -282,14 +282,36 @@ class DatabaseWorkflowTests(unittest.TestCase):
             self._assert_utc(event["created_at"])
 
         with self.app.extensions["airsense_engine"].connect() as connection:
-            self.assertEqual(
-                connection.execute(text("PRAGMA foreign_key_check")).all(), []
-            )
-            self.assertEqual(
-                connection.execute(text("PRAGMA integrity_check")).scalar_one(),
-                "ok",
-            )
-            self.assertEqual(
-                connection.execute(text("PRAGMA foreign_keys")).scalar_one(),
-                1,
-            )
+            metadata = MetaData()
+            metadata.reflect(bind=connection)
+            for table in metadata.tables.values():
+                for foreign_key in table.foreign_keys:
+                    child_column = foreign_key.parent
+                    parent_column = foreign_key.column
+                    orphan = connection.execute(
+                        select(child_column)
+                        .select_from(
+                            table.outerjoin(
+                                parent_column.table,
+                                child_column == parent_column,
+                            )
+                        )
+                        .where(
+                            child_column.is_not(None),
+                            parent_column.is_(None),
+                        )
+                        .limit(1)
+                    ).scalar_one_or_none()
+                    self.assertIsNone(
+                        orphan,
+                        f"orphaned foreign key {table.name}.{child_column.name}",
+                    )
+            if inspect(connection).dialect.name == "sqlite":
+                self.assertEqual(
+                    connection.execute(text("PRAGMA integrity_check")).scalar_one(),
+                    "ok",
+                )
+                self.assertEqual(
+                    connection.execute(text("PRAGMA foreign_keys")).scalar_one(),
+                    1,
+                )

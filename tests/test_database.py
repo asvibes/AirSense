@@ -1,4 +1,5 @@
 import os
+import json
 import tempfile
 import uuid
 import unittest
@@ -144,13 +145,13 @@ class DatabaseIntegrityTests(AirSenseTestCase):
                 ).scalar_one(),
                 "member",
             )
-            self.assertEqual(
-                connection.execute(
-                    text("SELECT ventilation_sources FROM rooms WHERE id = :id"),
-                    {"id": room_id},
-                ).scalar_one(),
-                "[]",
-            )
+            ventilation_sources = connection.execute(
+                text("SELECT ventilation_sources FROM rooms WHERE id = :id"),
+                {"id": room_id},
+            ).scalar_one()
+            if isinstance(ventilation_sources, str):
+                ventilation_sources = json.loads(ventilation_sources)
+            self.assertEqual(ventilation_sources, [])
             self.assertEqual(
                 connection.execute(
                     text(

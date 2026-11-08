@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from threading import Lock
 from time import monotonic
 
-from sqlalchemy import case, func, or_, update
+from sqlalchemy import case, func, or_
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
@@ -108,52 +108,33 @@ def record_persistent_failure(
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(seconds=window_seconds)
     dialect = db.get_bind().dialect.name
+    insert = sqlite_insert if dialect == "sqlite" else postgresql_insert
     expired = (
         func.datetime(RateLimitBucket.window_started_at)
         < func.datetime(cutoff.isoformat())
         if dialect == "sqlite"
         else RateLimitBucket.window_started_at < cutoff
     )
-    statement = (
-        update(RateLimitBucket)
-        .where(
-            RateLimitBucket.key == key,
-            or_(expired, RateLimitBucket.count < limit),
-        )
-        .values(
-            window_started_at=case(
-                (expired, now),
+    statement = insert(RateLimitBucket).values(
+        key=key,
+        window_started_at=now,
+        count=1,
+    )
+    excluded = statement.excluded
+    statement = statement.on_conflict_do_update(
+        index_elements=[RateLimitBucket.key],
+        where=or_(expired, RateLimitBucket.count < limit),
+        set_={
+            "window_started_at": case(
+                (expired, excluded.window_started_at),
                 else_=RateLimitBucket.window_started_at,
             ),
-            count=case(
+            "count": case(
                 (expired, 1),
                 else_=RateLimitBucket.count + 1,
             ),
-        )
-    )
-    result = db.execute(statement)
-    if result.rowcount == 0:
-        insert = sqlite_insert if dialect == "sqlite" else postgresql_insert
-        statement = insert(RateLimitBucket).values(
-            key=key,
-            window_started_at=now,
-            count=1,
-        )
-        statement = statement.on_conflict_do_nothing(
-            index_elements=[RateLimitBucket.key]
-        )
-        result = db.execute(statement)
-        if result.rowcount == 1:
-            db.commit()
-            return True
-        db.expire_all()
-        result = db.execute(
-            update(RateLimitBucket)
-            .where(RateLimitBucket.key == key, RateLimitBucket.count < limit)
-            .values(count=RateLimitBucket.count + 1)
-        )
-        if result.rowcount == 0:
-            db.rollback()
-            return False
+        },
+    ).returning(RateLimitBucket.count)
+    count = db.execute(statement).scalar_one_or_none()
     db.commit()
-    return True
+    return count is not None

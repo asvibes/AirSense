@@ -20,7 +20,7 @@ class SafeCsvCellTests(unittest.TestCase):
             "@SUM(A1)",
             " \t=1+1",
             "\r\n@SUM(A1)",
-            "\x00-1+1",
+            "\ufeff-1+1",
             "\ufeff+1+1",
         ):
             with self.subTest(value=value):
