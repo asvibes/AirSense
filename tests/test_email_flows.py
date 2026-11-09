@@ -632,6 +632,241 @@ class EmailFlowTests(AirSenseTestCase):
             db.commit()
             self.assertTrue(allow_persistent(db, key, limit=2, window_seconds=60))
 
+    def test_registration_otp_delivery_failure_rolls_back_challenge(self):
+        with patch(
+            "app.routers.auth.send_otp_email",
+            side_effect=EmailDeliveryError("provider unavailable"),
+        ):
+            response = self.client.post(
+                "/api/auth/register/send-otp",
+                json={"email": "registration-delivery@example.test", "display_name": "New User"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+        self.assertEqual(response.status_code, 503)
+        with self.app.app_context():
+            self.assertIsNone(
+                get_session().scalar(
+                    select(EmailChallenge).where(
+                        EmailChallenge.email == "registration-delivery@example.test",
+                        EmailChallenge.purpose == "email_verification",
+                        EmailChallenge.user_id.is_(None),
+                    )
+                )
+            )
+
+    def test_registration_otp_sending_is_generic_and_resend_invalidates_previous_code(self):
+        with patch("app.routers.auth.send_otp_email") as send:
+            first = self.client.post(
+                "/api/auth/register/send-otp",
+                json={"email": "new-registration@example.test", "display_name": "New User"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            self.assertEqual(first.status_code, 202, first.get_json())
+            self.assertNotIn("otp", first.get_json())
+            first_otp = send.call_args.kwargs["otp"]
+            with self.app.app_context():
+                first_challenge = get_session().scalar(
+                    select(EmailChallenge).where(
+                        EmailChallenge.email == "new-registration@example.test",
+                        EmailChallenge.user_id.is_(None),
+                    )
+                )
+                self.assertNotEqual(first_challenge.otp_hash, first_otp)
+                first_id = first_challenge.id
+                first_challenge.last_sent_at = datetime.now(timezone.utc) - timedelta(seconds=61)
+                get_session().commit()
+
+            second = self.client.post(
+                "/api/auth/register/send-otp",
+                json={"email": "new-registration@example.test", "display_name": "New User"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            self.assertEqual(second.status_code, 202, second.get_json())
+            second_otp = send.call_args.kwargs["otp"]
+            self.assertEqual(send.call_count, 2)
+
+        with self.app.app_context():
+            rows = list(
+                get_session().scalars(
+                    select(EmailChallenge).where(
+                        EmailChallenge.email == "new-registration@example.test",
+                        EmailChallenge.user_id.is_(None),
+                    )
+                )
+            )
+            old_challenge = next(row for row in rows if row.id == first_id)
+            self.assertIsNotNone(old_challenge.consumed_at)
+            self.assertNotEqual(
+                old_challenge.otp_hash,
+                next(row for row in rows if row.consumed_at is None).otp_hash,
+            )
+
+        completed = self.client.post(
+            "/api/auth/register",
+            json={
+                "email": "new-registration@example.test",
+                "display_name": "New User",
+                "password": "secure-password-123",
+                "otp": second_otp,
+            },
+            headers={"X-CSRF-Token": self.csrf},
+        )
+        self.assertEqual(completed.status_code, 201, completed.get_json())
+        self.assertTrue(completed.get_json()["verified"])
+        reused = self.client.post(
+            "/api/auth/register",
+            json={
+                "email": "new-registration@example.test",
+                "display_name": "New User",
+                "password": "secure-password-123",
+                "otp": second_otp,
+            },
+            headers={"X-CSRF-Token": self.csrf},
+        )
+        self.assertEqual(reused.status_code, 400)
+        with self.app.app_context():
+            user = get_session().scalar(
+                select(User).where(User.email == "new-registration@example.test")
+            )
+            self.assertIsNotNone(user.email_verified_at)
+
+    def test_registration_rejects_wrong_expired_and_email_mismatched_codes(self):
+        with patch("app.routers.auth.send_otp_email") as send:
+            sent = self.client.post(
+                "/api/auth/register/send-otp",
+                json={"email": "otp-binding@example.test", "display_name": "OTP User"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            self.assertEqual(sent.status_code, 202)
+            otp = send.call_args.kwargs["otp"]
+
+        def complete(email, code):
+            return self.client.post(
+                "/api/auth/register",
+                json={
+                    "email": email,
+                    "display_name": "OTP User",
+                    "password": "secure-password-123",
+                    "otp": code,
+                },
+                headers={"X-CSRF-Token": self.csrf},
+            )
+
+        wrong = complete("otp-binding@example.test", "000000" if otp != "000000" else "000001")
+        self.assertEqual(wrong.status_code, 400)
+        changed_email = complete("changed-address@example.test", otp)
+        self.assertEqual(changed_email.status_code, 400)
+        with self.app.app_context():
+            challenge = get_session().scalar(
+                select(EmailChallenge).where(
+                    EmailChallenge.email == "otp-binding@example.test",
+                    EmailChallenge.user_id.is_(None),
+                )
+            )
+            challenge.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+            get_session().commit()
+        expired = complete("otp-binding@example.test", otp)
+        self.assertEqual(expired.status_code, 400)
+        with self.app.app_context():
+            self.assertIsNone(
+                get_session().scalar(
+                    select(User.id).where(
+                        User.email.in_(["otp-binding@example.test", "changed-address@example.test"])
+                    )
+                )
+            )
+
+    def test_registration_duplicate_account_is_not_created_and_send_response_is_generic(self):
+        with patch("app.routers.auth.send_otp_email") as send:
+            known = self.client.post(
+                "/api/auth/register/send-otp",
+                json={"email": "owner@example.test", "display_name": "AirSense Owner"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            unknown = self.client.post(
+                "/api/auth/register/send-otp",
+                json={"email": "available@example.test", "display_name": "New User"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+        self.assertEqual(known.status_code, unknown.status_code)
+        self.assertEqual(known.get_json(), unknown.get_json())
+        self.assertEqual(send.call_count, 1)
+
+        with patch("app.routers.auth.send_otp_email") as send:
+            self.client.post(
+                "/api/auth/register/send-otp",
+                json={"email": "racing-duplicate@example.test", "display_name": "New User"},
+                headers={"X-CSRF-Token": self.csrf},
+            )
+            otp = send.call_args.kwargs["otp"]
+        with self.app.app_context():
+            get_session().add(
+                User(
+                    id="duplicate-account-id",
+                    email="racing-duplicate@example.test",
+                    display_name="Existing User",
+                    password_hash="already-hashed",
+                    is_active=True,
+                    email_verified_at=None,
+                )
+            )
+            get_session().commit()
+        duplicate = self.client.post(
+            "/api/auth/register",
+            json={
+                "email": "racing-duplicate@example.test",
+                "display_name": "New User",
+                "password": "secure-password-123",
+                "otp": otp,
+            },
+            headers={"X-CSRF-Token": self.csrf},
+        )
+        self.assertEqual(duplicate.status_code, 400)
+        with self.app.app_context():
+            matches = list(
+                get_session().scalars(
+                    select(User).where(User.email == "racing-duplicate@example.test")
+                )
+            )
+            self.assertEqual(len(matches), 1)
+            self.assertIsNone(matches[0].email_verified_at)
+
+    def test_unverified_user_cannot_accept_email_bound_invitation(self):
+        from hashlib import sha256
+        from app.services.invitations import accept_invitation_for_user
+
+        with patch("app.routers.homes.send_invitation_email"):
+            invitation_response = self.request_json(
+                "POST",
+                f"/api/homes/{self.home_id}/invitations",
+                {"email": "unverified-invitee@example.test"},
+            )
+        self.assertEqual(invitation_response.status_code, 201)
+        raw_token = invitation_response.get_json()["invitation"]["token"]
+        with self.app.app_context():
+            db = get_session()
+            user = User(
+                id="unverified-invitee-id",
+                email="unverified-invitee@example.test",
+                display_name="Unverified Invitee",
+                password_hash="already-hashed",
+                is_active=True,
+                email_verified_at=None,
+            )
+            db.add(user)
+            db.commit()
+            result, error, status = accept_invitation_for_user(
+                db,
+                user=user,
+                token_hash=sha256(raw_token.encode()).hexdigest(),
+            )
+            self.assertIsNone(result)
+            self.assertEqual(status, 403)
+            self.assertIn("Verify your email", error)
+            self.assertIsNone(
+                db.get(HomeMembership, (self.home_id, user.id))
+            )
+
     def test_invitation_sends_email_and_expires_in_24_hours(self):
         self.app.config["PUBLIC_BASE_URL"] = "https://airsense.example.test"
         with patch("app.routers.homes.send_invitation_email") as send:

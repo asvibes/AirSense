@@ -133,6 +133,16 @@
     }
     .field input::placeholder { color: #cbd6dc; opacity: 1; }
     .field-help { color: #cbd6dc; font-size: 11px; font-weight: 400; line-height: 1.45; }
+    .email-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+    .email-entry .field { min-width: 0; }
+    .button.button-otp {
+      min-height: 47px; padding: 10px 12px; border: 1px solid rgba(247, 249, 250, .65);
+      border-radius: 7px; background: transparent; color: var(--air-white);
+      font: 600 12px/1.2 "Geist", ui-sans-serif, system-ui, sans-serif; white-space: nowrap; cursor: pointer;
+    }
+    .button.button-otp:hover:not(:disabled) { background: rgba(200, 171, 255, .12); }
+    .button.button-otp:disabled { cursor: not-allowed; opacity: .65; }
+    .registration-status { min-height: 18px; margin: -5px 0 0; color: var(--air-muted); font-size: 12px; line-height: 1.5; }
     .password-control { position: relative; display: block; width: 100%; }
     .password-control input { padding-right: 64px; }
     .password-toggle {
@@ -220,11 +230,16 @@
       <h1 id="auth-title"><span class="gradient-text"><span class="gradient-text__content">Let's get your home on the map.</span></span></h1>
       <p class="page-subtitle">Create an account, set up your first home, and start exploring your room readings.</p>
       {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
-      <form method="post" action="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}">
+      <form id="registration-form" method="post" action="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <label class="field">Your name<input name="display_name" autocomplete="name" required maxlength="120"></label>
-        <label class="field">Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+        <label class="field">Your name<input id="display-name" name="display_name" autocomplete="name" required maxlength="120"></label>
+        <div class="email-entry">
+          <label class="field">Email address<input id="registration-email" name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <button class="button button-otp" id="send-registration-otp" type="button">Send OTP</button>
+        </div>
         <label class="field">Password<span class="password-control"><input id="password" name="password" type="password" autocomplete="new-password" minlength="12" required maxlength="256"><button class="password-toggle" type="button" aria-controls="password" aria-label="Show password" aria-pressed="false">Show</button></span><span class="field-help">Use at least 12 characters, including a letter and a number.</span></label>
+        <label class="field">Verification code<input id="registration-otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label>
+        <p class="registration-status" id="registration-status" role="status" aria-live="polite"></p>
         <button class="button button-dark" type="submit">Create my account</button>
       </form>
       <p class="auth-switch">Already part of AirSense? <a href="{{ url_for('auth.login_page') }}">Sign in</a></p>
@@ -243,6 +258,106 @@
         passwordToggle.textContent = isVisible ? 'Show' : 'Hide';
         passwordToggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
         passwordToggle.setAttribute('aria-pressed', String(!isVisible));
+      });
+
+      const registrationForm = document.getElementById('registration-form');
+      const emailInput = document.getElementById('registration-email');
+      const otpInput = document.getElementById('registration-otp');
+      const sendOtpButton = document.getElementById('send-registration-otp');
+      const registrationStatus = document.getElementById('registration-status');
+      let sentOtpEmail = null;
+      let resendTimer = 0;
+      let resendRemaining = 0;
+
+      const stopCooldown = () => {
+        if (resendTimer) window.clearInterval(resendTimer);
+        resendTimer = 0;
+        resendRemaining = 0;
+        sendOtpButton.disabled = false;
+        sendOtpButton.textContent = sentOtpEmail ? 'Resend OTP' : 'Send OTP';
+      };
+      const startCooldown = () => {
+        if (resendTimer) window.clearInterval(resendTimer);
+        resendRemaining = 60;
+        sendOtpButton.disabled = true;
+        sendOtpButton.textContent = `Resend OTP (${resendRemaining}s)`;
+        resendTimer = window.setInterval(() => {
+          resendRemaining -= 1;
+          if (resendRemaining <= 0) {
+            stopCooldown();
+          } else {
+            sendOtpButton.textContent = `Resend OTP (${resendRemaining}s)`;
+          }
+        }, 1000);
+      };
+
+      emailInput.addEventListener('input', () => {
+        const normalizedEmail = emailInput.value.trim().toLocaleLowerCase();
+        if (sentOtpEmail && normalizedEmail !== sentOtpEmail) {
+          sentOtpEmail = null;
+          otpInput.value = '';
+          stopCooldown();
+          registrationStatus.textContent = 'Email changed. Request a new code for this address.';
+        }
+      });
+
+      sendOtpButton.addEventListener('click', async () => {
+        for (const fieldName of ['display_name', 'email', 'password']) {
+          const field = registrationForm.elements[fieldName];
+          if (!field.checkValidity()) { field.reportValidity(); return; }
+        }
+        sendOtpButton.disabled = true;
+        sendOtpButton.textContent = 'Sending…';
+        registrationStatus.textContent = '';
+        const csrf = registrationForm.elements.csrf_token.value;
+        try {
+          const response = await fetch('{{ url_for("auth.send_registration_otp") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+            body: JSON.stringify({
+              email: emailInput.value,
+              display_name: registrationForm.elements.display_name.value,
+              csrf_token: csrf
+            })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Unable to send the code. Please try again.');
+          sentOtpEmail = emailInput.value.trim().toLocaleLowerCase();
+          registrationStatus.textContent = result.message || 'If this address can be registered, a verification code has been sent.';
+          startCooldown();
+          otpInput.focus();
+        } catch (error) {
+          registrationStatus.textContent = error.message || 'Unable to send the code. Please try again.';
+          stopCooldown();
+        }
+      });
+
+      registrationForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!registrationForm.reportValidity()) return;
+        const normalizedEmail = emailInput.value.trim().toLocaleLowerCase();
+        if (!sentOtpEmail || sentOtpEmail !== normalizedEmail) {
+          registrationStatus.textContent = 'Send a verification code to this email address first.';
+          sendOtpButton.focus();
+          return;
+        }
+        const submitButton = registrationForm.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        registrationStatus.textContent = 'Creating your account…';
+        const csrf = registrationForm.elements.csrf_token.value;
+        try {
+          const response = await fetch(registrationForm.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+            body: JSON.stringify(Object.fromEntries(new FormData(registrationForm)))
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Unable to create your account. Please try again.');
+          window.location.assign('{{ url_for("alerts.alerts_page") }}');
+        } catch (error) {
+          registrationStatus.textContent = error.message || 'Unable to create your account. Please try again.';
+          submitButton.disabled = false;
+        }
       });
 
       const root = document.querySelector('.dither-layer');

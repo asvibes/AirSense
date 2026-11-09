@@ -31,6 +31,10 @@ def accept_invitation_for_user(
         db.rollback()
         return None, "Sign in with the email address this invitation was sent to.", 403
 
+    if user.email_verified_at is None:
+        db.rollback()
+        return None, "Verify your email before accepting this invitation.", 403
+
     if db.get(HomeMembership, (invitation.home_id, user.id)) is not None:
         db.rollback()
         return None, "You are already a member of this home.", 409

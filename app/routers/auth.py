@@ -220,6 +220,62 @@ def _new_challenge(db, *, user: User | None, email: str, purpose: str) -> tuple[
     return challenge, otp
 
 
+def _new_registration_challenge(db, *, email: str) -> tuple[EmailChallenge, str]:
+    """Create a pre-registration challenge not attached to an account yet."""
+    now = datetime.now(timezone.utc)
+    latest = db.scalar(
+        select(EmailChallenge)
+        .where(
+            EmailChallenge.email == email,
+            EmailChallenge.purpose == "email_verification",
+            EmailChallenge.user_id.is_(None),
+            EmailChallenge.consumed_at.is_(None),
+        )
+        .order_by(EmailChallenge.created_at.desc())
+    )
+    if latest and (now - _aware(latest.last_sent_at)).total_seconds() < current_app.config[
+        "OTP_RESEND_COOLDOWN_SECONDS"
+    ]:
+        raise AuthInputError("Please wait before requesting another code.")
+    otp = f"{secrets.randbelow(1_000_000):06d}"
+    challenge = EmailChallenge(
+        id=str(uuid.uuid4()),
+        user_id=None,
+        email=email,
+        purpose="email_verification",
+        otp_hash=_challenge_hash(otp),
+        created_at=now,
+        expires_at=now + timedelta(seconds=current_app.config["OTP_EXPIRY_SECONDS"]),
+        last_sent_at=now,
+        attempts=0,
+    )
+    db.add(challenge)
+    db.flush()
+    return challenge, otp
+
+
+def _invalidate_previous_registration_challenges(
+    db, *, email: str, challenge_id: str
+) -> None:
+    _invalidate_previous_email_verification_challenges(
+        db, email=email, challenge_id=challenge_id, registration_only=True
+    )
+
+
+def _invalidate_previous_email_verification_challenges(
+    db, *, email: str, challenge_id: str, registration_only: bool = False
+) -> None:
+    query = update(EmailChallenge).where(
+        EmailChallenge.email == email,
+        EmailChallenge.purpose == "email_verification",
+        EmailChallenge.id != challenge_id,
+        EmailChallenge.consumed_at.is_(None),
+    )
+    if registration_only:
+        query = query.where(EmailChallenge.user_id.is_(None))
+    db.execute(query.values(consumed_at=datetime.now(timezone.utc)))
+
+
 def _invalidate_previous_challenges(db, *, email: str, challenge_id: str) -> None:
     now = datetime.now(timezone.utc)
     db.execute(
@@ -238,15 +294,18 @@ def _aware(value: datetime) -> datetime:
     return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
 
 
-def _verify_challenge(db, *, email: str, purpose: str, otp: str) -> EmailChallenge:
+def _verify_challenge(
+    db, *, email: str, purpose: str, otp: str, registration_only: bool = False
+) -> EmailChallenge:
+    query = select(EmailChallenge).where(
+        EmailChallenge.email == email,
+        EmailChallenge.purpose == purpose,
+        EmailChallenge.consumed_at.is_(None),
+    )
+    if registration_only:
+        query = query.where(EmailChallenge.user_id.is_(None))
     challenge = db.scalar(
-        select(EmailChallenge)
-        .where(
-            EmailChallenge.email == email,
-            EmailChallenge.purpose == purpose,
-            EmailChallenge.consumed_at.is_(None),
-        )
-        .order_by(EmailChallenge.created_at.desc())
+        query.order_by(EmailChallenge.created_at.desc())
     )
     now = datetime.now(timezone.utc)
     if challenge is None or _aware(challenge.expires_at) <= now:
@@ -323,6 +382,49 @@ def me():
     )
 
 
+@auth.post("/api/auth/register/send-otp")
+@auth.post("/register/send-otp")
+def send_registration_otp():
+    generic = "If this address can be registered, a verification code has been sent."
+    try:
+        payload = _payload()
+        _csrf(payload)
+        email = validate_email(payload.get("email"))
+        display_name = payload.get("display_name", payload.get("name", "there"))
+        if display_name != "there":
+            display_name = validate_display_name(display_name)
+        if not _email_rate_limit("register-otp", email, ip_limit=8, email_limit=3):
+            return jsonify(message=generic), 202
+
+        db = get_session()
+        # Use the same response for known and unknown addresses so the send
+        # endpoint does not disclose whether an account already exists.
+        if db.scalar(select(User.id).where(User.email == email)):
+            return jsonify(message=generic), 202
+
+        challenge, otp = _new_registration_challenge(db, email=email)
+        send_otp_email(
+            recipient=email,
+            otp=otp,
+            purpose="email_verification",
+            user_name=display_name,
+        )
+        _invalidate_previous_registration_challenges(
+            db, email=email, challenge_id=challenge.id
+        )
+        db.commit()
+    except (AuthInputError, ValueError, TypeError) as error:
+        get_session().rollback()
+        if "wait before requesting" in str(error):
+            return jsonify(message=generic), 202
+        return _auth_error(str(error))
+    except EmailDeliveryError:
+        get_session().rollback()
+        _logger.warning("Registration OTP delivery failed safely")
+        return jsonify(error="Unable to send the verification code. Please try again later."), 503
+    return jsonify(message=generic), 202
+
+
 @auth.post("/api/auth/register")
 @auth.post("/register")
 def register():
@@ -340,6 +442,56 @@ def register():
         return _auth_error("Too many registration attempts. Try again later.", 429)
 
     db = get_session()
+    if "otp" in payload:
+        try:
+            challenge = _verify_challenge(
+                db,
+                email=email,
+                purpose="email_verification",
+                otp=payload.get("otp"),
+                registration_only=True,
+            )
+        except AuthInputError as error:
+            db.rollback()
+            return _auth_error(str(error))
+        if db.scalar(select(User.id).where(User.email == email)):
+            db.rollback()
+            return _auth_error("That code is invalid or has expired.")
+        user = User(
+            id=str(uuid.uuid4()),
+            email=email,
+            display_name=name,
+            password_hash=hash_password(password),
+            is_active=True,
+            email_verified_at=datetime.now(timezone.utc),
+        )
+        home = Home(id=str(uuid.uuid4()), name=f"{name}'s home")
+        db.add_all(
+            [user, home, HomeMembership(home_id=home.id, user_id=user.id, role="owner")]
+        )
+        db.flush()
+        record_event(
+            db,
+            home_id=home.id,
+            actor_user_id=user.id,
+            event_type="account.registered",
+            entity_type="home",
+            entity_id=home.id,
+        )
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            return _auth_error("That code is invalid or has expired.")
+        _start_authenticated_session(user)
+        if request.is_json:
+            return jsonify(
+                user={"id": user.id, "email": user.email, "display_name": user.display_name},
+                home={"id": home.id, "name": home.name},
+                verified=True,
+            ), 201
+        return redirect(url_for("alerts.alerts_page"))
+
     if db.scalar(select(User.id).where(User.email == email)):
         return _auth_error("Unable to create the account with those details.", 409)
     user = User(
@@ -482,16 +634,23 @@ def resend_verification():
         )
         if user is None:
             return jsonify(message="If the account can be verified, a new code has been sent.")
-        _, otp = _new_challenge(db, user=user, email=email, purpose="email_verification")
+        challenge, otp = _new_challenge(
+            db, user=user, email=email, purpose="email_verification"
+        )
         send_otp_email(
             recipient=email,
             otp=otp,
             purpose="email_verification",
             user_name=user.display_name,
         )
+        _invalidate_previous_email_verification_challenges(
+            db, email=email, challenge_id=challenge.id
+        )
         db.commit()
     except (AuthInputError, ValueError, TypeError, EmailDeliveryError) as error:
         get_session().rollback()
+        if isinstance(error, AuthInputError) and "wait before requesting" in str(error):
+            return jsonify(message="If the account can be verified, a new code has been sent.")
         return jsonify(error=str(error)), 400 if not isinstance(error, EmailDeliveryError) else 503
     return jsonify(message="If the account can be verified, a new code has been sent.")
 
