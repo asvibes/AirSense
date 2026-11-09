@@ -47,8 +47,9 @@
   const sourceLabel = source => ({
     dataset: "Recorded dataset",
     simulated: "Simulated data",
-    device: "Live sensor"
-  })[source] || "Source unavailable";
+    device: "Live sensor",
+    airgradient_public: "Public sensor · live"
+  })[source] || (source ? source.replaceAll("_", " ") : "Source unavailable");
 
   async function api(path, options = {}) {
     const headers = new Headers(options.headers || {});
@@ -180,19 +181,35 @@
   }
 
   function renderSnapshot() {
-    const readings = rooms.map(room => ({ room, reading: latestReading(room) })).filter(item => item.reading);
-    const mostRecent = readings.slice().sort((a, b) => new Date(b.reading.measured_at) - new Date(a.reading.measured_at))[0];
-    $("#snapshot-updated").textContent = mostRecent ? dateTime(mostRecent.reading.measured_at) : "—";
+    const readings = rooms.map(room => latestReading(room, "CO2")).filter(Boolean);
+    const mostRecent = readings
+      .filter(reading => Number.isFinite(Date.parse(reading.measured_at)))
+      .sort((left, right) => Date.parse(right.measured_at) - Date.parse(left.measured_at))[0];
+    $("#snapshot-updated").textContent = mostRecent ? dateTime(mostRecent.measured_at) : "—";
     const body = $("#snapshot-main");
-    const center = readings.length
-      ? Math.round(readings.reduce((sum, item) => sum + Number(item.reading.value), 0) / readings.length)
-      : null;
+    const sourceAverages = window.AirSenseCO2Averages?.averageBySource(readings, {
+      metric: "CO2",
+      now: Date.now()
+    }) || [];
+    const average = sourceAverages.length === 1 ? sourceAverages[0].average : null;
     const high = Math.max(...thresholds.map(item => Number(item.high_threshold)), Number(config.defaults.high_threshold));
     const elevated = Math.max(...thresholds.map(item => Number(item.elevated_threshold)), Number(config.defaults.elevated_threshold));
-    const score = center === null ? null : Math.max(0, Math.min(100, Math.round(100 - (center / high) * 55)));
-    const level = center === null ? "none" : center >= high ? "high" : center >= elevated ? "elevated" : "none";
-    const summary = center === null ? "Waiting for readings" : level === "none" ? `${format(center)} ppm average CO₂` : `${statusText(level)} · ${format(center)} ppm average CO₂`;
-    body.innerHTML = `<div class="air-score"><div class="score-number">${score === null ? "—" : score}</div><div class="score-caption">Home<br>snapshot</div></div><div class="snapshot-copy"><span class="status-pill status-${statusClass(level)}">${escapeHtml(summary)}</span><p>${center === null ? "Connect a sensor or enter a simulator reading to see home conditions." : `${readings.length} room${readings.length === 1 ? "" : "s"} with recent CO₂ data.`}</p><button class="text-button" type="button" data-nav="demo">Enter a reading <span>→</span></button></div>`;
+    const score = average === null ? null : Math.max(0, Math.min(100, Math.round(100 - (average / high) * 55)));
+    const levelFor = value => value >= high ? "high" : value >= elevated ? "elevated" : "none";
+    const summary = sourceAverages.length === 0
+      ? "No recent valid CO₂ readings"
+      : sourceAverages.length === 1
+        ? `Average from ${sourceLabel(sourceAverages[0].source)}`
+        : "CO₂ averages are separated by source";
+    const sourceRows = sourceAverages.map(group => {
+      const level = levelFor(group.average);
+      const roomsLabel = `${group.count} room${group.count === 1 ? "" : "s"}`;
+      return `<div class="snapshot-source-average"><strong>${escapeHtml(format(group.average))} ppm</strong><span class="source-pill">${escapeHtml(sourceLabel(group.source))}</span><small>${roomsLabel} · <span class="status-pill status-${statusClass(level)}">${escapeHtml(statusText(level))}</span></small></div>`;
+    }).join("");
+    const scoreCaption = sourceAverages.length === 1
+      ? `Home<br>${escapeHtml(sourceLabel(sourceAverages[0].source))}`
+      : sourceAverages.length > 1 ? "Separate<br>sources" : "CO₂<br>snapshot";
+    body.innerHTML = `<div class="air-score"><div class="score-number">${score === null ? "—" : score}</div><div class="score-caption">${scoreCaption}</div></div><div class="snapshot-copy"><span class="status-pill status-none">${escapeHtml(summary)}</span><div class="snapshot-source-averages" aria-label="Recent CO₂ averages by source">${sourceRows}</div><p>${sourceAverages.length ? "Only valid readings from the last 30 minutes are included; source averages are never combined." : "Connect a live sensor or use a recent recorded or simulated reading to see a source-specific average."}</p><button class="text-button" type="button" data-nav="demo">Enter a reading <span>→</span></button></div>`;
   }
 
   function renderChart() {
@@ -313,47 +330,62 @@
     }
     const recent = latestReading(room, metricKey);
     $("#history-series-title").textContent = `${room.name} · ${metric.label}`;
-    $("#history-current-value").innerHTML = `${recent ? format(recent.value, metricKey === "temperature" ? 1 : 0) : "—"} <small>${escapeHtml(recent?.unit || metric.unit)}</small>`;
+    $("#history-current-value").innerHTML = `${recent ? format(recent.value, metricKey === "temperature" ? 1 : 0) : "—"} <small>${escapeHtml(recent?.unit || metric.unit)}${recent?.source ? ` · ${escapeHtml(sourceLabel(recent.source))}` : ""}</small>`;
     const now = new Date();
     const visibleStart = new Date(now.getTime() - days * 86400000);
     const daily = new Map();
     historyReadings.filter(reading => new Date(reading.measured_at) >= visibleStart).forEach(reading => {
       const key = new Date(reading.measured_at).toLocaleDateString();
       const values = daily.get(key) || [];
-      values.push(Number(reading.value));
+      values.push(reading);
       daily.set(key, values);
     });
+    const nowMs = now.getTime();
     const dates = Array.from({ length: days }, (_, index) => {
       const date = new Date(visibleStart.getFullYear(), visibleStart.getMonth(), visibleStart.getDate() + index + 1);
-      const values = daily.get(date.toLocaleDateString()) || [];
-      return { date, value: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null, count: values.length };
+      const readings = daily.get(date.toLocaleDateString()) || [];
+      const sourceAverages = window.AirSenseCO2Averages?.averageBySource(readings, {
+        metric: metricKey,
+        now: nowMs,
+        maxAgeMs: null
+      }) || [];
+      return { date, sourceAverages };
     });
+    const sources = [...new Set(dates.flatMap(item => item.sourceAverages.map(group => group.source)))];
     const svg = $("#history-chart");
     const width = 1000, height = 320, left = 64, right = 18, top = 18, bottom = 54;
     const plotWidth = width - left - right, plotHeight = height - top - bottom, step = plotWidth / days;
-    const barWidth = Math.max(2, Math.min(20, step * 0.66));
-    const maximum = Math.max(metric.max, ...dates.map(item => item.value || 0)) * 1.05;
+    const sourceColors = { device: "var(--accent)", dataset: "var(--accent2)", simulated: "var(--warn)" };
+    const groupWidth = Math.min(20, step * 0.66);
+    const barWidth = Math.max(1, groupWidth / Math.max(1, sources.length) * 0.82);
+    const maximum = Math.max(metric.max, ...dates.flatMap(item => item.sourceAverages.map(group => group.average))) * 1.05;
     const grid = [0, 0.25, 0.5, 0.75, 1].map(fraction => {
       const y = top + plotHeight * (1 - fraction);
       return `<line class="history-gridline" x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"/><text class="history-y-label" x="${left - 10}" y="${y + 4}" text-anchor="end">${format(maximum * fraction)}</text>`;
     }).join("");
-    const bars = dates.map((item, index) => {
-      if (item.value === null) return "";
-      const barHeight = Math.max(2, Math.min(plotHeight, item.value / maximum * plotHeight));
-      const x = left + index * step + (step - barWidth) / 2;
+    const bars = dates.map((item, index) => item.sourceAverages.map(group => {
+      const sourceIndex = sources.indexOf(group.source);
+      const barHeight = Math.max(2, Math.min(plotHeight, group.average / maximum * plotHeight));
+      const x = left + index * step + (step - groupWidth) / 2 + sourceIndex * (groupWidth / sources.length) + (groupWidth / sources.length - barWidth) / 2;
       const y = top + plotHeight - barHeight;
       const fullDate = item.date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-      return `<rect class="history-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 3)}"><title>${escapeHtml(fullDate)}: ${format(item.value)} ${escapeHtml(metric.unit)} daily average · ${item.count} reading${item.count === 1 ? "" : "s"}</title></rect>`;
-    }).join("");
+      const color = sourceColors[group.source] || "var(--muted)";
+      return `<rect class="history-bar" style="fill:${color}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 3)}"><title>${escapeHtml(fullDate)}: ${format(group.average)} ${escapeHtml(metric.unit)} daily average · ${escapeHtml(sourceLabel(group.source))} · ${group.count} reading${group.count === 1 ? "" : "s"}</title></rect>`;
+    }).join("")).join("");
     const ticks = [...new Set([0, Math.round((days - 1) / 4), Math.round((days - 1) / 2), Math.round((days - 1) * 3 / 4), days - 1])].map(index => {
       const x = left + index * step + step / 2;
       return `<text class="history-date-label" x="${x.toFixed(2)}" y="${height - 16}" text-anchor="middle">${dates[index].date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</text>`;
     }).join("");
-    svg.setAttribute("aria-label", `Stored ${metric.label} readings in ${room.name} for the last ${days} days`);
+    svg.setAttribute("aria-label", `Stored ${metric.label} readings in ${room.name} for the last ${days} days, with separate daily averages by source`);
     svg.innerHTML = `${grid}${bars}${ticks}`;
-    $("#history-axis").textContent = historyReadings.length
-      ? `${historyReadings.length} stored readings in this range`
-      : "No readings were recorded in this date range.";
+    const validReadingCount = dates.reduce((sum, item) => sum + item.sourceAverages.reduce((daySum, group) => daySum + group.count, 0), 0);
+    const sourceLegend = sources.map(source => {
+      const color = sourceColors[source] || "var(--muted)";
+      return `<span class="history-source-legend-item"><i aria-hidden="true" style="color:${color}">●</i>${escapeHtml(sourceLabel(source))}</span>`;
+    }).join("");
+    $("#history-axis").innerHTML = validReadingCount
+      ? `${validReadingCount} valid stored readings · daily averages separated by source <span class="history-source-legend">${sourceLegend}</span>`
+      : "No valid readings were recorded in this date range.";
     renderHeatmap(metricKey, now);
   }
 

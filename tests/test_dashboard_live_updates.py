@@ -134,6 +134,13 @@ class DashboardLiveUpdateIntegrationTests(AirSenseTestCase):
             self.template.index("js/room-trends.js"),
             self.template.index("js/dashboard.js"),
         )
+        self.assertLess(
+            self.template.index("js/co2-averages.js"),
+            self.template.index("js/dashboard.js"),
+        )
+        self.assertIn("AirSenseCO2Averages", self.script)
+        self.assertIn('averageBySource(readings', self.script)
+        self.assertIn("daily averages separated by source", self.script)
         self.assertIn('id="liveUpdateTimestamp"', self.template)
         self.assertIn('id="liveUpdateStatus"', self.template)
         self.assertIn("const LIVE_REFRESH_INTERVAL_MS = 20000", self.script)
