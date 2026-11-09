@@ -154,7 +154,11 @@ class LandingAuthTests(AirSenseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(response.headers.get("Location"))
         self.assertIn(
-            b'<a class="split-flap-cta" href="/login"', response.data
+            b'<a class="split-flap-cta" href="/register"', response.data
+        )
+        self.assertIn(
+            b'<a class="landing-login-link" href="/login">Login</a>',
+            response.data,
         )
         self.assertIn(
             b'<a class="landing-brand" href="/" '
@@ -172,6 +176,12 @@ class LandingAuthTests(AirSenseTestCase):
         ]
         self.assertEqual(len(root_rules), 1)
         self.assertEqual(root_rules[0].endpoint, "landing")
+
+    def test_landing_login_and_get_started_links_use_normal_auth_pages(self):
+        landing = self.client.get("/")
+        self.assertIn(b'href="/login">Login</a>', landing.data)
+        self.assertIn(b'href="/register" aria-label="Get Started"', landing.data)
+        self.assertNotIn(b"next=%2Fjoin", landing.data)
 
     def test_login_form_preserves_internal_next_and_success_redirects_to_dashboard(self):
         client = self.app.test_client()

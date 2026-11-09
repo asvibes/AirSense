@@ -34,6 +34,16 @@ class InvitationAcceptanceFlowTests(AirSenseTestCase):
         )
         return response
 
+    def test_join_without_invitation_returns_to_landing_without_login_next(self):
+        anonymous = self.app.test_client()
+
+        response = anonymous.get("/join")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/")
+        with anonymous.session_transaction() as browser_session:
+            self.assertNotIn("pending_invitation_hash", browser_session)
+
     def test_unauthenticated_invitation_is_carried_to_sign_in_without_raw_token(self):
         invitation = self.create_invitation("recipient@example.test")
         anonymous = self.app.test_client()

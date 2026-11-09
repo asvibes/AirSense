@@ -34,9 +34,6 @@ def invitation_page():
         session.pop("pending_invitation_hash", None)
 
     user = current_user()
-    if user is None or not user.is_active:
-        return redirect(url_for("auth.login_page", next=url_for("homes.invitation_page")))
-
     error_messages = {
         "wrong-account": "This invitation was sent to a different email address. Sign out and sign in with the invited account.",
         "expired": "This invitation has expired.",
@@ -44,6 +41,14 @@ def invitation_page():
         "already-member": "You are already a member of this home.",
     }
     error = error_messages.get(request.args.get("error"))
+    if pending_hash is None and (
+        user is None or not user.is_active or error is None
+    ):
+        return redirect(url_for("landing"))
+
+    if user is None or not user.is_active:
+        return redirect(url_for("auth.login_page", next=url_for("homes.invitation_page")))
+
     return render_template(
         "auth/join.html",
         token="",
