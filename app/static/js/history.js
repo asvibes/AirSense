@@ -7,6 +7,11 @@
   const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[char]);
+  const sourceLabel = source => ({
+    device: "Live sensor", dataset: "Recorded dataset", simulated: "Simulated data",
+    airgradient_public: "Public sensor · live"
+  })[source] || (typeof source === "string" && source.trim() ? source.replaceAll("_", " ") : "Source unavailable");
+  const sourceKey = reading => typeof reading?.source === "string" && reading.source.trim() ? reading.source : null;
   const state = {
     rooms: [],
     sensors: [],
@@ -196,7 +201,9 @@
   function seriesGroups(readings) {
     const groups = new Map();
     readings.forEach(reading => {
-      const key = `${reading.metric}:${reading.sensor_id || "unassigned"}:${reading.room_id}`;
+      const source = sourceKey(reading);
+      if (!source) return;
+      const key = `${reading.metric}:${source}:${reading.sensor_id || "unassigned"}:${reading.room_id}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(reading);
     });
@@ -264,8 +271,9 @@
     if (!summary) return;
     const selected = new Set(checkedMetrics());
     const groups = new Map();
-    for (const reading of state.readings.filter(item => selected.has(item.metric))) {
-      const key = `${reading.metric}|${reading.room_id || ""}|${reading.sensor_id || ""}`;
+    for (const reading of state.readings.filter(item => selected.has(item.metric) && sourceKey(item)
+      && typeof item.value !== "boolean" && Number.isFinite(Number(item.value)))) {
+      const key = `${reading.metric}|${reading.room_id || ""}|${reading.sensor_id || ""}|${sourceKey(reading)}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(reading);
     }
@@ -276,13 +284,16 @@
       const room = state.rooms.find(item => item.id === readings[0].room_id)?.name || readings[0].room;
       const sensor = state.sensors.find(item => item.id === readings[0].sensor_id)?.name || "Unassigned sensor";
       const change = values.length > 1 ? values[values.length - 1] - values[0] : null;
-      return `<tr><td>${esc(metric?.name || readings[0].metric)}</td><td>${esc(room)} / ${esc(sensor)}</td><td>${esc(numeric(Math.min(...values)))} ${esc(readings[0].unit)}</td><td>${esc(numeric(values.reduce((sum, value) => sum + value, 0) / values.length))} ${esc(readings[0].unit)}</td><td>${esc(numeric(Math.max(...values)))} ${esc(readings[0].unit)}</td><td>${change === null ? "—" : `${change > 0 ? "+" : ""}${esc(numeric(change))} ${esc(readings[0].unit)}`}</td><td>${readings.length.toLocaleString()}</td></tr>`;
-    }).join("") || '<tr><td class="table-empty" colspan="7">No stored readings match these filters.</td></tr>';
+      return `<tr><td>${esc(metric?.name || readings[0].metric)}</td><td>${esc(room)} / ${esc(sensor)}</td><td>${esc(sourceLabel(readings[0].source))}</td><td>${esc(numeric(Math.min(...values)))} ${esc(readings[0].unit)}</td><td>${esc(numeric(values.reduce((sum, value) => sum + value, 0) / values.length))} ${esc(readings[0].unit)}</td><td>${esc(numeric(Math.max(...values)))} ${esc(readings[0].unit)}</td><td>${change === null ? "—" : `${change > 0 ? "+" : ""}${esc(numeric(change))} ${esc(readings[0].unit)}`}</td><td>${readings.length.toLocaleString()}</td></tr>`;
+    }).join("") || '<tr><td class="table-empty" colspan="8">No stored readings match these filters.</td></tr>';
   }
 
   function aggregatedReadings(period) {
     const buckets = new Map();
     for (const reading of state.readings) {
+      const source = sourceKey(reading);
+      const value = Number(reading.value);
+      if (!source || typeof reading.value === "boolean" || !Number.isFinite(value)) continue;
       const date = new Date(reading.measured_at);
       if (!Number.isFinite(date.getTime())) continue;
       const bucketDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -291,10 +302,10 @@
       } else if (period === "month") {
         bucketDate.setUTCDate(1);
       }
-      const key = `${reading.metric}|${reading.room_id || ""}|${reading.sensor_id || ""}|${bucketDate.toISOString()}`;
+      const key = `${reading.metric}|${reading.room_id || ""}|${reading.sensor_id || ""}|${source}|${bucketDate.toISOString()}`;
       if (!buckets.has(key)) buckets.set(key, { ...reading, measured_at: bucketDate.toISOString(), values: [], sample_count: 0 });
       const bucket = buckets.get(key);
-      bucket.values.push(Number(reading.value));
+      bucket.values.push(value);
       bucket.sample_count += 1;
     }
     return [...buckets.values()].map(bucket => ({
@@ -335,17 +346,28 @@
       if (compareBy === "room-sensor") {
         const groups = new Map();
         for (const reading of matching) {
-          const key = `${reading.room_id || ""}|${reading.sensor_id || ""}`;
+          const source = sourceKey(reading);
+          if (!source) continue;
+          const key = `${reading.room_id || ""}|${reading.sensor_id || ""}|${source}`;
           if (!groups.has(key)) groups.set(key, []);
           groups.get(key).push(reading);
         }
         for (const readings of groups.values()) {
           const room = state.rooms.find(item => item.id === readings[0].room_id)?.name || readings[0].room;
           const sensor = state.sensors.find(item => item.id === readings[0].sensor_id)?.name || "Unassigned sensor";
-          chartSeries.push({ metric, readings, label: `${room} · ${sensor}` });
+          chartSeries.push({ metric, readings, label: `${room} · ${sensor} · ${sourceLabel(readings[0].source)}` });
         }
       } else {
-        chartSeries.push({ metric, readings: matching, label: metric.name });
+        const bySource = new Map();
+        for (const reading of matching) {
+          const source = sourceKey(reading);
+          if (!source) continue;
+          if (!bySource.has(source)) bySource.set(source, []);
+          bySource.get(source).push(reading);
+        }
+        for (const readings of bySource.values()) {
+          chartSeries.push({ metric, readings, label: sourceLabel(readings[0].source) });
+        }
       }
     }
     chartRoot.innerHTML = chartSeries.map(({ metric, readings: allReadings, label }, index) => {
@@ -427,7 +449,7 @@
       const sampleLabel = period === "sample"
         ? `${readings.length} actual samples · median interval ${cadence === null ? "not available" : esc(duration(cadence))}${expectedLabel ? ` · configured ${esc(expectedLabel)}` : ""}`
         : `${readings.reduce((count, item) => count + item.sample_count, 0)} actual samples summarized in ${readings.length} non-empty ${period} periods`;
-      return `<div class="chart-panel"><h3 class="chart-title"><span><i class="legend-dot" style="background:${colors[index % colors.length]}"></i>${esc(metric.name)} <small>${esc(metric.code)} · ${esc(metric.unit)}${compareBy === "room-sensor" ? ` · ${esc(label)}` : ""}</small></span><small>${sampleLabel}</small></h3><svg class="history-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(metric.name)} stored samples plotted at their actual timestamps">${grid}${gaps.join("")}${linePaths}${dots}<text class="chart-axis" x="${left}" y="${height - 6}">${esc(startLabel)}</text><text class="chart-axis" x="${width - right}" y="${height - 6}" text-anchor="end">${esc(endLabel)}</text></svg></div>`;
+      return `<div class="chart-panel"><h3 class="chart-title"><span><i class="legend-dot" style="background:${colors[index % colors.length]}"></i>${esc(metric.name)} <small>${esc(metric.code)} · ${esc(metric.unit)} · ${esc(label)}</small></span><small>${sampleLabel}</small></h3><svg class="history-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(metric.name)} stored samples plotted at their actual timestamps">${grid}${gaps.join("")}${linePaths}${dots}<text class="chart-axis" x="${left}" y="${height - 6}">${esc(startLabel)}</text><text class="chart-axis" x="${width - right}" y="${height - 6}" text-anchor="end">${esc(endLabel)}</text></svg></div>`;
     }).join("");
   }
 

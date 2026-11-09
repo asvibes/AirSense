@@ -124,6 +124,45 @@ class DashboardLiveUpdateIntegrationTests(AirSenseTestCase):
             [500, 510, 520, 530],
         )
 
+    def test_active_live_room_and_overview_renderers_use_trends_and_source_averages(self):
+        live_room = self.script[
+            self.script.index("function renderRoom(room, index, scope)"):
+            self.script.index("function renderRooms({", self.script.index("function renderRoom(room, index, scope)"))
+        ]
+        live_overview = self.script[
+            self.script.index("function renderRooms({"):
+            self.script.index("function renderRoomCycle(", self.script.index("function renderRooms({"))
+        ]
+        legacy_room = self.script[
+            self.script.index("function roomCard(room)"):
+            self.script.index("function renderRooms()", self.script.index("function roomCard(room)"))
+        ]
+        legacy_snapshot = self.script[
+            self.script.index("function renderSnapshot()"):
+            self.script.index("function renderChart()", self.script.index("function renderSnapshot()"))
+        ]
+        self.assertIn("AirSenseRoomTrends?.trendForMetric(room.trend_readings, reading.metric)", live_room)
+        self.assertIn('class="room-trend-indicator"', live_room)
+        self.assertIn('if (parameter.code === "CO2")', live_overview)
+        self.assertIn("AirSenseCO2Averages?.averageBySource(values", live_overview)
+        self.assertIn('data-average-source="${escapeHtml(group.source)}"', live_overview)
+        self.assertNotIn("AirSenseRoomTrends", legacy_room)
+        self.assertNotIn("AirSenseCO2Averages", legacy_snapshot)
+
+    def test_history_and_analytics_series_and_summaries_separate_sources(self):
+        history = (self.root / "app" / "static" / "js" / "history.js").read_text(
+            encoding="utf-8"
+        )
+        template = (self.root / "app" / "templates" / "history.html").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("${source}:${reading.sensor_id", history)
+        self.assertIn("${source}|${bucketDate.toISOString()}", history)
+        self.assertIn("|${sourceKey(reading)}", history)
+        self.assertIn("sourceLabel(readings[0].source)", history)
+        self.assertIn("<th>Source</th>", template)
+        self.assertIn("source-specific averages", template)
+
     def test_dashboard_polling_and_timestamp_wiring_preserve_user_state(self):
         self.assertIn("live-update-scheduler.js", self.template)
         self.assertLess(

@@ -128,11 +128,7 @@
     const readingRows = room.readings.length
       ? room.readings.map(reading => {
         const metric = metrics[reading.metric] || { label: reading.metric_name || reading.metric, unit: reading.unit };
-        const trend = window.AirSenseRoomTrends?.trendForMetric(room.trend_readings, reading.metric);
-        const trendIndicator = trend
-          ? `<span class="trend-indicator" role="img" aria-label="${escapeHtml(trend.ariaLabel)}" title="${escapeHtml(trend.label)}">${escapeHtml(trend.symbol)}</span>`
-          : "";
-        return `<div class="reading-line"><span class="reading-name">${escapeHtml(metric.label)}</span><strong class="reading-value">${escapeHtml(format(reading.value, reading.metric === "temperature" ? 1 : 0))}<span class="reading-unit">${escapeHtml(reading.unit)}</span>${trendIndicator}</strong><span class="source-pill">${escapeHtml(sourceLabel(reading.source))}</span></div>`;
+        return `<div class="reading-line"><span class="reading-name">${escapeHtml(metric.label)}</span><strong class="reading-value">${escapeHtml(format(reading.value, reading.metric === "temperature" ? 1 : 0))}<span class="reading-unit">${escapeHtml(reading.unit)}</span></strong><span class="source-pill">${escapeHtml(sourceLabel(reading.source))}</span></div>`;
       }).join("")
       : '<p class="empty-state">No readings received yet.</p>';
     const lastReading = room.readings.slice().sort((a, b) => new Date(b.measured_at) - new Date(a.measured_at))[0];
@@ -187,29 +183,12 @@
       .sort((left, right) => Date.parse(right.measured_at) - Date.parse(left.measured_at))[0];
     $("#snapshot-updated").textContent = mostRecent ? dateTime(mostRecent.measured_at) : "—";
     const body = $("#snapshot-main");
-    const sourceAverages = window.AirSenseCO2Averages?.averageBySource(readings, {
-      metric: "CO2",
-      now: Date.now()
-    }) || [];
-    const average = sourceAverages.length === 1 ? sourceAverages[0].average : null;
+    const average = readings.length
+      ? readings.reduce((sum, reading) => sum + Number(reading.value), 0) / readings.length
+      : null;
     const high = Math.max(...thresholds.map(item => Number(item.high_threshold)), Number(config.defaults.high_threshold));
-    const elevated = Math.max(...thresholds.map(item => Number(item.elevated_threshold)), Number(config.defaults.elevated_threshold));
     const score = average === null ? null : Math.max(0, Math.min(100, Math.round(100 - (average / high) * 55)));
-    const levelFor = value => value >= high ? "high" : value >= elevated ? "elevated" : "none";
-    const summary = sourceAverages.length === 0
-      ? "No recent valid CO₂ readings"
-      : sourceAverages.length === 1
-        ? `Average from ${sourceLabel(sourceAverages[0].source)}`
-        : "CO₂ averages are separated by source";
-    const sourceRows = sourceAverages.map(group => {
-      const level = levelFor(group.average);
-      const roomsLabel = `${group.count} room${group.count === 1 ? "" : "s"}`;
-      return `<div class="snapshot-source-average"><strong>${escapeHtml(format(group.average))} ppm</strong><span class="source-pill">${escapeHtml(sourceLabel(group.source))}</span><small>${roomsLabel} · <span class="status-pill status-${statusClass(level)}">${escapeHtml(statusText(level))}</span></small></div>`;
-    }).join("");
-    const scoreCaption = sourceAverages.length === 1
-      ? `Home<br>${escapeHtml(sourceLabel(sourceAverages[0].source))}`
-      : sourceAverages.length > 1 ? "Separate<br>sources" : "CO₂<br>snapshot";
-    body.innerHTML = `<div class="air-score"><div class="score-number">${score === null ? "—" : score}</div><div class="score-caption">${scoreCaption}</div></div><div class="snapshot-copy"><span class="status-pill status-none">${escapeHtml(summary)}</span><div class="snapshot-source-averages" aria-label="Recent CO₂ averages by source">${sourceRows}</div><p>${sourceAverages.length ? "Only valid readings from the last 30 minutes are included; source averages are never combined." : "Connect a live sensor or use a recent recorded or simulated reading to see a source-specific average."}</p><button class="text-button" type="button" data-nav="demo">Enter a reading <span>→</span></button></div>`;
+    body.innerHTML = `<div class="air-score"><div class="score-number">${score === null ? "—" : score}</div><div class="score-caption">Home</div></div><div class="snapshot-copy"><span class="status-pill status-none">${average === null ? "No recent CO₂ readings" : `Average ${escapeHtml(format(average))} ppm`}</span><p>Latest available readings from this home.</p><button class="text-button" type="button" data-nav="demo">Enter a reading <span>→</span></button></div>`;
   }
 
   function renderChart() {
@@ -973,9 +952,13 @@
       const editButton = config.role === "owner"
         ? `<button class="btn room-edit" type="button" data-edit-room="${escapeHtml(room.id)}">Edit room</button>`
         : "";
-      const measurementRows = readings.map(reading =>
-        `<div class="reading-line"><span>${escapeHtml(measurementName(reading))}</span><strong>${escapeHtml(formatMeasurement(reading.value))} <small>${escapeHtml(reading.unit)}</small></strong><small>${escapeHtml(sourceLabel(reading.source))} · ${escapeHtml(dateTime(reading.measured_at))}</small></div>`
-      ).join("") || '<p class="empty-note">No measurements recorded yet.</p>';
+      const measurementRows = readings.map(reading => {
+        const trend = window.AirSenseRoomTrends?.trendForMetric(room.trend_readings, reading.metric);
+        const trendIndicator = trend
+          ? `<span class="room-trend-indicator" role="img" aria-label="${escapeHtml(trend.ariaLabel)}" title="${escapeHtml(trend.label)}">${escapeHtml(trend.symbol)}</span>`
+          : "";
+        return `<div class="reading-line"><span>${escapeHtml(measurementName(reading))}</span><strong>${escapeHtml(formatMeasurement(reading.value))} <small>${escapeHtml(reading.unit)}</small>${trendIndicator}</strong><small>${escapeHtml(sourceLabel(reading.source))} · ${escapeHtml(dateTime(reading.measured_at))}</small></div>`;
+      }).join("") || '<p class="empty-note">No measurements recorded yet.</p>';
       return `<article class="room room-accordion"><div class="room-toggle"><span class="room-symbol" aria-hidden="true">⌂</span><span class="room-info"><strong>${escapeHtml(room.name)}</strong><small>${escapeHtml(sources)}</small></span><span class="room-reading"><small>${escapeHtml(status)}</small><small data-freshness="${escapeHtml(freshness.state)}">${escapeHtml(freshness.label)}</small></span><span class="pill">${escapeHtml(status)}</span></div><div class="room-details"><p>${escapeHtml(sensorNames)}</p><div class="reading-list">${measurementRows}</div>${editButton}</div></article>`;
     }
 
@@ -1011,6 +994,16 @@
       })).sort((a, b) => a.name.localeCompare(b.name));
       $("#parameterCards").innerHTML = activeMeasurements.map(parameter => {
         const values = grouped.get(parameter.code);
+        if (parameter.code === "CO2") {
+          const sourceAverages = window.AirSenseCO2Averages?.averageBySource(values, {
+            metric: "CO2",
+            now: Date.now()
+          }) || [];
+          if (!sourceAverages.length) {
+            return `<article class="card metric" data-metric="CO2"><div class="card-top"><span class="card-label">${escapeHtml(parameter.name)}</span></div><div class="metric-value">— <span class="unit">${escapeHtml(parameter.unit)}</span></div><span class="metric-status">No recent valid reading</span><span class="metric-foot">Only readings from the last 30 minutes are averaged; unavailable sources are not combined.</span></article>`;
+          }
+          return sourceAverages.map(group => `<article class="card metric" data-metric="CO2" data-average-source="${escapeHtml(group.source)}"><div class="card-top"><span class="card-label">${escapeHtml(parameter.name)} average</span></div><div class="metric-value">${escapeHtml(formatMeasurement(group.average))} <span class="unit">${escapeHtml(parameter.unit)}</span></div><span class="metric-status">${escapeHtml(sourceLabel(group.source))}</span><span class="metric-foot">${group.count} room reading${group.count === 1 ? "" : "s"} · source kept separate</span></article>`).join("");
+        }
         const average = values.reduce((sum, reading) => sum + Number(reading.value), 0) / values.length;
         return `<article class="card metric"><div class="card-top"><span class="card-label">${escapeHtml(parameter.name)}</span><span class="card-label">●</span></div><div class="metric-value">${escapeHtml(formatMeasurement(average))} <span class="unit">${escapeHtml(parameter.unit)}</span></div><span class="metric-status">Recorded average</span><span class="metric-foot">${values.length} room${values.length === 1 ? "" : "s"} · latest stored values</span></article>`;
       }).join("");
