@@ -1,7 +1,8 @@
 import uuid
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, jsonify, request
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.db import get_session
@@ -79,6 +80,29 @@ def list_rooms(home_id: str):
         latest_by_metric = {}
         for reading in readings:
             latest_by_metric.setdefault(reading.metric_code, reading)
+        ranked_trend_readings = (
+            select(
+                Reading.id.label("reading_id"),
+                func.row_number()
+                .over(
+                    partition_by=Reading.metric_code,
+                    order_by=(Reading.measured_at.desc(), Reading.id.desc()),
+                )
+                .label("sample_rank"),
+            )
+            .where(
+                Reading.home_id == home_id,
+                Reading.room_id == room.id,
+                Reading.measured_at >= datetime.now(timezone.utc) - timedelta(hours=1),
+            )
+            .subquery()
+        )
+        trend_readings = db.scalars(
+            select(Reading)
+            .join(ranked_trend_readings, Reading.id == ranked_trend_readings.c.reading_id)
+            .where(ranked_trend_readings.c.sample_rank <= 5)
+            .order_by(Reading.metric_code, Reading.measured_at.desc(), Reading.id.desc())
+        ).all()
         policies = db.scalars(
             select(ThresholdPolicy).where(
                 ThresholdPolicy.home_id == home_id, ThresholdPolicy.room_id == room.id
@@ -101,6 +125,14 @@ def list_rooms(home_id: str):
                         "received_at": format_utc(reading.received_at),
                     }
                     for reading in latest_by_metric.values()
+                ],
+                "trend_readings": [
+                    {
+                        "metric": reading.metric_code,
+                        "value": reading.value,
+                        "measured_at": format_utc(reading.measured_at),
+                    }
+                    for reading in trend_readings
                 ],
                 "sensors": [
                     {

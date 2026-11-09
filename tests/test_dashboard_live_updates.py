@@ -3,6 +3,8 @@ from pathlib import Path
 import unittest
 
 from app.db import get_session
+from app.models.metric import Metric
+from app.models.reading import Reading
 from app.models.sensor import Sensor
 from helpers import AirSenseTestCase
 
@@ -75,10 +77,61 @@ class DashboardLiveUpdateIntegrationTests(AirSenseTestCase):
         updated = self.client.get(dashboard_url).get_json()["alerts"]
         self.assertEqual(updated[0]["status"], "acknowledged")
 
+    def test_room_api_supplies_recent_history_scoped_to_each_room_and_metric(self):
+        first_room = self.create_room("Trend room")
+        second_room = self.create_room("Other trend room")
+        now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+        offsets = (45, 30, 15, 0)
+        with self.app.app_context():
+            db = get_session()
+            if db.get(Metric, "TEMPERATURE") is None:
+                db.add(Metric(code="TEMPERATURE", name="Temperature", unit="C"))
+            for room, metric, baseline in (
+                (first_room, "CO2", 500),
+                (first_room, "TEMPERATURE", 20),
+                (second_room, "CO2", 1200),
+            ):
+                for index, minutes_ago in enumerate(offsets):
+                    measured_at = now - timedelta(minutes=minutes_ago)
+                    db.add(
+                        Reading(
+                            home_id=self.home_id,
+                            room_id=room["id"],
+                            metric_code=metric,
+                            value=baseline + index * 10,
+                            source="simulated",
+                            measured_at=measured_at,
+                            received_at=measured_at,
+                        )
+                    )
+            db.commit()
+
+        response = self.client.get(f"/api/homes/{self.home_id}/rooms")
+        self.assertEqual(response.status_code, 200, response.get_json())
+        room_payloads = {room["name"]: room for room in response.get_json()["rooms"]}
+        first_trends = room_payloads["Trend room"]["trend_readings"]
+        other_trends = room_payloads["Other trend room"]["trend_readings"]
+        self.assertEqual(
+            {sample["metric"] for sample in room_payloads["Trend room"]["readings"]},
+            {"CO2", "TEMPERATURE"},
+        )
+        self.assertEqual(len(first_trends), 8)
+        self.assertEqual({sample["metric"] for sample in first_trends}, {"CO2", "TEMPERATURE"})
+        self.assertEqual(len(other_trends), 4)
+        self.assertEqual({sample["metric"] for sample in other_trends}, {"CO2"})
+        self.assertEqual(
+            sorted(sample["value"] for sample in first_trends if sample["metric"] == "CO2"),
+            [500, 510, 520, 530],
+        )
+
     def test_dashboard_polling_and_timestamp_wiring_preserve_user_state(self):
         self.assertIn("live-update-scheduler.js", self.template)
         self.assertLess(
             self.template.index("live-update-scheduler.js"),
+            self.template.index("js/dashboard.js"),
+        )
+        self.assertLess(
+            self.template.index("js/room-trends.js"),
             self.template.index("js/dashboard.js"),
         )
         self.assertIn('id="liveUpdateTimestamp"', self.template)

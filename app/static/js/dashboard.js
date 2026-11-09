@@ -127,7 +127,11 @@
     const readingRows = room.readings.length
       ? room.readings.map(reading => {
         const metric = metrics[reading.metric] || { label: reading.metric_name || reading.metric, unit: reading.unit };
-        return `<div class="reading-line"><span class="reading-name">${escapeHtml(metric.label)}</span><strong class="reading-value">${escapeHtml(format(reading.value, reading.metric === "temperature" ? 1 : 0))}<span class="reading-unit">${escapeHtml(reading.unit)}</span></strong><span class="source-pill">${escapeHtml(sourceLabel(reading.source))}</span></div>`;
+        const trend = window.AirSenseRoomTrends?.trendForMetric(room.trend_readings, reading.metric);
+        const trendIndicator = trend
+          ? `<span class="trend-indicator" role="img" aria-label="${escapeHtml(trend.ariaLabel)}" title="${escapeHtml(trend.label)}">${escapeHtml(trend.symbol)}</span>`
+          : "";
+        return `<div class="reading-line"><span class="reading-name">${escapeHtml(metric.label)}</span><strong class="reading-value">${escapeHtml(format(reading.value, reading.metric === "temperature" ? 1 : 0))}<span class="reading-unit">${escapeHtml(reading.unit)}</span>${trendIndicator}</strong><span class="source-pill">${escapeHtml(sourceLabel(reading.source))}</span></div>`;
       }).join("")
       : '<p class="empty-state">No readings received yet.</p>';
     const lastReading = room.readings.slice().sort((a, b) => new Date(b.measured_at) - new Date(a.measured_at))[0];
