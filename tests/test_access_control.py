@@ -7,11 +7,97 @@ from sqlalchemy import select
 
 from app.db import get_session
 from app.models.user import HomeInvitation
+from app.models.user import User
 from app.models.alert import Alert
 from app.models.reading import Reading
 
 
 class AccessControlTests(AirSenseTestCase):
+    def test_owner_invitation_request_uses_rendered_home_and_csrf_session(self):
+        page = self.client.get(f"/alerts?home_id={self.home_id}")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b'"homeId": "' + self.home_id.encode() + b'"', page.data)
+        self.assertIn(b'"role": "owner"', page.data)
+        self.assertIn(b'id="inviteBtn" type="button"', page.data)
+        self.assertNotIn(b'id="inviteBtn" type="button" hidden', page.data)
+
+        response = self.client.post(
+            f"/api/homes/{self.home_id}/invitations",
+            json={"email": "authorized-invite@example.test"},
+            headers={"X-CSRF-Token": self.csrf},
+        )
+        self.assertEqual(response.status_code, 201, response.get_data(as_text=True))
+        self.assertEqual(
+            response.get_json()["invitation"]["email"],
+            "authorized-invite@example.test",
+        )
+
+    def test_non_owner_invite_control_is_hidden_and_invitation_is_forbidden(self):
+        invitation = self.request_json(
+            "POST",
+            f"/api/homes/{self.home_id}/invitations",
+            {"email": "member-invite-test@example.test"},
+        ).get_json()["invitation"]
+        member_client, _, member_csrf = self.register_client(
+            "member-invite-test@example.test", "Invitation Test Member"
+        )
+        accepted = member_client.post(
+            "/api/invitations/accept",
+            json={"token": invitation["token"]},
+            headers={"X-CSRF-Token": member_csrf},
+        )
+        self.assertEqual(accepted.status_code, 200, accepted.get_json())
+
+        page = member_client.get(f"/alerts?home_id={self.home_id}")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b'id="inviteBtn" type="button" hidden', page.data)
+        denied = member_client.post(
+            f"/api/homes/{self.home_id}/invitations",
+            json={"email": "unauthorized-invite@example.test"},
+            headers={"X-CSRF-Token": member_csrf},
+        )
+        self.assertEqual(denied.status_code, 403, denied.get_data(as_text=True))
+        self.assertEqual(
+            denied.get_json(),
+            {
+                "error": (
+                    "You don't have the permission to access the requested resource. "
+                    "It is either read-protected or not readable by the server."
+                )
+            },
+        )
+
+    def test_invitation_rejects_wrong_household_stale_session_and_bad_csrf(self):
+        other_client, _, other_csrf = self.register_client(
+            "another-owner@example.test", "Another Owner"
+        )
+        wrong_home = other_client.post(
+            f"/api/homes/{self.home_id}/invitations",
+            json={"email": "wrong-home@example.test"},
+            headers={"X-CSRF-Token": other_csrf},
+        )
+        self.assertEqual(wrong_home.status_code, 404, wrong_home.get_data(as_text=True))
+
+        bad_csrf = self.client.post(
+            f"/api/homes/{self.home_id}/invitations",
+            json={"email": "bad-csrf@example.test"},
+            headers={"X-CSRF-Token": "invalid-token"},
+        )
+        self.assertEqual(bad_csrf.status_code, 400, bad_csrf.get_data(as_text=True))
+
+        with self.client.session_transaction() as browser_session:
+            owner_id = browser_session["user_id"]
+        with self.app.app_context():
+            user = get_session().get(User, owner_id)
+            user.session_version += 1
+            get_session().commit()
+        expired = self.client.post(
+            f"/api/homes/{self.home_id}/invitations",
+            json={"email": "stale-session@example.test"},
+            headers={"X-CSRF-Token": self.csrf},
+        )
+        self.assertEqual(expired.status_code, 401, expired.get_data(as_text=True))
+
     def test_owner_can_use_both_legacy_reading_routes(self):
         self.create_room("Bedroom")
         payload = {
