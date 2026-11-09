@@ -849,6 +849,10 @@
     let currentRoomIndex = 0;
     let selectedMetric = "CO2";
     let rotationPaused = false;
+    let fullDashboardLoad = null;
+    let liveDashboardLoad = null;
+    let lastDashboardUpdate = null;
+    const LIVE_REFRESH_INTERVAL_MS = 20000;
 
     const homePath = `/api/homes/${encodeURIComponent(config.homeId)}`;
     const modal = $("#modalBg");
@@ -903,6 +907,16 @@
       return (room.readings || []).find(reading => reading.metric === metric) || null;
     }
 
+    function roomFreshness(room) {
+      const sensors = room.sensors || [];
+      const active = sensors.filter(sensor => sensor.status === "active");
+      if (active.some(sensor => sensor.state === "fresh")) return { state: "fresh", label: "Fresh" };
+      if (active.some(sensor => sensor.state === "stale")) return { state: "stale", label: "Stale" };
+      if (active.some(sensor => sensor.state === "never_seen")) return { state: "awaiting", label: "Awaiting data" };
+      if (sensors.length) return { state: "inactive", label: "Sensor inactive" };
+      return { state: "recorded", label: "Recorded data" };
+    }
+
     function roomAlert(room, metric = selectedMetric) {
       return activeAlerts.find(alert =>
         alert.room_id === room.id && alert.metric === metric &&
@@ -915,6 +929,7 @@
       const alert = activeAlerts.find(item =>
         item.room_id === room.id && ["active", "acknowledged"].includes(item.status)
       );
+      const freshness = roomFreshness(room);
       const status = alert ? `${measurementName({ metric: alert.metric, metric_name: alert.metric_name })} · ${statusText(alert.level)}`
         : readings.length ? "Measurements available" : "Awaiting readings";
       const sources = (room.ventilation_sources || []).join(" · ") || "Ventilation source not specified";
@@ -925,10 +940,10 @@
       const measurementRows = readings.map(reading =>
         `<div class="reading-line"><span>${escapeHtml(measurementName(reading))}</span><strong>${escapeHtml(formatMeasurement(reading.value))} <small>${escapeHtml(reading.unit)}</small></strong><small>${escapeHtml(sourceLabel(reading.source))} · ${escapeHtml(dateTime(reading.measured_at))}</small></div>`
       ).join("") || '<p class="empty-note">No measurements recorded yet.</p>';
-      return `<article class="room room-accordion"><div class="room-toggle"><span class="room-symbol" aria-hidden="true">⌂</span><span class="room-info"><strong>${escapeHtml(room.name)}</strong><small>${escapeHtml(sources)}</small></span><span class="room-reading"><small>${escapeHtml(status)}</small></span><span class="pill">${escapeHtml(status)}</span></div><div class="room-details"><p>${escapeHtml(sensorNames)}</p><div class="reading-list">${measurementRows}</div>${editButton}</div></article>`;
+      return `<article class="room room-accordion"><div class="room-toggle"><span class="room-symbol" aria-hidden="true">⌂</span><span class="room-info"><strong>${escapeHtml(room.name)}</strong><small>${escapeHtml(sources)}</small></span><span class="room-reading"><small>${escapeHtml(status)}</small><small data-freshness="${escapeHtml(freshness.state)}">${escapeHtml(freshness.label)}</small></span><span class="pill">${escapeHtml(status)}</span></div><div class="room-details"><p>${escapeHtml(sensorNames)}</p><div class="reading-list">${measurementRows}</div>${editButton}</div></article>`;
     }
 
-    function renderRooms() {
+    function renderRooms({ renderThresholdsSection = true } = {}) {
       $("#overviewRooms").innerHTML = activeRooms.slice(0, 3).map((room, index) =>
         renderRoom(room, index, "overview")
       ).join("") || '<p class="empty-note">No rooms yet. Add a room to get started.</p>';
@@ -985,7 +1000,7 @@
       if (activeRooms.some(room => room.id === selectedDemoRoom)) demoRoomSelect.value = selectedDemoRoom;
       renderRoomCycle();
       renderHistoryChart();
-      renderThresholds();
+      if (renderThresholdsSection) renderThresholds();
     }
 
     function renderRoomCycle() {
@@ -1022,9 +1037,17 @@
     }
 
     function renderSensors() {
-      $("#sensorRows").innerHTML = activeSensors.map(sensor =>
-        `<tr><td>${escapeHtml(sensor.name)}</td><td>${escapeHtml(sensor.room)}</td><td>${escapeHtml(sensor.status)}</td><td>${escapeHtml(dateTime(sensor.last_seen_at))}</td></tr>`
-      ).join("") || '<tr><td colspan="4">No sensors are connected to this home.</td></tr>';
+      $("#sensorRows").innerHTML = activeSensors.map(sensor => {
+        const freshness = sensor.status !== "active"
+          ? { state: "inactive", label: "Revoked" }
+          : sensor.state === "fresh"
+            ? { state: "fresh", label: "Fresh" }
+            : sensor.state === "stale"
+              ? { state: "stale", label: "Stale" }
+              : { state: "awaiting", label: "Awaiting data" };
+        const pillClass = freshness.state === "fresh" ? "" : " warn";
+        return `<tr><td>${escapeHtml(sensor.name)}</td><td>${escapeHtml(sensor.room)}</td><td><span class="pill${pillClass}" data-freshness="${escapeHtml(freshness.state)}">${escapeHtml(freshness.label)}</span></td><td>${escapeHtml(dateTime(sensor.last_seen_at))}</td></tr>`;
+      }).join("") || '<tr><td colspan="4">No sensors are connected to this home.</td></tr>';
     }
 
     function renderThresholds() {
@@ -1088,24 +1111,83 @@
       ).join("") || '<p class="empty-note">No stored measurements are available.</p>';
     }
 
-    async function loadDashboard() {
-      const [roomData, sensorData, thresholdData, dashboardData, memberData] = await Promise.all([
+    function markDashboardUpdated() {
+      lastDashboardUpdate = new Date();
+      const timestamp = $("#liveUpdateTimestamp");
+      timestamp.dateTime = lastDashboardUpdate.toISOString();
+      timestamp.textContent = dateTime(lastDashboardUpdate.toISOString());
+      const status = $("#liveUpdateStatus");
+      status.dataset.state = "live";
+      status.textContent = "Live";
+      status.title = `Last successful update ${timestamp.textContent}`;
+    }
+
+    function markDashboardUpdateFailed() {
+      const status = $("#liveUpdateStatus");
+      status.dataset.state = "error";
+      status.textContent = lastDashboardUpdate
+        ? "Update unavailable · showing last successful data"
+        : "Unable to connect · retrying automatically";
+      status.removeAttribute("title");
+    }
+
+    async function fetchLiveDashboard() {
+      const [roomData, dashboardData] = await Promise.all([
         api(`${homePath}/rooms`),
-        api(`${homePath}/sensors`),
-        api(`${homePath}/thresholds`),
-        api(`${homePath}/dashboard`),
-        api(`${homePath}/members`)
+        api(`${homePath}/dashboard`)
       ]);
       activeRooms = roomData.rooms;
-      activeSensors = sensorData.sensors;
-      activeThresholds = thresholdData.thresholds;
+      activeSensors = activeRooms.flatMap(room => (room.sensors || []).map(sensor => ({
+        ...sensor,
+        room_id: room.id,
+        room: room.name
+      })));
       activeAlerts = dashboardData.alerts;
-      activeMembers = memberData.members;
-      renderRooms();
+      renderRooms({ renderThresholdsSection: false });
       renderAlerts();
       renderSensors();
-      renderThresholds();
-      renderMembers();
+      markDashboardUpdated();
+    }
+
+    async function loadDashboard({ liveOnly = false } = {}) {
+      if (liveOnly) {
+        if (fullDashboardLoad || liveDashboardLoad) return false;
+        liveDashboardLoad = fetchLiveDashboard();
+        try {
+          await liveDashboardLoad;
+          return true;
+        } finally {
+          liveDashboardLoad = null;
+        }
+      }
+      if (fullDashboardLoad) return fullDashboardLoad;
+      if (liveDashboardLoad) await liveDashboardLoad.catch(() => {});
+      if (fullDashboardLoad) return fullDashboardLoad;
+      fullDashboardLoad = (async () => {
+        const [roomData, sensorData, thresholdData, dashboardData, memberData] = await Promise.all([
+          api(`${homePath}/rooms`),
+          api(`${homePath}/sensors`),
+          api(`${homePath}/thresholds`),
+          api(`${homePath}/dashboard`),
+          api(`${homePath}/members`)
+        ]);
+        activeRooms = roomData.rooms;
+        activeSensors = sensorData.sensors;
+        activeThresholds = thresholdData.thresholds;
+        activeAlerts = dashboardData.alerts;
+        activeMembers = memberData.members;
+        renderRooms();
+        renderAlerts();
+        renderSensors();
+        renderThresholds();
+        renderMembers();
+        markDashboardUpdated();
+      })();
+      try {
+        return await fullDashboardLoad;
+      } finally {
+        fullDashboardLoad = null;
+      }
     }
 
     async function saveThresholds() {
@@ -1473,8 +1555,44 @@
     $("#todayLabel").textContent = `HOME AIR · ${new Intl.DateTimeFormat(undefined, {
       weekday: "long", month: "long", day: "numeric"
     }).format(new Date()).toUpperCase()}`;
-    await loadDashboard().catch(error => notify(error.message || "Unable to load home data.", "error"));
+    await loadDashboard().catch(error => {
+      markDashboardUpdateFailed();
+      notify(error.message || "Unable to load home data.", "error");
+    });
     go(config.initialView || "overview");
+    const liveUpdates = window.createLiveUpdateScheduler({
+      intervalMs: LIVE_REFRESH_INTERVAL_MS,
+      shouldRun: () => document.visibilityState === "visible",
+      refresh: async () => {
+        const focused = document.activeElement;
+        if (
+          focused?.closest("form[data-ack], #room-form") ||
+          focused?.matches("#dashboardMetricSelect, #thresholdMetric, #demo-room-select, #demo-reading-value, #dalton-csv-file, #dalton-limit, #dalton-shift-timestamps")
+        ) return;
+        await loadDashboard({ liveOnly: true });
+      },
+      onError: () => markDashboardUpdateFailed()
+    });
+    const startLiveUpdates = () => {
+      if (document.visibilityState === "visible") liveUpdates.start();
+      else liveUpdates.stop();
+    };
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        startLiveUpdates();
+        liveUpdates.refreshNow();
+      } else {
+        liveUpdates.stop();
+      }
+    });
+    window.addEventListener("pagehide", () => liveUpdates.stop());
+    window.addEventListener("pageshow", event => {
+      if (event.persisted && document.visibilityState === "visible") {
+        startLiveUpdates();
+        liveUpdates.refreshNow();
+      }
+    });
+    startLiveUpdates();
     window.setInterval(() => {
       if (!rotationPaused && document.visibilityState === "visible" && activeRooms.length) {
         currentRoomIndex = (currentRoomIndex + 1) % activeRooms.length;
