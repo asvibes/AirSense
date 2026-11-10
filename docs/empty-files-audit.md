@@ -2,34 +2,32 @@
 
 ## Scope and result
 
-The inventory below records 28 tracked zero-byte files at the time of this audit. Recount before relying on that number after later merges or edits. The audit checked imports, blueprint registration, template rendering, static references, requirements, and project documentation. Empty files are not by themselves evidence that functionality is missing.
+The `divija` and `shreya` branch audits counted 28 and 22 tracked zero-byte files, respectively, before this merge. Those branch-specific snapshots are not a count for the merged tree: this merge populates several previously empty files. Recount before relying on either number. The audit checked imports, blueprint registration, template rendering, static references, requirements, and project documentation. Empty files are not by themselves evidence that functionality is missing.
 
 No application behavior is inferred from filenames alone. The local SQLite database and its backup are not part of this inventory and must remain local.
 
-## Classification of the 28 files
+## Classification and current status
 
-### Deferred PRD/cloud implementation
-
-- `app/services/blob_storage.py` — empty and unreferenced. Blob Storage is a stated cloud/report-file target requirement, not a local dashboard dependency. No integration is implemented.
+- `app/services/blob_storage.py` now implements private local room-photo storage; Azure Blob Storage is still not integrated.
 
 ### Optional future feature
 
-- `app/services/email.py` — invitations are generated in-app and shared manually; email delivery is not configured.
-- `app/sources/airgradient.py` — no vendor-specific adapter is wired. The generic per-device-key ingestion endpoint is active.
+- `app/services/email.py` logs invitation details only in development; outbound email delivery is not configured.
+- `app/sources/airgradient.py` normalizes AirGradient `rco2` push payloads through the existing device-key-authenticated ingestion endpoint; it does not poll vendor or cloud APIs.
 - `app/static/manifest.webmanifest`
 - `app/static/sw.js` — no installable/offline PWA behavior is registered.
 - `tools/column_mapping.json` — the DALTON importer uses its documented fields; generic configurable mapping is not implemented.
-- `tools/seed_demo_home.py` — optional convenience; demo data can be created through the application.
+- `tools/seed_demo_home.py` is an explicit CLI convenience and is not run during app startup.
 
-### Intentionally unused placeholder
+### Active surfaces populated by this merge
 
-- `tests/conftest.py` — tests use the shared `AirSenseTestCase` in `tests/helpers.py`; this empty pytest fixture file is currently unused.
+- `app/routers/uploads.py` registers authorized private room-photo upload, retrieval, and deletion endpoints. DALTON replay remains in `app/routers/demo.py` and is processed in memory.
+- `tests/conftest.py` provides pytest fixtures backed by temporary SQLite databases. Tests use both pytest fixtures and existing `unittest.TestCase` integration tests.
 
 ### Safe to remove only after reference review
 
-These are not active surfaces in the current Flask registration/template loading. Do not remove without a separate repository cleanup decision:
+These files are not active surfaces in the current Flask registration/template loading. Do not remove without a separate repository cleanup decision:
 
-- `app/routers/uploads.py` — replay is implemented in `app/routers/demo.py`; no separate uploads blueprint is registered.
 - `app/static/js/heatmap.js`
 - `app/static/js/polling.js`
 - `app/static/js/rotating_chart.js` — active dashboard functionality is consolidated in `app/static/js/dashboard.js`.
@@ -53,27 +51,32 @@ These are not active surfaces in the current Flask registration/template loading
 - `database/powerbi/airsense-report.pbix` — zero bytes; no finished Power BI report/data connection is present. This remains a PRD analytics deliverable.
 - `infra/https_and_headers.md` — zero bytes; it is not active configuration. HTTPS/security headers must be configured and evidenced in the chosen deployment.
 
-**Classification totals:** 1 deferred PRD/cloud implementation, 6 optional future features, 1 intentionally unused placeholder, 18 files safe to remove only after review, and 2 external/manual artifacts (28 total at inventory time).
+The historical inventory totals are branch-specific and pre-merge; they should not be treated as the merged tree's current zero-byte count.
 
 ## Functionality verified in active code
 
-- `app/main.py` registers authentication, homes, rooms, sensors, device readings, thresholds, dashboard, history, audit, demo, and alerts blueprints.
+- `app/main.py` registers authentication, homes, rooms, sensors, device readings, thresholds, dashboard, history, audit, demo, alerts, and uploads blueprints.
 - The authenticated UI is served from `app/templates/alerts.html` and loads `app/static/js/dashboard.js`; it calls same-origin backend routes with session credentials and CSRF tokens for mutations.
-- User registration/login/logout, scrypt password hashing, CSRF, home membership, owner/member authorization, invitations, and per-sensor key provisioning/rotation/revocation are implemented.
+- User registration/login/logout, scrypt password hashing, CSRF, home membership, owner/member authorization, invitations, and per-sensor key provisioning/rotation/revocation are implemented. Invitation details are logged only in development; no outbound email is sent.
+- Owners can update room names and ventilation sources. Room deletion is not implemented.
+- Authenticated home members can upload, retrieve, and delete private JPEG, PNG, or WebP room photos (maximum 5 MB each).
 - Device-key readings, simulated readings, and DALTON replay use validated server-side reading/alert processing. DALTON upload is processed in memory; no Blob persistence is implemented.
+- AirGradient `rco2` pushes are normalized to CO₂ ppm and use the same device authentication, validation, rejection, and reading-processing path as other sensor readings.
 - Alert evaluation/lifecycle, selected audit events, sensor freshness, history filters, CSV export, charts, heatmap, and dashboard polling are present in active application code.
-- The latest full backend suite result is 65 passing tests. This is not browser E2E, PostgreSQL, or cloud deployment evidence.
+- The latest full backend suite result must be updated after validating the merged tree. This is not browser E2E, PostgreSQL, or cloud deployment evidence.
 - Azure SQL scripts under `database/` are separate target-schema scripts; they do not configure or migrate the active Flask database.
 
 ## Genuine gaps and boundaries
 
 1. **Cloud/report deliverables:** The Power BI artifact is empty, Blob Storage is not integrated, and no Azure deployment/network/security evidence is present. These are deferred cloud/submission requirements, not local UI blockers.
-2. **Room management:** The active API supports room list/create only. There is no room update/delete endpoint, although the product requirements call for room update.
+2. **Room management:** Owners can create and update rooms. Room deletion is not implemented.
 3. **Roles:** The application implements home-scoped `owner` and `member`, not the proposed facility-manager/administrator roles. No role-change flow exists.
 4. **Audit:** Successful login, known-account failed login, logout, membership/invitation, sensor, threshold, reading, and alert lifecycle events are implemented and covered by selected tests. Unknown-account failed login has no home-scoped event; role changes cannot be audited until a role-change feature exists.
 5. **Reading timestamps:** `air_readings` stores event time (`measured_at`) and nullable server receipt time (`received_at`). New readings receive UTC receipt timestamps through the shared ingestion service; existing rows are not backfilled.
-6. **Hardware and notifications:** No live vendor adapter, discovery, email delivery, or push/WebSocket updates are implemented. The generic device endpoint and simulator/DALTON flows are available for local demos.
+6. **Hardware and notifications:** AirGradient `rco2` push payloads are supported through the generic device-key endpoint, but no polling/discovery, outbound email, or push/WebSocket updates are implemented. Simulator/DALTON flows are also available for local demos.
 7. **Browser verification:** UI-to-API integration is evident in the active code, but no automated browser E2E evidence is available.
+
+The API and application tests cover these active paths. The remaining empty templates and frontend scripts are not active application surfaces and should not be populated without a product requirement and explicit routing.
 
 Threshold defaults are illustrative and do not have persisted authoritative citations. Do not represent simulated or dataset readings as physical sensor measurements, or threshold labels as medical/safety advice.
 

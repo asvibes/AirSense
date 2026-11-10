@@ -72,13 +72,18 @@ Features include:
 * **Analytics:** Review observed minimum, average, maximum, and change summaries; compare series by room/sensor; view actual samples or daily, weekly, and monthly averages. Empty periods are not synthesized.
 * **Predictions:** A dedicated page reports forecasts only when a per-series linear trend beats a persistence baseline by at least 5% on a later chronological holdout. Unsupported series and horizons remain unavailable; simulated readings are excluded from training.
 * **Household management:** Owners can invite members and review activity history.
+* **Room photos:** Authenticated home members can upload, view, and delete private JPEG, PNG, or WebP room photos (maximum 5 MB each).
 * **Simulation:** Submit simulated readings to the server-side alert pipeline.
 * **Environmental dataset replay:** Import supported timestamped measurements from a CSV, including CO₂, particulate matter, temperature, humidity, CO, NO₂, VOC, and compatible custom measurements with explicit units. Historical dataset readings retain their timestamps and do not create live alerts.
+* **DALTON replay:** Upload a processed DALTON CSV and replay valid CO₂ samples through that same alert pipeline. Samples are labeled as recorded data; timestamps can be shifted for a current demo.
+* **AirGradient:** Provisioned devices can push their `rco2` CO₂ value to the existing device-authenticated reading endpoint.
 * **Appearance:** Persist the light/dark theme preference.
 
 The browser interface uses plain HTML, CSS, and vanilla JavaScript. No separate frontend build or third-party browser package is required.
 
 Invitation links are single-use and expire after 24 hours. Email delivery is configured through the Brevo adapter when deployment credentials and a verified sender are supplied.
+
+Room photos are stored outside Flask's public static directory under `instance\private_uploads` by default. Set `PRIVATE_UPLOAD_FOLDER` (or `AIRSENSE_PRIVATE_UPLOAD_FOLDER`) to a private persistent directory in deployments where the application filesystem is ephemeral. Photo routes verify home membership and that the room belongs to the requested home.
 
 DALTON source data is not bundled. In the Demo Lab, upload a CSV (up to 16 MB) with one timestamp column (`ts`, `timestamp`, `datetime`, or similar) and any supported measurement columns; CO₂ is optional. Common aliases and explicit units are recognized and converted only when the conversion is defined. The documented DALTON headers and units are applied only to files matching the DALTON schema; other unitless or ambiguous columns are reported for review and not imported. The app imports up to 1,000 rows per replay, skips duplicate metric/timestamp pairs, and reports skipped duplicates. Original timestamps are kept by default; optional shifting moves the newest sample to the present while retaining sample spacing. Historical dataset readings are stored for dashboard, History, Analytics, and Predictions, but do not produce active alerts. See [DALTON replay notes](docs/dalton-notes.md).
 
@@ -87,6 +92,7 @@ DALTON source data is not bundled. In the Demo Lab, upload a CSV (up to 16 MB) w
 Account and home API routes use the signed-in session. Authenticated `POST`, `PUT`, `PATCH`, and `DELETE` requests require the `X-CSRF-Token` header. The dashboard obtains the token from the server-rendered page.
 
 Device ingestion uses the `X-Device-Key` header for sensor authentication.
+AirGradient device push payloads containing `rco2` are normalized to CO₂ ppm and use this same authenticated route, validation, rejection, and reading-processing path.
 
 | Endpoint | Purpose |
 |---|---|
@@ -103,6 +109,9 @@ Device ingestion uses the `X-Device-Key` header for sensor authentication.
 | `POST /api/sensors/{sensor_id}/readings` | Submit a validated reading using `X-Device-Key`. |
 | `POST /api/homes/{home_id}/demo/readings`, `POST /api/homes/{home_id}/demo/replay` | Submit simulator readings or replay a timestamped environmental CSV. |
 | `GET /api/homes/{home_id}/thresholds`, `PUT /api/homes/{home_id}/thresholds` | Read or batch-update per-room, per-metric thresholds. |
+| `POST /api/homes/{home_id}/rooms/{room_id}/photos` | Upload a private JPEG, PNG, or WebP room photo as multipart `photo`. |
+| `GET /api/homes/{home_id}/rooms/{room_id}/photos/{filename}` | Retrieve an authorized room photo. |
+| `DELETE /api/homes/{home_id}/rooms/{room_id}/photos/{filename}` | Delete an authorized room photo. |
 | `PUT /api/homes/{home_id}/thresholds/{room_id}/{metric_code}` | Update one room/metric threshold. |
 | `GET /api/homes/{home_id}/history`, `GET /api/homes/{home_id}/history.csv` | Get filtered history or export it as CSV. |
 | `GET /api/homes/{home_id}/history/options` | List stored metrics for the selected room and sensor filters. |
@@ -140,7 +149,14 @@ Separate, one-time Azure SQL target-schema scripts and their application order a
 Run the integration tests:
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+Create a demo home for an existing account (after applying migrations):
+
+```powershell
+python tools/seed_demo_home.py --email owner@example.com
 ```
 
 Apply migrations:

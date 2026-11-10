@@ -20,6 +20,7 @@ from app.routers.thresholds import thresholds
 from app.routers.uploads import uploads
 from .error_handlers import register_error_handlers
 
+
 def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     app = Flask(__name__)
     register_error_handlers(app)
