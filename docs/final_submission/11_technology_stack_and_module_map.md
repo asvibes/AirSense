@@ -9,7 +9,7 @@
 | Data access | SQLAlchemy 2.x dependency range | ORM models and sessions are under `app/models/` and `app/db.py`. |
 | Schema evolution | Alembic 1.x dependency range | Active application migrations are under `migrations/versions/`. |
 | Default database | SQLite | Local default is configured in `app/config.py`; application connections enable SQLite foreign keys. |
-| Additional database driver | `psycopg[binary]` 3.x is declared; PostgreSQL URLs are normalized | PostgreSQL migration/test jobs are configured in CI; a successful CI run is not verified. |
+| Additional database driver | `psycopg[binary]` 3.x is declared; PostgreSQL URLs are normalized | PostgreSQL migration and test CI jobs passed on commit `0fe75da`; Azure SQL connectivity remains unverified. |
 | Browser UI | HTML templates, CSS, vanilla JavaScript | No separate frontend framework or package build is declared in the inspected requirements. |
 | Web server | Gunicorn 22.x dependency range | `render.yaml` uses Gunicorn; a live deployment is not verified. |
 | Testing | pytest 8.x development dependency | `tests/` contains Python tests; JavaScript test execution and line coverage were not measured. |

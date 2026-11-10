@@ -2,7 +2,7 @@
 
 ## Implemented architecture
 
-AirSense is implemented as a Flask modular monolith. Flask serves HTML templates and static JavaScript/CSS; browser code calls same-origin routes. Routers call shared services and SQLAlchemy models. The default local database is SQLite. PostgreSQL URL normalization and CI migration/test jobs are present, but a successful PostgreSQL CI run was not verified. The Azure SQL files are a separate proposed target.
+AirSense is implemented as a Flask modular monolith. Flask serves HTML templates and static JavaScript/CSS; browser code calls same-origin routes. Routers call shared services and SQLAlchemy models. The default local database is SQLite. GitHub Actions push and pull-request runs for commit `0fe75da` passed, including PostgreSQL tests and migrations. This verifies the configured CI jobs, not Azure SQL connectivity or a deployed system. The Azure SQL files are a separate proposed target.
 
 ```mermaid
 flowchart LR
@@ -29,6 +29,10 @@ flowchart LR
 ```
 
 The diagram presents code paths, not a deployed topology. There is no separate frontend service, no verified Azure resource, and no active Blob Storage integration.
+
+## Architecture trade-off
+
+The implemented design is a modular monolith rather than a set of independently deployed services. This keeps the academic demonstration in one Flask application, allows the ingestion and alert lifecycle to share application services and database transactions, and avoids requiring multiple service deployments to run the local project. The trade-off is that application components cannot be independently deployed or scaled, and module boundaries must be maintained within the shared codebase. This is a retrospective explanation of the architecture visible in the repository, not a claim that an original design-decision record exists.
 
 ## Sensor and simulated-reading flow
 
@@ -58,7 +62,7 @@ Forecast training is an offline command (`python -m app.ml.train`), not part of 
 |---|---|---|
 | Browser to Flask | Signed session, CSRF validation for mutations, membership/role checks | HTTPS at a live endpoint, browser E2E, external penetration test |
 | Sensor to Flask | Per-sensor key checked against keyed hash; active/revoked state and rate limit | Device provisioning in the field, key storage on actual hardware |
-| Flask to database | SQLAlchemy sessions; SQLite foreign keys enabled by connection setup | Azure SQL connectivity, successful PostgreSQL CI run, production backups/restore |
+| Flask to database | SQLAlchemy sessions; SQLite foreign keys enabled by connection setup; PostgreSQL test and migration CI jobs passed on `0fe75da` | Azure SQL connectivity, production backups/restore |
 | Flask to email provider | Brevo adapter exists and uses configuration | Verified sender/domain, delivery success, DNS authentication |
 | Data/report storage | Room photos use a private local path; forecasts stored under instance path | Durable private cloud object storage, retention policy, hosted access policy |
 

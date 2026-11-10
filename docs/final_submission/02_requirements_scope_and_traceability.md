@@ -35,7 +35,7 @@ The project brief in [product-requirements.md](../../docs/product-requirements.m
 
 ## Explicitly out of scope or unverified
 
-AirSense does not manufacture sensors, read CO2 using a phone, control HVAC, diagnose illness, guarantee safe conditions, or guarantee push notifications. The repository does not establish a deployed Azure frontend/backend, a Power BI report, Blob Storage, a successful PostgreSQL CI run, physical sensor performance, a formal literature review, or actual per-role demo accounts. PostgreSQL migration/test jobs are configured in CI, but their results were not verified.
+AirSense does not manufacture sensors, read CO2 using a phone, control HVAC, diagnose illness, guarantee safe conditions, or guarantee push notifications. The repository does not establish a deployed Azure frontend/backend, a Power BI report, Blob Storage, physical sensor performance, a formal literature review, or actual per-role demo accounts. GitHub Actions push run [42848360170](https://github.com/asvibes/AirSense/actions/runs/42848360170) and pull-request run [42848374302](https://github.com/asvibes/AirSense/actions/runs/42848374302) passed all configured jobs on commit `0fe75da`, including PostgreSQL tests and migrations. This CI evidence is for the configured PostgreSQL service, not an Azure database or deployed application.
 
 ## Traceability sources
 

@@ -10,7 +10,7 @@
 **Project guide:** [Insert guide name and designation]<br>
 **Submission date:** [Insert date]
 
-> **Evidence statement:** This report describes the local `divija` checkout inspected on 10 November 2026 at HEAD `0fe75da`; the worktree was clean and synced with `origin/divija`. The local Python test result was collected after application commit `730cd08` and before the CI workflow-only commit `0fe75da`. GitHub Actions push and pull-request runs for `0fe75da` passed all configured jobs, including PostgreSQL tests and migrations. No Azure service, physical sensor deployment, or public deployment is claimed.
+> **Evidence statement:** This report describes the local `divija` checkout at HEAD `a3a7136` when guide alignment began on 10 November 2026; the edits for this review are uncommitted. The local Python test result was collected after application commit `730cd08` and before the CI workflow-only commit `0fe75da`. GitHub Actions push and pull-request runs for `0fe75da` passed all configured jobs, including PostgreSQL tests and migrations. No Azure service, physical sensor deployment, or public deployment is claimed.
 
 > **Submission status:** This Markdown report is an academic draft, not a completed institutional submission. Replace the marked placeholders, apply the institution's required format, and remove this notice only after the remaining items in the [final submission checklist](15_final_submission_checklist.md) have been verified.
 
@@ -265,7 +265,7 @@ Account identity, room/home membership, environmental values and timestamps, dev
 
 The primary threats are account takeover/CSRF, cross-home data access, device key exposure, malformed/replayed readings, malicious CSV uploads, private-file disclosure and database/secret exposure. The local code has mitigations for selected threats, but there is no independent penetration test. HTTPS at a live endpoint, cloud secrets, database network restrictions, least-privilege hosted identity, backup/restore and incident response remain unverified.
 
-No claims are made for Azure deployment, Azure Blob storage, completed Power BI, physical sensor calibration, a successful PostgreSQL CI run, or verified email delivery. PostgreSQL migration/test jobs are configured in CI, but their results were not verified.
+No claims are made for Azure deployment, Azure Blob storage, completed Power BI, physical sensor calibration, or verified email delivery. GitHub Actions push and pull-request runs for commit `0fe75da` passed the configured PostgreSQL migration and test jobs; this does not verify Azure database connectivity or deployment.
 
 ## 9. Testing, results and discussion
 
@@ -318,6 +318,10 @@ Use the citation format required by the department. The numbered sources below d
 10. pytest development team, “pytest Documentation,” https://docs.pytest.org/en/stable/ (test runner reference).
 
 These are official software documentation sources, not peer-reviewed indoor-air or forecasting research. Verify access dates and the citation style required by the institution. Add reviewed scholarly/domain references if required.
+
+### Credits and AI-tool disclosure
+
+GitHub Copilot, an AI assistant in VS Code, was used to assist with this report's documentation audit and drafting. The project authors must verify and take responsibility for the submitted content, disclose any additional AI assistance and third-party assets actually used during implementation, and follow the institution's citation and AI-use policy.
 
 ### Academic references to be supplied by the project team
 

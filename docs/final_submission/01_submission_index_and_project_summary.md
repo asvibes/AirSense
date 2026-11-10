@@ -3,7 +3,7 @@
 **Project:** AirSense
 **Programme context:** B.Tech CSE (AI/ML) project
 **Evidence snapshot:** 10 November 2026
-**Source of truth:** Local `divija` branch, HEAD `0fe75da`; the worktree was clean and the branch was synced with `origin/divija` when checked on 10 November 2026.
+**Source of truth:** Local `divija` branch, HEAD `a3a7136` when this guide-alignment review began on 10 November 2026. The prior evidence update was pushed and synced; this guide-alignment edit is currently uncommitted.
 
 ## Project summary
 

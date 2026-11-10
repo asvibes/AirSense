@@ -1,6 +1,43 @@
 # AirSense final college submission checklist
 
-This checklist is a handoff for the project team. Boxes are intentionally unchecked; this document does not assert that the remaining evidence or approvals have been obtained. Follow the college rubric and template where they differ.
+This checklist maps the student guide supplied by the team to repository evidence. It does not assert that reviews, registration, deployment, or faculty approvals occurred. The guide's submission deadline of 6 November 2026 has passed; ask the project lead/mentor whether late submission is authorized before representing this package as submitted.
+
+## Registration and team requirements
+
+- [ ] Confirm the project appeared as **Taken** on the public list before work began; the registration/public-list links are not included in the supplied guide text.
+- [ ] Confirm one registration form was filed for the team and every member accepted the undertaking.
+- [ ] Confirm the team has one or two members, belongs to one project, and meets the solo (at least three) or pair (at least five) core-feature minimum.
+- [ ] Use verified student records to check names, roll numbers, team size, project title and registration description; the repository cannot establish the registered team or idea status.
+- [ ] If a pair, ensure individual contribution can be explained in the viva and supported by genuine commit history. Do not manufacture commits or divide one change artificially.
+
+## Review milestones
+
+| Guide milestone | Required hand-in | Evidence in this repository | Status |
+|---|---|---|---|
+| Design review — 19 October 2026 | Design document, ER diagram, threat model | [Architecture and data flow](03_architecture_and_data_flow.md), [ER diagram and database design](04_er_diagram_and_database_design.md), and [threat model](08_data_classification_and_threat_model.md) are present. Review submission and approval are not evidenced. | Documents present; review outcome unverified |
+| Mid review — 28 October 2026 | Repository link and one core feature working end to end | The [AirSense GitHub repository](https://github.com/asvibes/AirSense) and automated application tests are available. No mentor review record or browser/live demonstration evidence is included. | Repository present; end-to-end demonstration and review unverified |
+| Security check — guide says “Last Tuesday” | Live cloud URL, security checklist, analytics report | [Security checklist](09_security_checklist.md) is present as a code-based review with deployment gaps. No verified live URL was found, and `database/powerbi/airsense-report.pbix` is a zero-byte placeholder. | URL and analytics report missing; checklist does not establish deployed security |
+
+Repository files cannot prove registration, milestone hand-in, faculty review, or approval. Keep the team's actual submission receipts and review records separately.
+
+## Four-subject rubric crosswalk
+
+| Subject | Guide requirement | Current evidence | Remaining gap / status |
+|---|---|---|---|
+| System Design | Functional and non-functional requirements; architecture/data flow; API list; one written trade-off | Requirements/traceability, architecture and DFDs, API reference, plus a retrospective modular-monolith trade-off are documented. | Documents are present; verify they match the faculty template and explain them in the viva. |
+| RDBMS | 3NF relational schema with at least five related tables; keys/constraints; joins; view; stored procedure or trigger; transaction; indexes; ER/schema/query hand-in | Active ORM ER/schema documents 13 tables and relationships. Separate proposed SQL Server scripts contain related schema objects, indexes, joins, views, triggers, and a transaction example; ER/SQL artifact docs exist. | Azure SQL scripts are not wired to the application or applied to a verified database. 3NF is not formally assessed. Do not present proposed scripts as the active schema. Confirm the final schema/query files satisfy faculty expectations. |
+| DP-900 | Structured/semi-structured/unstructured classification; relational database hosted on Azure; non-relational file/semi-structured store; analytics view | Data classification note now distinguishes all three formats. | Azure relational hosting is unverified; Blob/Cosmos integration is absent; the tracked Power BI report is zero bytes. Major unmet evidence/implementation requirements. |
+| Cloud Security | Role-based login; password hashing; HTTPS; repository secret hygiene; SQL injection/XSS input protections; DB firewall/network rule; activity log; one-page threat model and completed checklist | Local code documents home-scoped owner/member checks, scrypt hashes, request validation, ORM use, security headers, audit events, a threat model, and a security checklist. | Live HTTPS, database firewall/network rule, deployed secrets, and cloud checklist evidence are unverified. No independent SQL injection/XSS assessment is claimed; checklist has unresolved deployment controls. |
+
+## Required final hand-in (five items)
+
+| Required item | Current repository evidence | Status |
+|---|---|---|
+| Live URL of cloud application | `render.yaml` is configuration only; no reachable deployed URL was verified. | Missing/unverified |
+| Repository link, full commit history, README setup and test login for every role | [Repository](https://github.com/asvibes/AirSense), Git history, and README setup/test commands exist. No reviewed test login credentials per role are documented; never publish passwords in the repository. | Partial; arrange demo access securely and verify the link/history |
+| Project report with required topics, screenshots and credits | [Report](14_btech_final_project_report.md) covers the project topics and now discloses Copilot assistance in its documentation drafting. | Draft; genuine application screenshots, verified academic citations, team/college details, final formatting and any other actual third-party/AI credits remain |
+| Schema script and query file | SQL Server schema scripts and `database/queries/reading_transaction_example.sql` exist. | Present as proposed coursework artifacts; not proof of active Azure SQL deployment |
+| Analytics report as a file or link | `database/powerbi/airsense-report.pbix` is zero bytes. | Missing; do not submit the empty placeholder as a report |
 
 ## Academic identity and report
 

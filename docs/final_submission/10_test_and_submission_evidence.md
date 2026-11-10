@@ -2,7 +2,7 @@
 
 **Evidence snapshot:** 10 November 2026
 **Branch inspected:** local `divija`
-**Commit at HEAD when audited:** `0fe75da` (worktree clean and synced with `origin/divija`)
+**Commit at HEAD when guide alignment began:** `a3a7136` (the guide-alignment documentation edits are uncommitted)
 
 ## Automated test evidence
 
@@ -84,8 +84,9 @@ This table summarizes selected test intent, not individual test counts or a line
 
 ## Local `divija` commit history
 
-The following is a subject list from `git log --format="%h %s" HEAD` at commit `0fe75da`. It is not a substitute for the Git repository, which retains the full commit objects. Local staged/unstaged changes are not commits and are intentionally absent.
+The following is a subject list from `git log --format="%h %s" HEAD` at commit `a3a7136`. It is not a substitute for the Git repository, which retains the full commit objects. Local staged/unstaged changes are not commits and are intentionally absent.
 
+a3a7136 docs: refresh final submission test evidence
 0fe75da ci: run PostgreSQL tests with pytest
 730cd08 feat: add AirGradient ingestion and demo setup
 83ea6a5 docs: complete key AirSense submission references

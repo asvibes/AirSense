@@ -22,7 +22,7 @@ Open `http://127.0.0.1:5000/`. Register or sign in, then use the authenticated d
 python -m pytest -q
 ```
 
-The default database URL points to a local SQLite file under `instance`. Set `DATABASE_URL` before running the migration command if using another database. PostgreSQL URL handling exists, but integration compatibility is not verified by this submission.
+The default database URL points to a local SQLite file under `instance`. Set `DATABASE_URL` before running the migration command if using another database. PostgreSQL migrations and the Python test suite passed in the configured GitHub Actions jobs on commit `0fe75da`; this does not establish Azure SQL compatibility or a deployed database.
 
 ## Configuration and secrets
 

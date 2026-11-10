@@ -37,15 +37,17 @@ The declared seeds are `database/seed/metrics.sql` and `database/seed/default_th
 | Threshold history | Current policy row per home/room/metric | SQL target describes effective-dated/provenance fields |
 | Scope relationships | Several independent foreign keys; no same-home composite key in active schema | SQL target includes stronger composite same-home relationships |
 | Reporting views | Dashboard/history query through application code | SQL target defines latest-reading and daily-coverage views |
-| Runtime use | SQLite default; PostgreSQL URL support not integration-tested | Azure SQL files are not wired into the runtime |
+| Runtime use | SQLite default; PostgreSQL migrations and Python tests passed in CI on `0fe75da` | Azure SQL files are not wired into the runtime |
 
 The Azure SQL scripts should therefore be treated as a proposed design artifact needing review and reconciliation before use, not as the authoritative live schema.
 
 ## Completion status
 
 - SQL Server scripts and a query example: **present in the repository**.
+- The SQL Server artifacts demonstrate related tables, keys/constraints, joins, a view, a trigger, and a transaction: **present in proposed scripts**.
+- Formal verification of Third Normal Form against either schema: **not documented or independently verified**.
 - Azure SQL deployment, schema application, and connectivity evidence: **not verified**.
-- Migration test evidence: local SQLite migration tests only; no Azure SQL migration test is claimed.
+- Migration test evidence: SQLite and PostgreSQL CI migrations passed; no Azure SQL migration test is claimed.
 - Backups, network rules, credentials, and production database identity: **not verified**.
 
 See [database/README.md](../../database/README.md) for prerequisites and warnings, and [document 4](04_er_diagram_and_database_design.md) for the active ORM schema.

@@ -21,6 +21,18 @@ This note classifies data represented by the current local application and summa
 
 The product is not designed to collect personal health records, but a household's measurement history may be sensitive indirectly. No data retention, deletion, or backup schedule was verified in this source review.
 
+## DP-900 data-format classification
+
+The sensitivity labels above describe confidentiality. They are separate from the following data-format classification:
+
+| Data format | AirSense examples | Current storage / status |
+|---|---|---|
+| Structured | Account, home, room, sensor, metric, threshold, reading, alert, and membership records | Relational SQLAlchemy tables; SQLite is the local default, and PostgreSQL test/migration CI passed. Azure relational hosting is not verified. |
+| Semi-structured | Device/API JSON payloads; JSON-valued ventilation-source and audit-detail fields | JSON is accepted or stored within the application/database. No separate Azure Cosmos DB or other non-relational service is configured. |
+| Unstructured | Uploaded room photographs | Private local filesystem implementation; no Azure Blob Storage integration or cloud persistence is verified. |
+
+The SQL Server scripts under `database/migrations/` are a proposed Azure SQL coursework target, not proof of a hosted relational database. The tracked Power BI file is zero bytes, so it is not an analytics report.
+
 ## One-page threat model
 
 | Asset / trust boundary | Entry points | Threat scenario | Existing mitigation in local code | Residual risk / action |
