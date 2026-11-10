@@ -163,3 +163,43 @@ The routes return JSON for `/api/` paths unless noted. Exact status and response
 | `POST /api/alerts/<alert_id>/acknowledge` | `200`: `alert` object for JSON requests |
 
 Validation and authorization failures generally return an `error` field. The device endpoint returns `401` for an invalid or inactive device key, `400` for invalid readings, and `429` when rate limited. Authentication, invitation, forecast, upload, and legacy routes have additional route-specific response bodies and status codes; consult their router implementations for exhaustive contracts. The invitation creation response contains a bearer-like token in addition to email delivery, so clients must protect it as a secret.
+
+### Example: device reading
+
+This example shows the request shape accepted by the shared reading validator; replace the sensor ID and device key with values provisioned in the local application. The key is a credential and must not be committed or included in a report.
+
+```http
+POST /api/sensors/<sensor_id>/readings HTTP/1.1
+Content-Type: application/json
+X-Device-Key: <one-time-provisioned-device-key>
+
+{
+  "room": "Study",
+  "metric": "CO2",
+  "unit": "ppm",
+  "value": 720,
+  "measured_at": "2026-11-10T12:00:00Z"
+}
+```
+
+The application binds the reading to the room provisioned for that sensor. A successful response is `201` and follows this shape (IDs, times and alert arrays depend on the request and database state):
+
+```json
+{
+  "reading_id": "<database-generated-id>",
+  "home_id": "<sensor-home-id>",
+  "room": "Study",
+  "metric": "CO2",
+  "value": 720.0,
+  "unit": "ppm",
+  "source": "device",
+  "measured_at": "2026-11-10T12:00:00Z",
+  "received_at": "<server-receipt-time>",
+  "rapid_rise_per_minute": null,
+  "created": [],
+  "cleared": [],
+  "alerts": []
+}
+```
+
+The example is illustrative, not captured output. A malformed payload returns `400`, an invalid/inactive key returns `401`, and a rate-limited request returns `429`; error responses include an `error` string. Authenticated browser/API mutations additionally need a valid session and CSRF token as applicable.

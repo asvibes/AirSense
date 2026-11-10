@@ -33,12 +33,12 @@ This checklist is a handoff for the project team. Boxes are intentionally unchec
 
 ## Ten required documentation deliverables
 
-- [x] ER diagram documents the active entities, attributes, keys, and relationships.
+- [x] ER diagram and data dictionary describe the active entities, attributes, keys, relationships, and field meanings.
 - [x] System architecture diagram is present.
 - [x] DFD Level 0 and Level 1 are present.
 - [x] Threat model is present and states its limitations.
-- [x] API reference documents inspected routes, auth conventions, and representative response shapes.
-- [x] Testing report states the exact observed result and distinguishes feature coverage from unmeasured line/branch coverage.
+- [x] API reference documents inspected routes, auth conventions, representative response shapes, and a clearly illustrative device request example.
+- [x] Testing report includes representative expected/observed cases, exact suite result, and distinguishes feature coverage from unmeasured line/branch coverage.
 - [x] Installation/setup guide is present for the local demonstration environment.
 - [x] User manual describes supported user workflows and limitations.
 - [x] Technology stack and module documentation matches declared dependencies and source modules.
@@ -49,6 +49,8 @@ The [documentation index](01_submission_index_and_project_summary.md#ten-brief-d
 ## Results and evidence
 
 - [ ] Confirm whether the college requires another fresh test run on the final submitted checkout; the 10 November 2026 run is recorded with its command, result, duration, and warnings, and includes pre-existing staged changes.
+- [ ] Run the JavaScript trend/source-average tests in an environment with Node.js; they were not executable in the current environment.
+- [ ] Add a coverage percentage only after running coverage instrumentation; no percentage has been measured.
 - [x] Clearly state that the Python test result was collected from a working tree with pre-existing staged changes and does not represent only committed HEAD `4b79836`.
 - [ ] Add deployment, Azure, Power BI, PostgreSQL, email-provider, or hardware evidence only if the team has actually produced and verified it.
 - [ ] Confirm the Power BI artifact and any resource screenshots are genuine, readable, and appropriately redacted before claiming them complete.

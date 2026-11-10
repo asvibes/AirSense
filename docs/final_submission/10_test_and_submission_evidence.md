@@ -35,6 +35,22 @@ This is feature-level test coverage, not a statement that every branch or requir
 
 This evidence is limited to the Python test suite. It is not a browser end-to-end run, PostgreSQL or Azure SQL integration test, load test, physical-sensor calibration, or penetration test. PostgreSQL migration/test jobs are configured in CI, but a successful CI run was not verified. The repository contains JavaScript test files, but no result for a JavaScript test runner was collected for this evidence snapshot.
 
+### Representative test cases
+
+The expected behavior below is taken from the named tests. “Observed” refers to the full Python suite result above, not a separately captured per-test report.
+
+| Test area and evidence | Expected result | Observed result |
+|---|---|---|
+| Authentication (`test_landing_auth.py`, `test_email_flows.py`) | Registration, login, verification/recovery paths follow validation and session rules | Suite passed; 202 tests total |
+| Authorization (`test_access_control.py`, `test_invitation_acceptance_flow.py`) | Cross-home access is denied; invitations are limited to the intended account and single use | Suite passed; 202 tests total |
+| Ingestion (`test_ingestion.py`, `test_airgradient.py`) | Valid supported payload is normalized and stored; invalid room/source data is rejected | Suite passed; 202 tests total |
+| Alerts (`test_alert_scenarios.py`, `test_thresholds.py`) | Configured crossings create appropriate alert states; duplicate active alerts are suppressed | Suite passed; 202 tests total |
+| History and exports (`test_history_page.py`, `test_csv_exports.py`) | Authorized history queries and export routes return supported results | Suite passed; 202 tests total |
+| Dashboard (`test_dashboard_live_updates.py`, `test_room_dashboard_integration.py`) | Dashboard data is returned for authorized home context | Suite passed; 202 tests total |
+| JavaScript trend/source averages (`dashboard_room_trends.test.js`, `dashboard_co2_averages.test.js`) | Rising/falling/stable trends and source-separated averages are calculated correctly | Not executed: Node.js test runner unavailable; assertions exist in repository |
+
+This table summarizes selected test intent, not individual test counts or a line-coverage report. See the unverified scenarios above before treating the project as deployment-tested.
+
 ## Submission deliverable register
 
 | Brief item | Repository evidence | Status |

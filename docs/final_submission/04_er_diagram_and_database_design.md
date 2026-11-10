@@ -173,6 +173,44 @@ erDiagram
 - Email OTP/reset challenge records store hashes and expiry/attempt state. Rate-limit counters are persisted in the database.
 - `email_challenges` contains nullable `user_id`, `consumed_at`, and reset-token state; `rate_limit_buckets` is independent and has no declared foreign key.
 
+## Data dictionary
+
+The following describes the purpose of each active ORM attribute. `PK` and `FK` are shown in the ER diagram above. Nullable timestamps/IDs can be empty until the associated event occurs.
+
+| Entity | Attribute | Meaning |
+|---|---|---|
+| `homes` | `id`, `name` | Home identifier and display name. |
+| `users` | `id`, `email`, `display_name` | Account identifier, unique login email, and displayed name. |
+|  | `password_hash`, `session_version` | Scrypt password hash and session invalidation counter; never store the raw password. |
+|  | `is_active`, `email_verified_at`, `created_at` | Account enabled state, email verification time, and creation time. |
+| `home_memberships` | `home_id`, `user_id`, `role`, `joined_at` | Home/user association, `owner` or `member` role, and membership time. The two IDs form the composite primary key. |
+| `home_invitations` | `id`, `home_id`, `email`, `role` | Invitation identifier, target home/address, and role granted on acceptance. |
+|  | `token_hash`, `created_by`, `created_at`, `expires_at`, `accepted_at` | Stored token digest, inviting user, issue/expiry times, and one-time acceptance time. |
+| `email_challenges` | `id`, `user_id`, `email`, `purpose` | Challenge identifier, optional linked account, target address, and verification/reset purpose. |
+|  | `otp_hash`, `created_at`, `expires_at`, `last_sent_at`, `attempts`, `consumed_at` | OTP digest, issue/expiry/resend times, attempt counter, and consumption time. |
+|  | `reset_token_hash`, `reset_token_expires_at`, `reset_token_used_at` | Optional reset-token digest, expiry, and one-time use time. |
+| `rate_limit_buckets` | `key`, `window_started_at`, `count` | Rate-limit scope key, current window start, and requests counted in that window. |
+| `rooms` | `id`, `home_id`, `name` | Room identifier, containing home, and room name. |
+|  | `ventilation`, `ventilation_sources` | Legacy joined display string and JSON list of ventilation source labels. |
+| `sensors` | `id`, `home_id`, `room_id`, `name` | Sensor identifier, associated home/room, and display name. |
+|  | `key_hash`, `status`, `reporting_interval_seconds` | Keyed device-credential digest, active/revoked state, and expected reporting interval. |
+|  | `last_seen_at`, `created_at` | Time of most recent accepted device reading and provision time. |
+| `metrics` | `code`, `name`, `unit` | Metric code (primary key), display name, and canonical unit. |
+| `threshold_policies` | `id`, `home_id`, `room_id`, `metric_code` | Policy identifier and home/room/metric scope. |
+|  | `high_threshold`, `elevated_threshold`, `elevated_duration_seconds` | High value, sustained-elevated value, and required elevated duration. |
+|  | `rapid_rise_per_minute`, `all_clear_duration_seconds`, `max_reading_gap_seconds` | Rapid-rise rate, clear duration, and largest allowed gap between readings for evaluation. |
+|  | `elevated_since` | Start time tracked for a currently sustained elevated condition. |
+| `air_readings` | `id`, `home_id`, `room_id`, `sensor_id`, `metric_code` | Reading identifier, home/room, optional originating sensor, and measured metric. |
+|  | `value`, `source`, `measured_at`, `received_at` | Numeric value, provenance label, event/measurement time, and server receipt time (nullable for some historical records). |
+| `air_alerts` | `id`, `home_id`, `room_id`, `metric_code` | Alert identifier and home/room/metric scope. |
+|  | `level`, `status`, `trigger_value`, `threshold_value`, `latest_value`, `threshold_unit` | Alert classification/state and values/units used to describe its condition. |
+|  | `clear_duration_seconds`, `below_threshold_since`, `created_at` | Clear timing policy, time below threshold, and alert creation time. |
+|  | `acknowledged_at`, `acknowledged_by`, `all_clear_at`, `detail` | Acknowledgement metadata, all-clear time, and explanatory text. |
+| `audit_logs` | `id`, `home_id`, `actor_user_id` | Event identifier, home scope, and optional acting user. |
+|  | `event_type`, `entity_type`, `entity_id`, `details_json`, `created_at` | Event classification, affected entity reference, JSON details, and event time. |
+
+These descriptions explain application semantics; they do not add database constraints beyond those listed above and shown in the ORM/migrations.
+
 ## Important integrity limitation
 
 Several rows hold both `home_id` and `room_id`, while independent foreign keys ensure each referenced row exists. The active schema does not use composite foreign keys to ensure those two references always belong to the same home. Application routes enforce home/room membership in normal flows, but direct SQL or future code can still create an inconsistent association. A reading's optional sensor reference likewise is not constrained by a composite home/room relationship.
