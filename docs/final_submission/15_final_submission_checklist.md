@@ -96,7 +96,7 @@ The [documentation index](01_submission_index_and_project_summary.md#ten-brief-d
 ## Final package review
 
 - [ ] Open the final Markdown/PDF export and check page breaks, table wrapping, figure sizing, captions, and link behavior.
-- [x] Verify all local links and referenced files resolve in the current package; recheck after any later edits or file moves.
+- [x] Verify the final-submission Markdown's 109 relative file links and 17 internal heading anchors; all resolved, including links to the standalone analytics HTML and CSV. Recheck after later edits or file moves.
 - [x] Confirm the current branch is `divija`; recheck the final package state before submission.
 - [x] Preserve the team's existing staged and unstaged changes; no pre-existing changes were staged, unstaged, or overwritten during this documentation pass.
 - [ ] Obtain any required guide/department approval before final submission.
