@@ -2,7 +2,7 @@
 
 **Evidence snapshot:** 10 November 2026
 **Branch inspected:** local `divija`
-**Commit at HEAD when guide alignment began:** `a3a7136` (the guide-alignment documentation edits are uncommitted)
+**Python test baseline:** pushed commit `27a83d1`; the worktree was clean when the test run began.
 
 ## Automated test evidence
 
@@ -12,7 +12,9 @@ The full Python suite was run from the repository root with:
 python -m pytest -q
 ```
 
-**Observed local result:** 202 passed, 14 warnings, in 84.04 seconds. The warnings include Alembic's `path_separator` deprecation notice and SQLAlchemy's inability to reflect a SQLite expression-based index. No test failures were reported. This local run was executed after application commit `730cd08`, while the only uncommitted change was the CI workflow correction later committed as `0fe75da`.
+**Observed local result:** 202 passed, 14 warnings, in 95.14 seconds. The warnings include Alembic's `path_separator` deprecation notice and SQLAlchemy's inability to reflect a SQLite expression-based index. No test failures were reported. The run started on clean, pushed commit `27a83d1`; changes made afterward for this evidence review are documentation-only.
+
+**JavaScript test status:** The repository contains three Node.js built-in test files: `tests/dashboard_room_trends.test.js`, `tests/dashboard_co2_averages.test.js`, and `tests/dashboard_live_updates.test.js`. They use `node:test` and `node:assert/strict`. The `node` executable is not installed or available on PATH in this environment, and no Node executable was found in the installed VS Code directory. Consequently, these tests could not be run here; no JavaScript pass result is claimed.
 
 **Verified CI result:** GitHub Actions push run [42848360170](https://github.com/asvibes/AirSense/actions/runs/42848360170) and pull-request run [42848374302](https://github.com/asvibes/AirSense/actions/runs/42848374302), both for commit `0fe75da`, completed successfully. All three jobs passed: the standard test/migration job, PostgreSQL migration job, and PostgreSQL test job. The PostgreSQL test job installed `requirements-dev.txt`, applied Alembic migrations, and ran `python -m pytest -q` against its PostgreSQL service.
 
@@ -33,9 +35,9 @@ The suite includes coverage for reading validation/ingestion, alert scenarios an
 | Audit, timestamps, errors and response headers | `test_audit.py`, `test_timestamps.py`, `test_error_handlers.py`, `test_security_headers.py` |
 | Dashboard, uploads, simulator and demo seeding | `test_dashboard_live_updates.py`, `test_room_uploads.py`, `test_simulator.py`, `test_seed_demo_home.py` |
 
-This is feature-level test coverage, not a statement that every branch or requirement has a passing test. A line/branch coverage percentage was **not measured** because the run used `pytest -q` without coverage instrumentation. No JavaScript test runner result was collected.
+This is feature-level test coverage, not a statement that every branch or requirement has a passing test. A line/branch coverage percentage was **not measured** because the run used `pytest -q` without coverage instrumentation. The JavaScript tests were not run because Node.js is unavailable in this environment.
 
-This evidence is limited to the Python test suite and the configured PostgreSQL CI jobs. It is not a browser end-to-end run, Azure SQL integration test, load test, physical-sensor calibration, or penetration test. The repository contains JavaScript test files, but no result for a JavaScript test runner was collected for this evidence snapshot.
+This evidence is limited to the Python test suite and the configured PostgreSQL CI jobs. It is not a browser end-to-end run, Azure SQL integration test, load test, physical-sensor calibration, or penetration test.
 
 ### Representative test cases
 
@@ -49,7 +51,7 @@ The expected behavior below is taken from the named tests. “Observed” refers
 | Alerts (`test_alert_scenarios.py`, `test_thresholds.py`) | Configured crossings create appropriate alert states; duplicate active alerts are suppressed | Suite passed; 202 tests total |
 | History and exports (`test_history_page.py`, `test_csv_exports.py`) | Authorized history queries and export routes return supported results | Suite passed; 202 tests total |
 | Dashboard (`test_dashboard_live_updates.py`, `test_room_dashboard_integration.py`) | Dashboard data is returned for authorized home context | Suite passed; 202 tests total |
-| JavaScript trend/source averages (`dashboard_room_trends.test.js`, `dashboard_co2_averages.test.js`) | Rising/falling/stable trends and source-separated averages are calculated correctly | Not executed: Node.js test runner unavailable; assertions exist in repository |
+| JavaScript trend/source averages/live refresh (`dashboard_room_trends.test.js`, `dashboard_co2_averages.test.js`, `dashboard_live_updates.test.js`) | Trend indicators, source-separated averages, and dashboard refresh scheduling behave as asserted | Not executed: Node.js executable unavailable in this environment; the three Node.js test files are present |
 
 This table summarizes selected test intent, not individual test counts or a line-coverage report. See the unverified scenarios above before treating the project as deployment-tested.
 
@@ -57,7 +59,7 @@ This table summarizes selected test intent, not individual test counts or a line
 
 | Brief item | Repository evidence | Status |
 |---|---|---|
-| Deployed frontend and backend | Flask application and a `render.yaml` service description | Application code/configuration present; live deployment and URL not verified. No Azure deployment is established. |
+| Deployed frontend and backend | Flask application, `render.yaml`, and the team-supplied Render URL | Application code/configuration present; the supplied URL returned 503 via the web checker and direct requests timed out. No Azure deployment is established. |
 | SQL schema and query | `database/migrations/001...008`, seed SQL, and `database/queries/reading_transaction_example.sql` | Present as a proposed SQL Server track; distinct from the active ORM/Alembic schema and not applied to a verified Azure database. |
 | ER diagram and design document | Mermaid ER diagram in [document 4](04_er_diagram_and_database_design.md); existing `docs/architecture.md` | Included in this package for current ORM; diagram/design must not be mistaken for deployed cloud architecture. |
 | API list and setup/README | [documents 6 and 7](06_api_reference.md) and repository `Readme.md` | Present, based on local route code and setup. |
@@ -84,8 +86,11 @@ This table summarizes selected test intent, not individual test counts or a line
 
 ## Local `divija` commit history
 
-The following is a subject list from `git log --format="%h %s" HEAD` at commit `a3a7136`. It is not a substitute for the Git repository, which retains the full commit objects. Local staged/unstaged changes are not commits and are intentionally absent.
+The following is a subject list from `git log --format="%h %s" HEAD` at commit `27a83d1`. It is not a substitute for the Git repository, which retains the full commit objects. Local staged/unstaged changes are not commits and are intentionally absent.
 
+27a83d1 docs: add reproducible AirSense analytics report
+1cac661 docs: record Render URL availability check
+cb85dd9 docs: align submission checklist with student guide
 a3a7136 docs: refresh final submission test evidence
 0fe75da ci: run PostgreSQL tests with pytest
 730cd08 feat: add AirGradient ingestion and demo setup

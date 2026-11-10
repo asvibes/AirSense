@@ -10,7 +10,7 @@
 **Project guide:** [Insert guide name and designation]<br>
 **Submission date:** [Insert date]
 
-> **Evidence statement:** This report describes the local `divija` checkout at HEAD `a3a7136` when guide alignment began on 10 November 2026; the edits for this review are uncommitted. The local Python test result was collected after application commit `730cd08` and before the CI workflow-only commit `0fe75da`. GitHub Actions push and pull-request runs for `0fe75da` passed all configured jobs, including PostgreSQL tests and migrations. No Azure service, physical sensor deployment, or public deployment is claimed.
+> **Evidence statement:** This report describes the local `divija` application at pushed commit `27a83d1` as of 10 November 2026. A fresh Python test run started from that clean commit and reported 202 passing tests. Later changes during this review are documentation-only. GitHub Actions push and pull-request runs for `0fe75da` passed all configured jobs, including PostgreSQL tests and migrations. No Azure service, physical sensor deployment, or operational public deployment is claimed.
 
 > **Submission status:** This Markdown report is an academic draft, not a completed institutional submission. Replace the marked placeholders, apply the institution's required format, and remove this notice only after the remaining items in the [final submission checklist](15_final_submission_checklist.md) have been verified.
 
@@ -40,7 +40,7 @@ Indoor-air measurements are difficult to interpret when they are distributed acr
 
 The system supports account/session flows, home-scoped owner/member authorization, room and sensor management, device-key-authenticated ingestion, simulated readings, environmental CSV replay, configurable threshold policies, an alert lifecycle, history and exports, and a conditional offline forecasting workflow. Reading sources are represented as device, simulated, or dataset data. The forecasting implementation fits a linear trend to time-indexed series and compares it with a persistence baseline using a chronological holdout; it does not claim general predictive accuracy or establish a sophisticated AI model.
 
-The local Python test run reported **202 passed, 14 warnings in 84.04 seconds** after application commit `730cd08`. In addition, the push and pull-request GitHub Actions runs for `0fe75da` passed all configured CI jobs, including the PostgreSQL test and migration jobs. This is evidence of selected automated behavior only. The repository does not establish a deployed Azure solution, completed Power BI report, Azure Blob integration, or physical sensor calibration. Browser end-to-end testing was not performed. AirSense is a software monitoring aid, not a medical diagnostic or certified safety device.
+The fresh local Python test run on pushed commit `27a83d1` reported **202 passed, 14 warnings in 95.14 seconds**. In addition, the push and pull-request GitHub Actions runs for `0fe75da` passed all configured CI jobs, including the PostgreSQL test and migration jobs. This is evidence of selected automated behavior only. The repository does not establish a deployed Azure solution, completed Power BI report, Azure Blob integration, or physical sensor calibration. Browser end-to-end testing was not performed. AirSense is a software monitoring aid, not a medical diagnostic or certified safety device.
 
 **Keywords:** indoor air, CO2, Flask, sensor ingestion, threshold alert, data provenance, time-series trend, web application.
 
@@ -277,13 +277,13 @@ Command run from the project root:
 python -m pytest -q
 ```
 
-Observed local result on 10 November 2026: **202 passed, 14 warnings, 84.04 seconds**. Warnings included an Alembic configuration deprecation and SQLite/SQLAlchemy expression-index reflection limitation. The run was executed after application commit `730cd08`; only the CI workflow file was subsequently committed as `0fe75da`.
+Observed local result on 10 November 2026, starting from clean pushed commit `27a83d1`: **202 passed, 14 warnings, 95.14 seconds**. Warnings included an Alembic configuration deprecation and SQLite/SQLAlchemy expression-index reflection limitation.
 
 ### 9.2 Test areas
 
 The Python suite covers account flows/rate limiting, access control, sensor provisioning and ingestion, AirGradient normalization, threshold/alert behavior, migration/database behavior, CSV replay and export, audit, timestamps, forecast rules, response headers, dashboard routes, photos and demo-home seeding. A test coverage map appears in [document 10](10_test_and_submission_evidence.md).
 
-GitHub Actions push run [42848360170](https://github.com/asvibes/AirSense/actions/runs/42848360170) and pull-request run [42848374302](https://github.com/asvibes/AirSense/actions/runs/42848374302) for `0fe75da` both passed all three configured jobs, including PostgreSQL tests and migrations. Line/branch coverage was not measured because the local test run used `pytest -q` without coverage instrumentation. JavaScript tests were not run. These results do not verify Azure, physical hardware, browser-level end-to-end behavior, load, or production settings.
+GitHub Actions push run [42848360170](https://github.com/asvibes/AirSense/actions/runs/42848360170) and pull-request run [42848374302](https://github.com/asvibes/AirSense/actions/runs/42848374302) for `0fe75da` both passed all three configured jobs, including PostgreSQL tests and migrations. Line/branch coverage was not measured because the local test run used `pytest -q` without coverage instrumentation. The three Node.js test files were not run because Node.js is unavailable in the test environment. These results do not verify Azure, physical hardware, browser-level end-to-end behavior, load, or production settings.
 
 ### 9.3 Results
 

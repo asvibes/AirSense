@@ -3,7 +3,7 @@
 **Project:** AirSense
 **Programme context:** B.Tech CSE (AI/ML) project
 **Evidence snapshot:** 10 November 2026
-**Source of truth:** Local `divija` branch, HEAD `a3a7136` when this guide-alignment review began on 10 November 2026. The prior evidence update was pushed and synced; this guide-alignment edit is currently uncommitted.
+**Evidence baseline:** Local `divija` at pushed commit `27a83d1` on 10 November 2026. The current review's test result was run against this clean commit; subsequent edits in the review are documentation-only.
 
 ## Project summary
 
