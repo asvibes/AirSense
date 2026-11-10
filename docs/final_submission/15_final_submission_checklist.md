@@ -48,10 +48,10 @@ The [documentation index](01_submission_index_and_project_summary.md#ten-brief-d
 
 ## Results and evidence
 
-- [ ] Confirm whether the college requires another fresh test run on the final submitted checkout; the 10 November 2026 run is recorded with its command, result, duration, and warnings, and includes pre-existing staged changes.
+- [ ] Confirm whether the college requires another fresh test run on the final submitted checkout; local Python and successful PostgreSQL CI results are recorded in [document 10](10_test_and_submission_evidence.md).
 - [ ] Run the JavaScript trend/source-average tests in an environment with Node.js; they were not executable in the current environment.
 - [ ] Add a coverage percentage only after running coverage instrumentation; no percentage has been measured.
-- [x] Clearly state that the Python test result was collected from a working tree with pre-existing staged changes and does not represent only committed HEAD `4b79836`.
+- [x] Record the local Python test context and successful push/pull-request CI results for commit `0fe75da` without claiming unverified browser, cloud, or hardware testing.
 - [ ] Add deployment, Azure, Power BI, PostgreSQL, email-provider, or hardware evidence only if the team has actually produced and verified it.
 - [ ] Confirm the Power BI artifact and any resource screenshots are genuine, readable, and appropriately redacted before claiming them complete.
 - [ ] Remove or retain every placeholder intentionally; do not submit accidental `[Insert ...]` fields or empty screenshot slots as completed content.

@@ -3,7 +3,7 @@
 **Project:** AirSense
 **Programme context:** B.Tech CSE (AI/ML) project
 **Evidence snapshot:** 10 November 2026
-**Source of truth:** Local `divija` branch, HEAD `4b79836`; pre-existing staged worktree changes were present and preserved. The test result is from the local working tree, not a clean commit-only snapshot.
+**Source of truth:** Local `divija` branch, HEAD `0fe75da`; the worktree was clean and the branch was synced with `origin/divija` when checked on 10 November 2026.
 
 ## Project summary
 
@@ -60,9 +60,9 @@ Use the [final submission checklist](15_final_submission_checklist.md) to track 
 
 ## Evidence boundary
 
-The repository contains an Azure SQL proposal under `database/`, a Render service configuration, and a zero-byte Power BI placeholder. These are not proof that a service has been deployed or that a Power BI report has been built. No Azure resource screenshots, live deployment verification, successful PostgreSQL CI run, physical-sensor validation, or role-specific demo credentials were found during this audit.
+The repository contains an Azure SQL proposal under `database/`, a Render service configuration, and a zero-byte Power BI placeholder. These are not proof that a service has been deployed or that a Power BI report has been built. No Azure resource screenshots, live deployment verification, physical-sensor validation, or role-specific demo credentials were found during this audit. GitHub Actions push run [42848360170](https://github.com/asvibes/AirSense/actions/runs/42848360170) and pull-request run [42848374302](https://github.com/asvibes/AirSense/actions/runs/42848374302) both passed all three CI jobs on commit `0fe75da`, including PostgreSQL tests and migrations.
 
-The test result was freshly rerun with `python -m pytest -q` during this documentation-preparation pass against the local working tree, which contained pre-existing staged changes. It is not tied to a clean commit-only snapshot and does not establish browser end-to-end behavior, cloud integration, production readiness, or the correctness of readings from physical sensors.
+The local Python suite result is recorded in [document 10](10_test_and_submission_evidence.md). The successful CI runs validate the test suite and migrations on the CI PostgreSQL service, but do not establish browser end-to-end behavior, Azure/cloud integration, production readiness, or the correctness of readings from physical sensors.
 
 ## Academic-use note
 

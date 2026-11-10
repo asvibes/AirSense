@@ -2,7 +2,7 @@
 
 **Evidence snapshot:** 10 November 2026
 **Branch inspected:** local `divija`
-**Commit at HEAD when audited:** `4b79836`
+**Commit at HEAD when audited:** `0fe75da` (worktree clean and synced with `origin/divija`)
 
 ## Automated test evidence
 
@@ -12,7 +12,9 @@ The full Python suite was run from the repository root with:
 python -m pytest -q
 ```
 
-**Observed result:** 202 passed, 14 warnings, in 79.58 seconds. The warnings include Alembic's `path_separator` deprecation notice and SQLAlchemy's inability to reflect a SQLite expression-based index. No test failures were reported. The run included the pre-existing staged application/test changes in the local working tree; it did not test only the committed `4b79836` snapshot.
+**Observed local result:** 202 passed, 14 warnings, in 84.04 seconds. The warnings include Alembic's `path_separator` deprecation notice and SQLAlchemy's inability to reflect a SQLite expression-based index. No test failures were reported. This local run was executed after application commit `730cd08`, while the only uncommitted change was the CI workflow correction later committed as `0fe75da`.
+
+**Verified CI result:** GitHub Actions push run [42848360170](https://github.com/asvibes/AirSense/actions/runs/42848360170) and pull-request run [42848374302](https://github.com/asvibes/AirSense/actions/runs/42848374302), both for commit `0fe75da`, completed successfully. All three jobs passed: the standard test/migration job, PostgreSQL migration job, and PostgreSQL test job. The PostgreSQL test job installed `requirements-dev.txt`, applied Alembic migrations, and ran `python -m pytest -q` against its PostgreSQL service.
 
 The suite includes coverage for reading validation/ingestion, alert scenarios and wording, access control, device provisioning, authentication rate limits and email flows, database/migration behavior, audit records, exports, CSV replay, forecasts, timestamps, dashboard routes, room uploads, AirGradient payloads, and demo-home seeding.
 
@@ -33,7 +35,7 @@ The suite includes coverage for reading validation/ingestion, alert scenarios an
 
 This is feature-level test coverage, not a statement that every branch or requirement has a passing test. A line/branch coverage percentage was **not measured** because the run used `pytest -q` without coverage instrumentation. No JavaScript test runner result was collected.
 
-This evidence is limited to the Python test suite. It is not a browser end-to-end run, PostgreSQL or Azure SQL integration test, load test, physical-sensor calibration, or penetration test. PostgreSQL migration/test jobs are configured in CI, but a successful CI run was not verified. The repository contains JavaScript test files, but no result for a JavaScript test runner was collected for this evidence snapshot.
+This evidence is limited to the Python test suite and the configured PostgreSQL CI jobs. It is not a browser end-to-end run, Azure SQL integration test, load test, physical-sensor calibration, or penetration test. The repository contains JavaScript test files, but no result for a JavaScript test runner was collected for this evidence snapshot.
 
 ### Representative test cases
 
@@ -80,10 +82,14 @@ This table summarizes selected test intent, not individual test counts or a line
 5. Create demo accounts only in a controlled environment and distribute credentials securely. The repository does not contain production/demo passwords.
 6. Preserve simulated and dataset source labels in any presentation; do not imply those records came from physical hardware.
 
-## Full local `divija` commit history
+## Local `divija` commit history
 
-The following is a point-in-time subject list from `git log --format="%h %s" HEAD`. It is not a substitute for the Git repository, which retains the full commit objects. Local staged/unstaged changes are not commits and are intentionally absent.
+The following is a subject list from `git log --format="%h %s" HEAD` at commit `0fe75da`. It is not a substitute for the Git repository, which retains the full commit objects. Local staged/unstaged changes are not commits and are intentionally absent.
 
+0fe75da ci: run PostgreSQL tests with pytest
+730cd08 feat: add AirGradient ingestion and demo setup
+83ea6a5 docs: complete key AirSense submission references
+a54fb4c docs: prepare AirSense final submission package
 4b79836 fix: integrate trends and source averages into live dashboard
 a0c8418 fix: separate CO2 averages by source
 1df51af feat: add room card trend indicators
