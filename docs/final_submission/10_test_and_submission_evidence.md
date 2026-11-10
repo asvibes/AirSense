@@ -63,7 +63,7 @@ This table summarizes selected test intent, not individual test counts or a line
 | API list and setup/README | [documents 6 and 7](06_api_reference.md) and repository `Readme.md` | Present, based on local route code and setup. |
 | Data classification | [document 8](08_data_classification_and_threat_model.md) | Included as a code-based student-project note; not a legal/privacy assessment. |
 | Azure resource screenshots | No screenshot files or Azure resource evidence found | Missing; obtain only from actual resources and redact credentials, identifiers, and personal data. |
-| Power BI report | `database/powerbi/airsense-report.pbix` has length 0 bytes | Missing/placeholder; no finished report or connection verified. |
+| Analytics report | `database/powerbi/airsense-analytics-report.html`, `airsense-synthetic-readings.csv`, and `tools/generate_analytics_report.py` | Standalone descriptive report present; generated from 1,512 deterministic synthetic observations across three fictional rooms and three metrics over seven days. The report and CSV passed the generator's reproducibility check. The `.pbix` remains zero bytes; no Power BI model or live connection is claimed. |
 | Threat model and security checklist | [documents 8 and 9](08_data_classification_and_threat_model.md) | Included; controls dependent on a live environment are explicitly not verified. |
 | Test evidence | This document and the Python suite result above | Python tests passed as reported; other integration/e2e test classes not evidenced. |
 | Demo accounts per role | Test fixtures create disposable accounts; `tools/seed_demo_home.py` requires an existing account | No reviewed demo credentials are provided. The implemented roles are owner/member, not the three global roles in the proposed PRD. Do not publish test secrets. |
@@ -77,7 +77,7 @@ This table summarizes selected test intent, not individual test counts or a line
 
 1. Supply student/institution details and required college formatting from verified records.
 2. If the rubric requires live-cloud evidence, deploy and test the selected build, then collect genuine, redacted resource screenshots and connectivity evidence.
-3. Build and verify the Power BI report against a deliberately selected data source; do not present the empty placeholder as a report.
+3. If the rubric specifically requires a Power BI `.pbix`, open the synthetic CSV in Power BI Desktop and build/validate the model and visuals there. The repository currently supplies a standalone HTML report as the guide permits, not a Power BI artifact.
 4. Decide whether to retain the proposed Azure SQL target or document the active local/SQLAlchemy database as the final implementation. Reconcile the schema before claiming the SQL target is active.
 5. Create demo accounts only in a controlled environment and distribute credentials securely. The repository does not contain production/demo passwords.
 6. Preserve simulated and dataset source labels in any presentation; do not imply those records came from physical hardware.

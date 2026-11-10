@@ -359,6 +359,10 @@ Complete or intentionally remove each item according to the department's templat
 
 Use the [final submission checklist](15_final_submission_checklist.md) to track completion. Do not fill these fields with invented values.
 
+### Appendix C.1 — Supplementary analytics report
+
+A standalone [HTML descriptive analytics report](../../database/powerbi/airsense-analytics-report.html) and its [synthetic CSV dataset](../../database/powerbi/airsense-synthetic-readings.csv) are included with the repository. These files are reproducible using `python tools/generate_analytics_report.py`. The observations are generated synthetic examples, not application, household, sensor, or public-dataset readings. The HTML report is not a Power BI `.pbix` and does not demonstrate a live database or cloud analytics integration.
+
 ### Appendix D — Application screenshot capture slots
 
 The boxes below are **placeholders only**. No application screenshots were supplied or captured for this report. Replace each box only with a genuine screenshot from the actual application, or remove the figure if that screen is not available. Record the capture context and redact personal data, email addresses, session material, device keys, tokens, and other secrets before inclusion.

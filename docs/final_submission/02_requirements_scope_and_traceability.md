@@ -21,7 +21,7 @@ The project brief in [product-requirements.md](../../docs/product-requirements.m
 | Activity/audit | Selected authentication, membership, sensor, reading, threshold, and alert events are recorded. | Implemented partially; coverage is limited to implemented actions. Unknown-account login events cannot be attributed to a home-scoped user. |
 | Room photos | Authenticated room photo upload, retrieval, and deletion routes exist; allowed types and size are checked and files are stored outside static assets by default. | Implemented locally; no hosted private-storage service is configured. |
 | Azure SQL and Blob Storage | A separate set of SQL Server scripts exists. The Flask app's active persistence is SQLAlchemy/Alembic; no Blob Storage adapter was found. | Not integrated. The SQL scripts are a proposed, different schema, not the active application schema. |
-| Power BI | `database/powerbi/airsense-report.pbix` exists but is zero bytes. | Not implemented or verified. |
+| Analytics report | A standalone descriptive HTML report and reproducible synthetic CSV are in `database/powerbi/`; the report generation/consistency check is in `tools/generate_analytics_report.py`. | This satisfies the guide's report-as-file format using explicitly synthetic data. It is not a Power BI `.pbix`, has no live application/database connection, and does not satisfy any requirement specifically requiring a Power BI-built report. The tracked `.pbix` remains empty. |
 | Azure deployment | No Azure resource or live deployment evidence was found. A Render configuration file exists. | Azure deployment is not evidenced. A configuration file alone does not establish that any service is running. |
 
 ## Non-functional scope
