@@ -39,7 +39,10 @@ class Config:
     DATABASE_URL = _database_url()
     PRIVATE_UPLOAD_FOLDER = os.environ.get(
         "PRIVATE_UPLOAD_FOLDER",
-        str(Path(__file__).resolve().parent.parent / "instance" / "private_uploads"),
+        os.environ.get(
+            "AIRSENSE_PRIVATE_UPLOAD_FOLDER",
+            str(Path(__file__).resolve().parent.parent / "instance" / "private_uploads"),
+        ),
     )
     HIGH_THRESHOLD = float(os.environ.get("AIRSENSE_HIGH_THRESHOLD", "1500"))
     ELEVATED_THRESHOLD = float(os.environ.get("AIRSENSE_ELEVATED_THRESHOLD", "1000"))

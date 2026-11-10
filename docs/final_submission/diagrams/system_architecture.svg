@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1120" viewBox="0 0 1900 1120">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#176b87"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #17324d; }
+      .title { font-size: 40px; font-weight: 700; }
+      .subtitle { font-size: 21px; fill: #425b70; }
+      .head { font-size: 25px; font-weight: 700; }
+      .body { font-size: 20px; }
+      .small { font-size: 17px; fill: #425b70; }
+      .actor { fill: #e8f4f8; stroke: #176b87; stroke-width: 3; }
+      .app { fill: #e9f4ec; stroke: #398258; stroke-width: 3; }
+      .data { fill: #fff3da; stroke: #ad7412; stroke-width: 3; }
+      .external { fill: #f3ebf8; stroke: #704b8b; stroke-width: 3; }
+      .flow { fill: none; stroke: #176b87; stroke-width: 4; marker-end: url(#arrow); }
+      .label { font-size: 18px; font-weight: 600; fill: #164b61; }
+    </style>
+  </defs>
+  <rect width="1900" height="1120" fill="#f8fafc"/>
+  <text x="60" y="65" class="title">AirSense — implemented system architecture</text>
+  <text x="60" y="102" class="subtitle">Local Flask modular monolith; deployment services are not implied by this diagram.</text>
+
+  <rect x="70" y="180" width="340" height="175" rx="18" class="actor"/>
+  <text x="100" y="222" class="head">Browser user</text>
+  <text x="100" y="260" class="body">HTML, CSS, vanilla JS</text>
+  <text x="100" y="292" class="body">Session + CSRF on writes</text>
+  <text x="100" y="324" class="small">Dashboard, history, exports</text>
+
+  <rect x="70" y="465" width="340" height="175" rx="18" class="actor"/>
+  <text x="100" y="507" class="head">Sensor client</text>
+  <text x="100" y="545" class="body">X-Device-Key</text>
+  <text x="100" y="577" class="body">Device / AirGradient shape</text>
+  <text x="100" y="609" class="small">Physical hardware not verified</text>
+
+  <rect x="70" y="750" width="340" height="175" rx="18" class="actor"/>
+  <text x="100" y="792" class="head">Owner demo inputs</text>
+  <text x="100" y="830" class="body">Simulated reading</text>
+  <text x="100" y="862" class="body">Historical CSV replay</text>
+  <text x="100" y="894" class="small">Stored with source labels</text>
+
+  <rect x="570" y="155" width="720" height="200" rx="18" class="app"/>
+  <text x="610" y="202" class="head">Flask application — app/main.py</text>
+  <text x="610" y="244" class="body">Blueprint routers · request parsing · authentication/authorization</text>
+  <text x="610" y="279" class="body">CSRF/session checks · device-key checks · error handlers</text>
+  <text x="610" y="318" class="small">Same-origin UI and JSON/API routes</text>
+
+  <rect x="570" y="430" width="330" height="220" rx="18" class="app"/>
+  <text x="600" y="474" class="head">Validation services</text>
+  <text x="600" y="515" class="body">Metric / unit normalization</text>
+  <text x="600" y="550" class="body">Value and timestamp checks</text>
+  <text x="600" y="585" class="body">CSV parser / source tagging</text>
+  <text x="600" y="621" class="small">app/services · app/sources</text>
+
+  <rect x="960" y="430" width="330" height="220" rx="18" class="app"/>
+  <text x="990" y="474" class="head">Domain services</text>
+  <text x="990" y="515" class="body">Reading ingestion</text>
+  <text x="990" y="550" class="body">Thresholds and alert lifecycle</text>
+  <text x="990" y="585" class="body">Audit and freshness</text>
+  <text x="990" y="621" class="small">Transactional SQLAlchemy session</text>
+
+  <rect x="570" y="735" width="330" height="190" rx="18" class="app"/>
+  <text x="600" y="780" class="head">Read / export</text>
+  <text x="600" y="820" class="body">Dashboard, history, analytics</text>
+  <text x="600" y="855" class="body">CSV / PDF, room photos</text>
+  <text x="600" y="893" class="small">Membership-scoped responses</text>
+
+  <rect x="960" y="735" width="330" height="190" rx="18" class="app"/>
+  <text x="990" y="780" class="head">Offline forecast</text>
+  <text x="990" y="820" class="body">Linear time trend</text>
+  <text x="990" y="855" class="body">Chronological holdout check</text>
+  <text x="990" y="893" class="small">Stored model JSON; not an AI claim</text>
+
+  <rect x="1450" y="290" width="380" height="280" rx="18" class="data"/>
+  <text x="1490" y="336" class="head">Active database</text>
+  <text x="1490" y="378" class="body">SQLite default</text>
+  <text x="1490" y="414" class="body">SQLAlchemy ORM + Alembic</text>
+  <text x="1490" y="450" class="body">13 application model tables</text>
+  <text x="1490" y="492" class="small">PostgreSQL URL support exists;</text>
+  <text x="1490" y="519" class="small">integration not verified.</text>
+
+  <rect x="1450" y="670" width="380" height="165" rx="18" class="external"/>
+  <text x="1490" y="716" class="head">Brevo email API</text>
+  <text x="1490" y="756" class="body">OTP / invitation delivery</text>
+  <text x="1490" y="798" class="small">External credentials required</text>
+
+  <path d="M410 260 H520 V230 H570" class="flow"/>
+  <text x="430" y="220" class="label">HTTPS / local HTTP</text>
+  <path d="M410 550 H500 V285 H570" class="flow"/>
+  <text x="430" y="475" class="label">device key</text>
+  <path d="M410 835 H500 V325 H570" class="flow"/>
+  <text x="430" y="754" class="label">session + CSRF</text>
+  <path d="M930 355 V430" class="flow"/>
+  <path d="M900 540 H960" class="flow"/>
+  <path d="M1125 650 V700 H735 V735" class="flow"/>
+  <path d="M1125 650 V735" class="flow"/>
+  <path d="M1290 535 H1450" class="flow"/>
+  <text x="1310" y="514" class="label">read / write</text>
+  <path d="M1450 425 H1360 V785 H1290" class="flow"/>
+  <path d="M1290 260 H1370 V748 H1450" class="flow"/>
+  <text x="1300" y="720" class="label">configured email</text>
+
+  <text x="70" y="1030" class="small">Not shown as active integrations: Azure SQL, Azure Blob Storage, Power BI. A Render service description exists, but deployment was not verified.</text>
+</svg>

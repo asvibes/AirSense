@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AirSense descriptive analytics report generated from a clearly labeled synthetic demonstration dataset.">
+  <title>AirSense Synthetic Indoor Readings — Analytics Report</title>
+  <style>
+    :root { color-scheme: light; font-family: Segoe UI, Arial, sans-serif; color: #172033; background: #f3f6fa; }
+    body { margin: 0; }
+    main { max-width: 1120px; margin: 0 auto; padding: 32px 24px 56px; }
+    header { border-bottom: 4px solid #2463eb; padding-bottom: 18px; margin-bottom: 24px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 3vw, 2.4rem); }
+    h2 { margin-top: 34px; }
+    p { line-height: 1.55; }
+    .notice { border-left: 5px solid #b45309; background: #fff7ed; padding: 14px 18px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin: 20px 0; }
+    .card, .panel { background: white; border: 1px solid #dce4ef; border-radius: 10px; padding: 18px; }
+    .card strong { display: block; font-size: 1.6rem; margin-top: 6px; }
+    .label { color: #526179; font-size: .9rem; }
+    .chart { overflow-x: auto; }
+    svg { width: 100%; min-width: 660px; height: auto; }
+    .axis { fill: #526179; font-size: 13px; }
+    .cutoff { fill: #92400e; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #dce4ef; }
+    thead th { background: #eaf0f8; }
+    .table-wrap { overflow-x: auto; border: 1px solid #dce4ef; border-radius: 8px; }
+    code { background: #edf2f8; padding: 2px 5px; border-radius: 4px; }
+    footer { color: #526179; margin-top: 32px; border-top: 1px solid #dce4ef; padding-top: 16px; }
+    @media print { :root { background: white; } main { max-width: none; padding: 0; } .panel, .card { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>AirSense Indoor Readings — Analytics Report</h1>
+    <p>Descriptive analysis of a reproducible synthetic demonstration dataset</p>
+    <p><strong>Observation window:</strong> 2026-01-01T00:00:00Z to 2026-01-07T23:00:00Z · UTC</p>
+  </header>
+
+  <section class="notice" aria-label="Dataset notice">
+    <strong>Important — synthetic data only.</strong>
+    These observations were generated deterministically for an academic report.
+    They were not collected from AirSense, a physical sensor, a household, or a public dataset.
+    The report is standalone HTML, not a Power BI report or a live data connection.
+  </section>
+
+  <section class="cards" aria-label="Summary metrics">
+    <article class="card"><span class="label">Observations</span><strong>1,512</strong><span>3 metrics × 3 rooms × 7 days × 24 hours</span></article>
+    <article class="card"><span class="label">Mean CO2</span><strong>814.7 ppm</strong><span>504 synthetic CO2 samples</span></article>
+    <article class="card"><span class="label">Mean temperature</span><strong>21.8 °C</strong><span>Across all rooms and timestamps</span></article>
+    <article class="card"><span class="label">Mean relative humidity</span><strong>46.5%</strong><span>Across all rooms and timestamps</span></article>
+  </section>
+
+  <section class="panel">
+    <h2>Daily mean CO2 by room</h2>
+    <p>Each point is the arithmetic mean of 24 generated hourly samples for one room and day.</p>
+    <div class="chart"><svg role="img" aria-labelledby="co2-title co2-desc" viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+<title id="co2-title">Daily mean synthetic CO2 by room</title>
+<desc id="co2-desc">Line chart of seven daily means for three fictional rooms.</desc>
+<line x1="76" y1="322.0" x2="874" y2="322.0" stroke="#dbe3ee"/>
+<text x="64" y="327.0" text-anchor="end" class="axis">500</text>
+<line x1="76" y1="274.0" x2="874" y2="274.0" stroke="#dbe3ee"/>
+<text x="64" y="279.0" text-anchor="end" class="axis">650</text>
+<line x1="76" y1="226.0" x2="874" y2="226.0" stroke="#dbe3ee"/>
+<text x="64" y="231.0" text-anchor="end" class="axis">800</text>
+<line x1="76" y1="178.0" x2="874" y2="178.0" stroke="#dbe3ee"/>
+<text x="64" y="183.0" text-anchor="end" class="axis">950</text>
+<line x1="76" y1="130.0" x2="874" y2="130.0" stroke="#dbe3ee"/>
+<text x="64" y="135.0" text-anchor="end" class="axis">1100</text>
+<line x1="76" y1="82.0" x2="874" y2="82.0" stroke="#dbe3ee"/>
+<text x="64" y="87.0" text-anchor="end" class="axis">1250</text>
+<line x1="76" y1="34.0" x2="874" y2="34.0" stroke="#dbe3ee"/>
+<text x="64" y="39.0" text-anchor="end" class="axis">1400</text>
+<line x1="76" y1="162.0" x2="874" y2="162.0" stroke="#b45309" stroke-dasharray="7 6"/>
+<text x="870" y="155.0" text-anchor="end" class="cutoff">Illustrative analysis cutoff: 1000 ppm</text>
+<text x="76.0" y="356" text-anchor="middle" class="axis">01-01</text>
+<text x="209.0" y="356" text-anchor="middle" class="axis">01-02</text>
+<text x="342.0" y="356" text-anchor="middle" class="axis">01-03</text>
+<text x="475.0" y="356" text-anchor="middle" class="axis">01-04</text>
+<text x="608.0" y="356" text-anchor="middle" class="axis">01-05</text>
+<text x="741.0" y="356" text-anchor="middle" class="axis">01-06</text>
+<text x="874.0" y="356" text-anchor="middle" class="axis">01-07</text>
+<polyline points="76.0,255.6 209.0,246.9 342.0,245.4 475.0,251.7 608.0,260.9 741.0,266.4 874.0,264.6" fill="none" stroke="#2463eb" stroke-width="3"/>
+<circle cx="76.0" cy="255.6" r="4.5" fill="#2463eb"><title>Living Room, 2026-01-01: 707.6 ppm</title></circle>
+<circle cx="209.0" cy="246.9" r="4.5" fill="#2463eb"><title>Living Room, 2026-01-02: 734.7 ppm</title></circle>
+<circle cx="342.0" cy="245.4" r="4.5" fill="#2463eb"><title>Living Room, 2026-01-03: 739.4 ppm</title></circle>
+<circle cx="475.0" cy="251.7" r="4.5" fill="#2463eb"><title>Living Room, 2026-01-04: 719.7 ppm</title></circle>
+<circle cx="608.0" cy="260.9" r="4.5" fill="#2463eb"><title>Living Room, 2026-01-05: 691.1 ppm</title></circle>
+<circle cx="741.0" cy="266.4" r="4.5" fill="#2463eb"><title>Living Room, 2026-01-06: 673.7 ppm</title></circle>
+<circle cx="874.0" cy="264.6" r="4.5" fill="#2463eb"><title>Living Room, 2026-01-07: 679.5 ppm</title></circle>
+<polyline points="76.0,219.2 209.0,209.9 342.0,208.1 475.0,214.8 608.0,224.5 741.0,229.9 874.0,227.4" fill="none" stroke="#0f8b8d" stroke-width="3"/>
+<circle cx="76.0" cy="219.2" r="4.5" fill="#0f8b8d"><title>Bedroom, 2026-01-01: 821.2 ppm</title></circle>
+<circle cx="209.0" cy="209.9" r="4.5" fill="#0f8b8d"><title>Bedroom, 2026-01-02: 850.2 ppm</title></circle>
+<circle cx="342.0" cy="208.1" r="4.5" fill="#0f8b8d"><title>Bedroom, 2026-01-03: 856.0 ppm</title></circle>
+<circle cx="475.0" cy="214.8" r="4.5" fill="#0f8b8d"><title>Bedroom, 2026-01-04: 835.0 ppm</title></circle>
+<circle cx="608.0" cy="224.5" r="4.5" fill="#0f8b8d"><title>Bedroom, 2026-01-05: 804.6 ppm</title></circle>
+<circle cx="741.0" cy="229.9" r="4.5" fill="#0f8b8d"><title>Bedroom, 2026-01-06: 787.7 ppm</title></circle>
+<circle cx="874.0" cy="227.4" r="4.5" fill="#0f8b8d"><title>Bedroom, 2026-01-07: 795.5 ppm</title></circle>
+<polyline points="76.0,189.3 209.0,179.9 342.0,177.4 475.0,183.9 608.0,194.2 741.0,200.1 874.0,197.2" fill="none" stroke="#d97706" stroke-width="3"/>
+<circle cx="76.0" cy="189.3" r="4.5" fill="#d97706"><title>Kitchen, 2026-01-01: 914.7 ppm</title></circle>
+<circle cx="209.0" cy="179.9" r="4.5" fill="#d97706"><title>Kitchen, 2026-01-02: 944.1 ppm</title></circle>
+<circle cx="342.0" cy="177.4" r="4.5" fill="#d97706"><title>Kitchen, 2026-01-03: 952.0 ppm</title></circle>
+<circle cx="475.0" cy="183.9" r="4.5" fill="#d97706"><title>Kitchen, 2026-01-04: 931.5 ppm</title></circle>
+<circle cx="608.0" cy="194.2" r="4.5" fill="#d97706"><title>Kitchen, 2026-01-05: 899.3 ppm</title></circle>
+<circle cx="741.0" cy="200.1" r="4.5" fill="#d97706"><title>Kitchen, 2026-01-06: 881.0 ppm</title></circle>
+<circle cx="874.0" cy="197.2" r="4.5" fill="#d97706"><title>Kitchen, 2026-01-07: 889.9 ppm</title></circle>
+<text x="76" y="20" class="axis">Daily mean CO2 (ppm)</text>
+</svg></div>
+  </section>
+
+  <section>
+    <h2>Room-level summary</h2>
+    <div class="table-wrap">
+      <table>
+        <caption>Summary of synthetic observations by fictional room</caption>
+        <thead><tr><th scope="col">Room</th><th scope="col">Mean CO2 (ppm)</th><th scope="col">CO2 min–max (ppm)</th><th scope="col">Mean temperature (°C)</th><th scope="col">Mean humidity (%)</th><th scope="col">Samples above analysis cutoff</th></tr></thead>
+        <tbody><tr><th scope="row">Living Room</th><td>706.5</td><td>557.5–920.6</td><td>21.3</td><td>44.0</td><td>0 / 168 (0.0%)</td></tr>
+<tr><th scope="row">Bedroom</th><td>821.5</td><td>667.1–1043.1</td><td>21.9</td><td>46.5</td><td>8 / 168 (4.8%)</td></tr>
+<tr><th scope="row">Kitchen</th><td>916.1</td><td>762.2–1130.9</td><td>22.4</td><td>49.0</td><td>52 / 168 (31.0%)</td></tr></tbody>
+      </table>
+    </div>
+    <p>The cutoff of 1000 ppm is an illustrative analysis parameter used only to demonstrate aggregation. It is not a health, safety, regulatory, or AirSense alert recommendation.</p>
+  </section>
+
+  <section>
+    <h2>Daily CO2 means</h2>
+    <div class="table-wrap">
+      <table>
+        <caption>Daily arithmetic mean CO2 by room, ppm</caption>
+        <thead><tr><th scope="col">UTC date</th><th scope="col">Living Room</th><th scope="col">Bedroom</th><th scope="col">Kitchen</th></tr></thead>
+        <tbody><tr><th scope="row">2026-01-01</th><td>707.6</td><td>821.2</td><td>914.7</td></tr>
+<tr><th scope="row">2026-01-02</th><td>734.7</td><td>850.2</td><td>944.1</td></tr>
+<tr><th scope="row">2026-01-03</th><td>739.4</td><td>856.0</td><td>952.0</td></tr>
+<tr><th scope="row">2026-01-04</th><td>719.7</td><td>835.0</td><td>931.5</td></tr>
+<tr><th scope="row">2026-01-05</th><td>691.1</td><td>804.6</td><td>899.3</td></tr>
+<tr><th scope="row">2026-01-06</th><td>673.7</td><td>787.7</td><td>881.0</td></tr>
+<tr><th scope="row">2026-01-07</th><td>679.5</td><td>795.5</td><td>889.9</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Method and interpretation</h2>
+    <ul>
+      <li>The generator creates 168 hourly timestamps from 1–7 January 2026 for each of three fictional rooms and records CO2, temperature, and relative humidity at each timestamp.</li>
+      <li>Values are deterministic formulas with room and time-of-day variation; the CSV labels every row with source <code>dataset</code> and dataset label <code>synthetic_demonstration</code>.</li>
+      <li>Means are arithmetic means; min/max are observed generated values; exceedance counts compare CO2 samples strictly greater than the illustrative cutoff. No inferential or predictive analysis is performed.</li>
+      <li>There are 60 of 504 CO2 samples (11.9%) above that illustrative cutoff. This describes this generated dataset only.</li>
+      <li>Reproduce the CSV and this HTML report from the repository root with <code>python tools/generate_analytics_report.py</code>. Run with <code>--check</code> to verify the checked-in outputs match the generator.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Data dictionary</h2>
+    <div class="table-wrap">
+      <table><thead><tr><th scope="col">Field</th><th scope="col">Meaning</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">observed_at_utc</th><td>Generated measurement timestamp in UTC ISO-8601.</td></tr>
+        <tr><th scope="row">room</th><td>Fictional room label; no real household is represented.</td></tr>
+        <tr><th scope="row">metric_code</th><td>AirSense-style metric identifier: CO2, TEMPERATURE, or HUMIDITY.</td></tr>
+        <tr><th scope="row">value / unit</th><td>Generated numeric observation and its unit (ppm, C, or %).</td></tr>
+        <tr><th scope="row">source</th><td><code>dataset</code>, consistent with the application's source category.</td></tr>
+        <tr><th scope="row">dataset_label</th><td><code>synthetic_demonstration</code>, identifying the values as generated.</td></tr>
+      </tbody></table>
+    </div>
+  </section>
+
+  <footer>
+    <p>Limitations: no live application/database connection, real or public sensor data, missing-data behavior, calibration, deployment, Power BI model, or user study is represented. Do not use these values to assess an actual indoor environment.</p>
+    <p>Companion dataset: <a href="airsense-synthetic-readings.csv">airsense-synthetic-readings.csv</a></p>
+  </footer>
+</main>
+</body>
+</html>

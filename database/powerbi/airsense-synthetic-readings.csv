@@ -1,0 +1,1513 @@
+observed_at_utc,room,metric_code,value,unit,source,dataset_label
+2026-01-01T00:00:00Z,Living Room,CO2,610.00,ppm,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Living Room,TEMPERATURE,19.74,C,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Living Room,HUMIDITY,47.89,%,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Living Room,CO2,626.00,ppm,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Living Room,TEMPERATURE,19.56,C,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Living Room,HUMIDITY,48.76,%,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Living Room,CO2,633.85,ppm,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Living Room,TEMPERATURE,19.50,C,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Living Room,HUMIDITY,49.31,%,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Living Room,CO2,629.54,ppm,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Living Room,TEMPERATURE,19.56,C,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Living Room,HUMIDITY,49.50,%,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Living Room,CO2,615.27,ppm,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Living Room,TEMPERATURE,19.74,C,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Living Room,HUMIDITY,49.31,%,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Living Room,CO2,598.32,ppm,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Living Room,TEMPERATURE,20.03,C,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Living Room,HUMIDITY,48.76,%,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Living Room,CO2,587.31,ppm,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Living Room,TEMPERATURE,20.40,C,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Living Room,HUMIDITY,47.89,%,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Living Room,CO2,645.73,ppm,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Living Room,TEMPERATURE,20.83,C,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Living Room,HUMIDITY,46.75,%,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Living Room,CO2,712.52,ppm,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Living Room,TEMPERATURE,21.30,C,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Living Room,HUMIDITY,45.42,%,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Living Room,CO2,778.90,ppm,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Living Room,TEMPERATURE,21.77,C,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Living Room,HUMIDITY,44.00,%,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Living Room,CO2,833.69,ppm,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Living Room,TEMPERATURE,22.20,C,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Living Room,HUMIDITY,42.58,%,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Living Room,CO2,867.88,ppm,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Living Room,TEMPERATURE,22.57,C,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Living Room,HUMIDITY,41.25,%,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Living Room,CO2,878.29,ppm,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Living Room,TEMPERATURE,22.86,C,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Living Room,HUMIDITY,40.11,%,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Living Room,CO2,868.44,ppm,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Living Room,TEMPERATURE,23.04,C,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Living Room,HUMIDITY,39.24,%,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Living Room,CO2,846.34,ppm,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Living Room,TEMPERATURE,23.10,C,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Living Room,HUMIDITY,38.69,%,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Living Room,CO2,820.28,ppm,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Living Room,TEMPERATURE,23.04,C,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Living Room,HUMIDITY,38.50,%,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Living Room,CO2,794.68,ppm,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Living Room,TEMPERATURE,22.86,C,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Living Room,HUMIDITY,38.69,%,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Living Room,CO2,768.37,ppm,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Living Room,TEMPERATURE,22.57,C,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Living Room,HUMIDITY,39.24,%,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Living Room,CO2,735.83,ppm,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Living Room,TEMPERATURE,22.20,C,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Living Room,HUMIDITY,40.11,%,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Living Room,CO2,691.00,ppm,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Living Room,TEMPERATURE,21.77,C,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Living Room,HUMIDITY,41.25,%,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Living Room,CO2,631.47,ppm,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Living Room,TEMPERATURE,21.30,C,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Living Room,HUMIDITY,42.58,%,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Living Room,CO2,618.86,ppm,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Living Room,TEMPERATURE,20.83,C,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Living Room,HUMIDITY,44.00,%,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Living Room,CO2,601.72,ppm,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Living Room,TEMPERATURE,20.40,C,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Living Room,HUMIDITY,45.42,%,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Living Room,CO2,588.81,ppm,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Living Room,TEMPERATURE,20.03,C,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Living Room,HUMIDITY,46.75,%,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Living Room,CO2,614.06,ppm,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Living Room,TEMPERATURE,20.01,C,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Living Room,HUMIDITY,46.95,%,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Living Room,CO2,623.82,ppm,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Living Room,TEMPERATURE,19.83,C,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Living Room,HUMIDITY,47.82,%,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Living Room,CO2,640.49,ppm,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Living Room,TEMPERATURE,19.77,C,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Living Room,HUMIDITY,48.37,%,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Living Room,CO2,655.56,ppm,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Living Room,TEMPERATURE,19.83,C,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Living Room,HUMIDITY,48.56,%,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Living Room,CO2,661.36,ppm,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Living Room,TEMPERATURE,20.01,C,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Living Room,HUMIDITY,48.37,%,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Living Room,CO2,654.93,ppm,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Living Room,TEMPERATURE,20.30,C,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Living Room,HUMIDITY,47.82,%,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Living Room,CO2,639.55,ppm,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Living Room,TEMPERATURE,20.67,C,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Living Room,HUMIDITY,46.95,%,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Living Room,CO2,680.91,ppm,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Living Room,TEMPERATURE,21.11,C,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Living Room,HUMIDITY,45.81,%,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Living Room,CO2,726.66,ppm,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Living Room,TEMPERATURE,21.57,C,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Living Room,HUMIDITY,44.49,%,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Living Room,CO2,778.74,ppm,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Living Room,TEMPERATURE,22.04,C,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Living Room,HUMIDITY,43.06,%,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Living Room,CO2,833.26,ppm,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Living Room,TEMPERATURE,22.47,C,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Living Room,HUMIDITY,41.64,%,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Living Room,CO2,881.34,ppm,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Living Room,TEMPERATURE,22.85,C,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Living Room,HUMIDITY,40.31,%,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Living Room,CO2,912.72,ppm,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Living Room,TEMPERATURE,23.13,C,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Living Room,HUMIDITY,39.17,%,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Living Room,CO2,920.25,ppm,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Living Room,TEMPERATURE,23.31,C,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Living Room,HUMIDITY,38.30,%,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Living Room,CO2,903.07,ppm,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Living Room,TEMPERATURE,23.37,C,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Living Room,HUMIDITY,37.75,%,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Living Room,CO2,866.95,ppm,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Living Room,TEMPERATURE,23.31,C,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Living Room,HUMIDITY,37.56,%,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Living Room,CO2,821.46,ppm,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Living Room,TEMPERATURE,23.13,C,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Living Room,HUMIDITY,37.75,%,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Living Room,CO2,775.56,ppm,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Living Room,TEMPERATURE,22.85,C,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Living Room,HUMIDITY,38.30,%,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Living Room,CO2,733.71,ppm,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Living Room,TEMPERATURE,22.47,C,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Living Room,HUMIDITY,39.17,%,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Living Room,CO2,694.60,ppm,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Living Room,TEMPERATURE,22.04,C,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Living Room,HUMIDITY,40.31,%,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Living Room,CO2,652.90,ppm,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Living Room,TEMPERATURE,21.57,C,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Living Room,HUMIDITY,41.64,%,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Living Room,CO2,661.14,ppm,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Living Room,TEMPERATURE,21.11,C,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Living Room,HUMIDITY,43.06,%,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Living Room,CO2,657.26,ppm,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Living Room,TEMPERATURE,20.67,C,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Living Room,HUMIDITY,44.49,%,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Living Room,CO2,643.24,ppm,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Living Room,TEMPERATURE,20.30,C,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Living Room,HUMIDITY,45.81,%,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Living Room,CO2,632.99,ppm,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Living Room,TEMPERATURE,20.08,C,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Living Room,HUMIDITY,46.72,%,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Living Room,CO2,621.65,ppm,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Living Room,TEMPERATURE,19.90,C,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Living Room,HUMIDITY,47.59,%,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Living Room,CO2,621.76,ppm,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Living Room,TEMPERATURE,19.84,C,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Living Room,HUMIDITY,48.14,%,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Living Room,CO2,633.27,ppm,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Living Room,TEMPERATURE,19.90,C,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Living Room,HUMIDITY,48.33,%,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Living Room,CO2,650.31,ppm,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Living Room,TEMPERATURE,20.08,C,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Living Room,HUMIDITY,48.14,%,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Living Room,CO2,664.20,ppm,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Living Room,TEMPERATURE,20.37,C,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Living Room,HUMIDITY,47.59,%,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Living Room,CO2,667.85,ppm,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Living Room,TEMPERATURE,20.74,C,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Living Room,HUMIDITY,46.72,%,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Living Room,CO2,717.27,ppm,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Living Room,TEMPERATURE,21.18,C,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Living Room,HUMIDITY,45.58,%,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Living Room,CO2,755.99,ppm,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Living Room,TEMPERATURE,21.64,C,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Living Room,HUMIDITY,44.25,%,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Living Room,CO2,789.53,ppm,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Living Room,TEMPERATURE,22.11,C,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Living Room,HUMIDITY,42.83,%,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Living Room,CO2,823.46,ppm,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Living Room,TEMPERATURE,22.54,C,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Living Room,HUMIDITY,41.41,%,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Living Room,CO2,859.39,ppm,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Living Room,TEMPERATURE,22.91,C,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Living Room,HUMIDITY,40.08,%,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Living Room,CO2,893.25,ppm,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Living Room,TEMPERATURE,23.20,C,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Living Room,HUMIDITY,38.94,%,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Living Room,CO2,916.62,ppm,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Living Room,TEMPERATURE,23.38,C,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Living Room,HUMIDITY,38.07,%,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Living Room,CO2,920.58,ppm,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Living Room,TEMPERATURE,23.44,C,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Living Room,HUMIDITY,37.52,%,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Living Room,CO2,900.12,ppm,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Living Room,TEMPERATURE,23.38,C,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Living Room,HUMIDITY,37.33,%,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Living Room,CO2,856.83,ppm,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Living Room,TEMPERATURE,23.20,C,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Living Room,HUMIDITY,37.52,%,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Living Room,CO2,798.54,ppm,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Living Room,TEMPERATURE,22.91,C,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Living Room,HUMIDITY,38.07,%,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Living Room,CO2,736.04,ppm,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Living Room,TEMPERATURE,22.54,C,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Living Room,HUMIDITY,38.94,%,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Living Room,CO2,678.53,ppm,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Living Room,TEMPERATURE,22.11,C,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Living Room,HUMIDITY,40.08,%,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Living Room,CO2,630.07,ppm,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Living Room,TEMPERATURE,21.64,C,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Living Room,HUMIDITY,41.41,%,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Living Room,CO2,646.63,ppm,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Living Room,TEMPERATURE,21.18,C,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Living Room,HUMIDITY,42.83,%,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Living Room,CO2,661.91,ppm,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Living Room,TEMPERATURE,20.74,C,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Living Room,HUMIDITY,44.25,%,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Living Room,CO2,668.12,ppm,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Living Room,TEMPERATURE,20.37,C,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Living Room,HUMIDITY,45.58,%,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Living Room,CO2,643.17,ppm,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Living Room,TEMPERATURE,19.89,C,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Living Room,HUMIDITY,47.37,%,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Living Room,CO2,627.99,ppm,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Living Room,TEMPERATURE,19.71,C,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Living Room,HUMIDITY,48.24,%,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Living Room,CO2,611.38,ppm,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Living Room,TEMPERATURE,19.65,C,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Living Room,HUMIDITY,48.79,%,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Living Room,CO2,601.81,ppm,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Living Room,TEMPERATURE,19.71,C,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Living Room,HUMIDITY,48.98,%,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Living Room,CO2,604.15,ppm,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Living Room,TEMPERATURE,19.89,C,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Living Room,HUMIDITY,48.79,%,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Living Room,CO2,617.21,ppm,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Living Room,TEMPERATURE,20.18,C,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Living Room,HUMIDITY,48.24,%,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Living Room,CO2,634.34,ppm,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Living Room,TEMPERATURE,20.55,C,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Living Room,HUMIDITY,47.37,%,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Living Room,CO2,704.66,ppm,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Living Room,TEMPERATURE,20.99,C,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Living Room,HUMIDITY,46.23,%,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Living Room,CO2,761.06,ppm,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Living Room,TEMPERATURE,21.45,C,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Living Room,HUMIDITY,44.90,%,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Living Room,CO2,800.05,ppm,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Living Room,TEMPERATURE,21.92,C,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Living Room,HUMIDITY,43.48,%,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Living Room,CO2,824.41,ppm,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Living Room,TEMPERATURE,22.35,C,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Living Room,HUMIDITY,42.06,%,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Living Room,CO2,840.64,ppm,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Living Room,TEMPERATURE,22.72,C,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Living Room,HUMIDITY,40.73,%,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Living Room,CO2,854.71,ppm,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Living Room,TEMPERATURE,23.01,C,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Living Room,HUMIDITY,39.59,%,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Living Room,CO2,868.28,ppm,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Living Room,TEMPERATURE,23.19,C,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Living Room,HUMIDITY,38.72,%,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Living Room,CO2,877.42,ppm,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Living Room,TEMPERATURE,23.25,C,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Living Room,HUMIDITY,38.17,%,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Living Room,CO2,874.49,ppm,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Living Room,TEMPERATURE,23.19,C,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Living Room,HUMIDITY,37.98,%,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Living Room,CO2,852.15,ppm,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Living Room,TEMPERATURE,23.01,C,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Living Room,HUMIDITY,38.17,%,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Living Room,CO2,807.53,ppm,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Living Room,TEMPERATURE,22.72,C,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Living Room,HUMIDITY,38.72,%,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Living Room,CO2,744.48,ppm,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Living Room,TEMPERATURE,22.35,C,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Living Room,HUMIDITY,39.59,%,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Living Room,CO2,672.46,ppm,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Living Room,TEMPERATURE,21.92,C,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Living Room,HUMIDITY,40.73,%,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Living Room,CO2,602.94,ppm,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Living Room,TEMPERATURE,21.45,C,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Living Room,HUMIDITY,42.06,%,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Living Room,CO2,602.61,ppm,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Living Room,TEMPERATURE,20.99,C,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Living Room,HUMIDITY,43.48,%,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Living Room,CO2,613.78,ppm,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Living Room,TEMPERATURE,20.55,C,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Living Room,HUMIDITY,44.90,%,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Living Room,CO2,630.77,ppm,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Living Room,TEMPERATURE,20.18,C,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Living Room,HUMIDITY,46.23,%,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Living Room,CO2,614.54,ppm,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Living Room,TEMPERATURE,19.59,C,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Living Room,HUMIDITY,48.41,%,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Living Room,CO2,618.63,ppm,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Living Room,TEMPERATURE,19.41,C,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Living Room,HUMIDITY,49.28,%,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Living Room,CO2,610.58,ppm,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Living Room,TEMPERATURE,19.35,C,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Living Room,HUMIDITY,49.83,%,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Living Room,CO2,594.49,ppm,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Living Room,TEMPERATURE,19.41,C,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Living Room,HUMIDITY,50.02,%,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Living Room,CO2,578.57,ppm,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Living Room,TEMPERATURE,19.59,C,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Living Room,HUMIDITY,49.83,%,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Living Room,CO2,570.93,ppm,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Living Room,TEMPERATURE,19.88,C,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Living Room,HUMIDITY,49.28,%,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Living Room,CO2,575.46,ppm,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Living Room,TEMPERATURE,20.25,C,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Living Room,HUMIDITY,48.41,%,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Living Room,CO2,647.71,ppm,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Living Room,TEMPERATURE,20.68,C,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Living Room,HUMIDITY,47.27,%,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Living Room,CO2,719.59,ppm,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Living Room,TEMPERATURE,21.15,C,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Living Room,HUMIDITY,45.94,%,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Living Room,CO2,779.71,ppm,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Living Room,TEMPERATURE,21.61,C,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Living Room,HUMIDITY,44.52,%,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Living Room,CO2,820.09,ppm,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Living Room,TEMPERATURE,22.05,C,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Living Room,HUMIDITY,43.10,%,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Living Room,CO2,839.07,ppm,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Living Room,TEMPERATURE,22.42,C,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Living Room,HUMIDITY,41.77,%,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Living Room,CO2,841.20,ppm,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Living Room,TEMPERATURE,22.71,C,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Living Room,HUMIDITY,40.63,%,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Living Room,CO2,834.24,ppm,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Living Room,TEMPERATURE,22.89,C,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Living Room,HUMIDITY,39.76,%,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Living Room,CO2,824.72,ppm,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Living Room,TEMPERATURE,22.95,C,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Living Room,HUMIDITY,39.21,%,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Living Room,CO2,814.51,ppm,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Living Room,TEMPERATURE,22.89,C,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Living Room,HUMIDITY,39.02,%,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Living Room,CO2,799.97,ppm,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Living Room,TEMPERATURE,22.71,C,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Living Room,HUMIDITY,39.21,%,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Living Room,CO2,774.28,ppm,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Living Room,TEMPERATURE,22.42,C,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Living Room,HUMIDITY,39.76,%,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Living Room,CO2,731.61,ppm,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Living Room,TEMPERATURE,22.05,C,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Living Room,HUMIDITY,40.63,%,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Living Room,CO2,671.06,ppm,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Living Room,TEMPERATURE,21.61,C,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Living Room,HUMIDITY,41.77,%,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Living Room,CO2,598.23,ppm,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Living Room,TEMPERATURE,21.15,C,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Living Room,HUMIDITY,43.10,%,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Living Room,CO2,581.52,ppm,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Living Room,TEMPERATURE,20.68,C,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Living Room,HUMIDITY,44.52,%,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Living Room,CO2,571.58,ppm,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Living Room,TEMPERATURE,20.25,C,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Living Room,HUMIDITY,45.94,%,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Living Room,CO2,573.48,ppm,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Living Room,TEMPERATURE,19.88,C,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Living Room,HUMIDITY,47.27,%,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Living Room,CO2,567.32,ppm,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Living Room,TEMPERATURE,19.40,C,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Living Room,HUMIDITY,49.06,%,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Living Room,CO2,584.45,ppm,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Living Room,TEMPERATURE,19.22,C,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Living Room,HUMIDITY,49.93,%,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Living Room,CO2,597.22,ppm,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Living Room,TEMPERATURE,19.16,C,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Living Room,HUMIDITY,50.48,%,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Living Room,CO2,599.10,ppm,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Living Room,TEMPERATURE,19.22,C,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Living Room,HUMIDITY,50.67,%,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Living Room,CO2,589.15,ppm,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Living Room,TEMPERATURE,19.40,C,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Living Room,HUMIDITY,50.48,%,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Living Room,CO2,572.44,ppm,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Living Room,TEMPERATURE,19.69,C,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Living Room,HUMIDITY,49.93,%,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Living Room,CO2,557.47,ppm,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Living Room,TEMPERATURE,20.06,C,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Living Room,HUMIDITY,49.06,%,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Living Room,CO2,609.75,ppm,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Living Room,TEMPERATURE,20.49,C,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Living Room,HUMIDITY,47.92,%,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Living Room,CO2,671.34,ppm,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Living Room,TEMPERATURE,20.96,C,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Living Room,HUMIDITY,46.59,%,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Living Room,CO2,736.12,ppm,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Living Room,TEMPERATURE,21.42,C,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Living Room,HUMIDITY,45.17,%,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Living Room,CO2,793.72,ppm,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Living Room,TEMPERATURE,21.86,C,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Living Room,HUMIDITY,43.75,%,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Living Room,CO2,833.70,ppm,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Living Room,TEMPERATURE,22.23,C,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Living Room,HUMIDITY,42.42,%,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Living Room,CO2,849.93,ppm,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Living Room,TEMPERATURE,22.52,C,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Living Room,HUMIDITY,41.28,%,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Living Room,CO2,842.96,ppm,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Living Room,TEMPERATURE,22.70,C,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Living Room,HUMIDITY,40.41,%,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Living Room,CO2,819.34,ppm,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Living Room,TEMPERATURE,22.76,C,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Living Room,HUMIDITY,39.86,%,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Living Room,CO2,788.12,ppm,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Living Room,TEMPERATURE,22.70,C,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Living Room,HUMIDITY,39.67,%,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Living Room,CO2,756.37,ppm,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Living Room,TEMPERATURE,22.52,C,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Living Room,HUMIDITY,39.86,%,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Living Room,CO2,726.04,ppm,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Living Room,TEMPERATURE,22.23,C,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Living Room,HUMIDITY,40.41,%,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Living Room,CO2,693.67,ppm,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Living Room,TEMPERATURE,21.86,C,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Living Room,HUMIDITY,41.28,%,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Living Room,CO2,653.10,ppm,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Living Room,TEMPERATURE,21.42,C,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Living Room,HUMIDITY,42.42,%,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Living Room,CO2,599.76,ppm,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Living Room,TEMPERATURE,20.96,C,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Living Room,HUMIDITY,43.75,%,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Living Room,CO2,592.11,ppm,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Living Room,TEMPERATURE,20.49,C,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Living Room,HUMIDITY,45.17,%,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Living Room,CO2,576.18,ppm,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Living Room,TEMPERATURE,20.06,C,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Living Room,HUMIDITY,46.59,%,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Living Room,CO2,560.10,ppm,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Living Room,TEMPERATURE,19.69,C,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Living Room,HUMIDITY,47.92,%,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Living Room,CO2,558.82,ppm,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Living Room,TEMPERATURE,19.47,C,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Living Room,HUMIDITY,48.83,%,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Living Room,CO2,562.92,ppm,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Living Room,TEMPERATURE,19.29,C,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Living Room,HUMIDITY,49.70,%,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Living Room,CO2,577.07,ppm,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Living Room,TEMPERATURE,19.23,C,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Living Room,HUMIDITY,50.25,%,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Living Room,CO2,594.05,ppm,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Living Room,TEMPERATURE,19.29,C,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Living Room,HUMIDITY,50.44,%,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Living Room,CO2,605.22,ppm,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Living Room,TEMPERATURE,19.47,C,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Living Room,HUMIDITY,50.25,%,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Living Room,CO2,604.88,ppm,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Living Room,TEMPERATURE,19.75,C,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Living Room,HUMIDITY,49.70,%,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Living Room,CO2,593.20,ppm,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Living Room,TEMPERATURE,20.13,C,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Living Room,HUMIDITY,48.83,%,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Living Room,CO2,633.99,ppm,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Living Room,TEMPERATURE,20.56,C,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Living Room,HUMIDITY,47.69,%,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Living Room,CO2,675.20,ppm,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Living Room,TEMPERATURE,21.03,C,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Living Room,HUMIDITY,46.36,%,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Living Room,CO2,721.06,ppm,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Living Room,TEMPERATURE,21.49,C,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Living Room,HUMIDITY,44.94,%,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Living Room,CO2,770.87,ppm,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Living Room,TEMPERATURE,21.93,C,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Living Room,HUMIDITY,43.51,%,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Living Room,CO2,818.15,ppm,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Living Room,TEMPERATURE,22.30,C,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Living Room,HUMIDITY,42.19,%,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Living Room,CO2,853.04,ppm,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Living Room,TEMPERATURE,22.59,C,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Living Room,HUMIDITY,41.05,%,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Living Room,CO2,866.60,ppm,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Living Room,TEMPERATURE,22.77,C,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Living Room,HUMIDITY,40.18,%,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Living Room,CO2,854.90,ppm,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Living Room,TEMPERATURE,22.83,C,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Living Room,HUMIDITY,39.63,%,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Living Room,CO2,820.92,ppm,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Living Room,TEMPERATURE,22.77,C,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Living Room,HUMIDITY,39.44,%,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Living Room,CO2,773.14,ppm,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Living Room,TEMPERATURE,22.59,C,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Living Room,HUMIDITY,39.63,%,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Living Room,CO2,721.68,ppm,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Living Room,TEMPERATURE,22.30,C,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Living Room,HUMIDITY,40.18,%,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Living Room,CO2,673.84,ppm,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Living Room,TEMPERATURE,21.93,C,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Living Room,HUMIDITY,41.05,%,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Living Room,CO2,631.36,ppm,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Living Room,TEMPERATURE,21.49,C,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Living Room,HUMIDITY,42.19,%,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Living Room,CO2,590.63,ppm,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Living Room,TEMPERATURE,21.03,C,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Living Room,HUMIDITY,43.51,%,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Living Room,CO2,603.68,ppm,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Living Room,TEMPERATURE,20.56,C,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Living Room,HUMIDITY,44.94,%,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Living Room,CO2,606.01,ppm,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Living Room,TEMPERATURE,20.13,C,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Living Room,HUMIDITY,46.36,%,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Living Room,CO2,596.43,ppm,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Living Room,TEMPERATURE,19.75,C,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Living Room,HUMIDITY,47.69,%,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Bedroom,CO2,745.20,ppm,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Bedroom,TEMPERATURE,20.29,C,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Bedroom,HUMIDITY,50.39,%,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Bedroom,CO2,748.70,ppm,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Bedroom,TEMPERATURE,20.11,C,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Bedroom,HUMIDITY,51.26,%,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Bedroom,CO2,740.12,ppm,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Bedroom,TEMPERATURE,20.05,C,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Bedroom,HUMIDITY,51.81,%,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Bedroom,CO2,723.84,ppm,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Bedroom,TEMPERATURE,20.11,C,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Bedroom,HUMIDITY,52.00,%,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Bedroom,CO2,708.15,ppm,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Bedroom,TEMPERATURE,20.29,C,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Bedroom,HUMIDITY,51.81,%,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Bedroom,CO2,701.05,ppm,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Bedroom,TEMPERATURE,20.58,C,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Bedroom,HUMIDITY,51.26,%,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Bedroom,CO2,706.15,ppm,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Bedroom,TEMPERATURE,20.95,C,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Bedroom,HUMIDITY,50.39,%,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Bedroom,CO2,778.72,ppm,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Bedroom,TEMPERATURE,21.38,C,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Bedroom,HUMIDITY,49.25,%,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Bedroom,CO2,850.49,ppm,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Bedroom,TEMPERATURE,21.85,C,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Bedroom,HUMIDITY,47.92,%,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Bedroom,CO2,910.15,ppm,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Bedroom,TEMPERATURE,22.32,C,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Bedroom,HUMIDITY,46.50,%,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Bedroom,CO2,949.93,ppm,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Bedroom,TEMPERATURE,22.75,C,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Bedroom,HUMIDITY,45.08,%,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Bedroom,CO2,968.48,ppm,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Bedroom,TEMPERATURE,23.12,C,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Bedroom,HUMIDITY,43.75,%,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Bedroom,CO2,970.59,ppm,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Bedroom,TEMPERATURE,23.41,C,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Bedroom,HUMIDITY,42.61,%,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Bedroom,CO2,964.00,ppm,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Bedroom,TEMPERATURE,23.59,C,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Bedroom,HUMIDITY,41.74,%,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Bedroom,CO2,955.08,ppm,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Bedroom,TEMPERATURE,23.65,C,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Bedroom,HUMIDITY,41.19,%,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Bedroom,CO2,945.38,ppm,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Bedroom,TEMPERATURE,23.59,C,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Bedroom,HUMIDITY,41.00,%,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Bedroom,CO2,931.00,ppm,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Bedroom,TEMPERATURE,23.41,C,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Bedroom,HUMIDITY,41.19,%,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Bedroom,CO2,905.04,ppm,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Bedroom,TEMPERATURE,23.12,C,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Bedroom,HUMIDITY,41.74,%,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Bedroom,CO2,861.81,ppm,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Bedroom,TEMPERATURE,22.75,C,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Bedroom,HUMIDITY,42.61,%,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Bedroom,CO2,800.69,ppm,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Bedroom,TEMPERATURE,22.32,C,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Bedroom,HUMIDITY,43.75,%,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Bedroom,CO2,727.59,ppm,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Bedroom,TEMPERATURE,21.85,C,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Bedroom,HUMIDITY,45.08,%,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Bedroom,CO2,711.02,ppm,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Bedroom,TEMPERATURE,21.38,C,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Bedroom,HUMIDITY,46.50,%,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Bedroom,CO2,701.57,ppm,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Bedroom,TEMPERATURE,20.95,C,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Bedroom,HUMIDITY,47.92,%,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Bedroom,CO2,704.07,ppm,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Bedroom,TEMPERATURE,20.58,C,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Bedroom,HUMIDITY,49.25,%,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Bedroom,CO2,744.60,ppm,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Bedroom,TEMPERATURE,20.56,C,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Bedroom,HUMIDITY,49.45,%,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Bedroom,CO2,761.72,ppm,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Bedroom,TEMPERATURE,20.38,C,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Bedroom,HUMIDITY,50.32,%,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Bedroom,CO2,774.07,ppm,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Bedroom,TEMPERATURE,20.32,C,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Bedroom,HUMIDITY,50.87,%,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Bedroom,CO2,775.36,ppm,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Bedroom,TEMPERATURE,20.38,C,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Bedroom,HUMIDITY,51.06,%,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Bedroom,CO2,764.93,ppm,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Bedroom,TEMPERATURE,20.56,C,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Bedroom,HUMIDITY,50.87,%,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Bedroom,CO2,748.09,ppm,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Bedroom,TEMPERATURE,20.85,C,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Bedroom,HUMIDITY,50.32,%,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Bedroom,CO2,733.43,ppm,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Bedroom,TEMPERATURE,21.22,C,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Bedroom,HUMIDITY,49.45,%,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Bedroom,CO2,786.28,ppm,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Bedroom,TEMPERATURE,21.66,C,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Bedroom,HUMIDITY,48.31,%,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Bedroom,CO2,848.42,ppm,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Bedroom,TEMPERATURE,22.12,C,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Bedroom,HUMIDITY,46.99,%,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Bedroom,CO2,913.45,ppm,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Bedroom,TEMPERATURE,22.59,C,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Bedroom,HUMIDITY,45.56,%,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Bedroom,CO2,970.87,ppm,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Bedroom,TEMPERATURE,23.02,C,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Bedroom,HUMIDITY,44.14,%,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Bedroom,CO2,1010.33,ppm,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Bedroom,TEMPERATURE,23.40,C,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Bedroom,HUMIDITY,42.81,%,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Bedroom,CO2,1025.97,ppm,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Bedroom,TEMPERATURE,23.68,C,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Bedroom,HUMIDITY,41.67,%,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Bedroom,CO2,1018.63,ppm,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Bedroom,TEMPERATURE,23.86,C,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Bedroom,HUMIDITY,40.80,%,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Bedroom,CO2,995.07,ppm,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Bedroom,TEMPERATURE,23.92,C,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Bedroom,HUMIDITY,40.25,%,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Bedroom,CO2,964.28,ppm,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Bedroom,TEMPERATURE,23.86,C,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Bedroom,HUMIDITY,40.06,%,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Bedroom,CO2,933.14,ppm,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Bedroom,TEMPERATURE,23.68,C,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Bedroom,HUMIDITY,40.25,%,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Bedroom,CO2,903.26,ppm,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Bedroom,TEMPERATURE,23.40,C,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Bedroom,HUMIDITY,40.80,%,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Bedroom,CO2,870.97,ppm,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Bedroom,TEMPERATURE,23.02,C,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Bedroom,HUMIDITY,41.67,%,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Bedroom,CO2,830.07,ppm,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Bedroom,TEMPERATURE,22.59,C,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Bedroom,HUMIDITY,42.81,%,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Bedroom,CO2,776.15,ppm,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Bedroom,TEMPERATURE,22.12,C,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Bedroom,HUMIDITY,44.14,%,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Bedroom,CO2,767.96,ppm,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Bedroom,TEMPERATURE,21.66,C,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Bedroom,HUMIDITY,45.56,%,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Bedroom,CO2,751.82,ppm,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Bedroom,TEMPERATURE,21.22,C,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Bedroom,HUMIDITY,46.99,%,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Bedroom,CO2,735.96,ppm,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Bedroom,TEMPERATURE,20.85,C,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Bedroom,HUMIDITY,48.31,%,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Bedroom,CO2,735.22,ppm,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Bedroom,TEMPERATURE,20.63,C,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Bedroom,HUMIDITY,49.22,%,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Bedroom,CO2,739.90,ppm,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Bedroom,TEMPERATURE,20.45,C,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Bedroom,HUMIDITY,50.09,%,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Bedroom,CO2,754.38,ppm,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Bedroom,TEMPERATURE,20.39,C,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Bedroom,HUMIDITY,50.64,%,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Bedroom,CO2,771.27,ppm,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Bedroom,TEMPERATURE,20.45,C,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Bedroom,HUMIDITY,50.83,%,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Bedroom,CO2,781.98,ppm,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Bedroom,TEMPERATURE,20.63,C,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Bedroom,HUMIDITY,50.64,%,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Bedroom,CO2,781.04,ppm,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Bedroom,TEMPERATURE,20.92,C,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Bedroom,HUMIDITY,50.09,%,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Bedroom,CO2,768.92,ppm,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Bedroom,TEMPERATURE,21.29,C,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Bedroom,HUMIDITY,49.22,%,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Bedroom,CO2,809.67,ppm,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Bedroom,TEMPERATURE,21.73,C,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Bedroom,HUMIDITY,48.08,%,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Bedroom,CO2,851.24,ppm,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Bedroom,TEMPERATURE,22.19,C,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Bedroom,HUMIDITY,46.75,%,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Bedroom,CO2,897.70,ppm,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Bedroom,TEMPERATURE,22.66,C,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Bedroom,HUMIDITY,45.33,%,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Bedroom,CO2,948.02,ppm,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Bedroom,TEMPERATURE,23.09,C,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Bedroom,HUMIDITY,43.91,%,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Bedroom,CO2,995.48,ppm,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Bedroom,TEMPERATURE,23.46,C,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Bedroom,HUMIDITY,42.58,%,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Bedroom,CO2,1030.11,ppm,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Bedroom,TEMPERATURE,23.75,C,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Bedroom,HUMIDITY,41.44,%,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Bedroom,CO2,1043.12,ppm,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Bedroom,TEMPERATURE,23.93,C,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Bedroom,HUMIDITY,40.57,%,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Bedroom,CO2,1030.85,ppm,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Bedroom,TEMPERATURE,23.99,C,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Bedroom,HUMIDITY,40.02,%,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Bedroom,CO2,996.58,ppm,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Bedroom,TEMPERATURE,23.93,C,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Bedroom,HUMIDITY,39.83,%,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Bedroom,CO2,948.92,ppm,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Bedroom,TEMPERATURE,23.75,C,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Bedroom,HUMIDITY,40.02,%,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Bedroom,CO2,897.94,ppm,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Bedroom,TEMPERATURE,23.46,C,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Bedroom,HUMIDITY,40.57,%,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Bedroom,CO2,850.70,ppm,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Bedroom,TEMPERATURE,23.09,C,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Bedroom,HUMIDITY,41.44,%,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Bedroom,CO2,808.62,ppm,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Bedroom,TEMPERATURE,22.66,C,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Bedroom,HUMIDITY,42.58,%,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Bedroom,CO2,767.90,ppm,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Bedroom,TEMPERATURE,22.19,C,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Bedroom,HUMIDITY,43.91,%,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Bedroom,CO2,780.56,ppm,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Bedroom,TEMPERATURE,21.73,C,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Bedroom,HUMIDITY,45.33,%,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Bedroom,CO2,782.29,ppm,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Bedroom,TEMPERATURE,21.29,C,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Bedroom,HUMIDITY,46.75,%,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Bedroom,CO2,772.22,ppm,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Bedroom,TEMPERATURE,20.92,C,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Bedroom,HUMIDITY,48.08,%,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Bedroom,CO2,736.53,ppm,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Bedroom,TEMPERATURE,20.44,C,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Bedroom,HUMIDITY,49.87,%,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Bedroom,CO2,721.64,ppm,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Bedroom,TEMPERATURE,20.26,C,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Bedroom,HUMIDITY,50.74,%,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Bedroom,CO2,716.21,ppm,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Bedroom,TEMPERATURE,20.20,C,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Bedroom,HUMIDITY,51.29,%,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Bedroom,CO2,722.99,ppm,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Bedroom,TEMPERATURE,20.26,C,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Bedroom,HUMIDITY,51.48,%,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Bedroom,CO2,738.54,ppm,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Bedroom,TEMPERATURE,20.44,C,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Bedroom,HUMIDITY,51.29,%,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Bedroom,CO2,754.93,ppm,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Bedroom,TEMPERATURE,20.73,C,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Bedroom,HUMIDITY,50.74,%,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Bedroom,CO2,763.80,ppm,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Bedroom,TEMPERATURE,21.10,C,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Bedroom,HUMIDITY,49.87,%,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Bedroom,CO2,818.50,ppm,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Bedroom,TEMPERATURE,21.54,C,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Bedroom,HUMIDITY,48.73,%,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Bedroom,CO2,859.86,ppm,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Bedroom,TEMPERATURE,22.00,C,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Bedroom,HUMIDITY,47.40,%,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Bedroom,CO2,892.08,ppm,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Bedroom,TEMPERATURE,22.47,C,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Bedroom,HUMIDITY,45.98,%,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Bedroom,CO2,921.37,ppm,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Bedroom,TEMPERATURE,22.90,C,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Bedroom,HUMIDITY,44.56,%,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Bedroom,CO2,951.72,ppm,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Bedroom,TEMPERATURE,23.27,C,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Bedroom,HUMIDITY,43.23,%,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Bedroom,CO2,981.91,ppm,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Bedroom,TEMPERATURE,23.56,C,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Bedroom,HUMIDITY,42.09,%,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Bedroom,CO2,1005.38,ppm,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Bedroom,TEMPERATURE,23.74,C,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Bedroom,HUMIDITY,41.22,%,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Bedroom,CO2,1013.16,ppm,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Bedroom,TEMPERATURE,23.80,C,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Bedroom,HUMIDITY,40.67,%,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Bedroom,CO2,998.30,ppm,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Bedroom,TEMPERATURE,23.74,C,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Bedroom,HUMIDITY,40.48,%,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Bedroom,CO2,959.53,ppm,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Bedroom,TEMPERATURE,23.56,C,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Bedroom,HUMIDITY,40.67,%,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Bedroom,CO2,902.38,ppm,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Bedroom,TEMPERATURE,23.27,C,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Bedroom,HUMIDITY,41.22,%,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Bedroom,CO2,837.05,ppm,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Bedroom,TEMPERATURE,22.90,C,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Bedroom,HUMIDITY,42.09,%,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Bedroom,CO2,774.20,ppm,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Bedroom,TEMPERATURE,22.47,C,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Bedroom,HUMIDITY,43.23,%,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Bedroom,CO2,720.59,ppm,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Bedroom,TEMPERATURE,22.00,C,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Bedroom,HUMIDITY,44.56,%,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Bedroom,CO2,734.83,ppm,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Bedroom,TEMPERATURE,21.54,C,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Bedroom,HUMIDITY,45.98,%,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Bedroom,CO2,751.80,ppm,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Bedroom,TEMPERATURE,21.10,C,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Bedroom,HUMIDITY,47.40,%,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Bedroom,CO2,762.85,ppm,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Bedroom,TEMPERATURE,20.73,C,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Bedroom,HUMIDITY,48.73,%,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Bedroom,CO2,731.97,ppm,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Bedroom,TEMPERATURE,20.14,C,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Bedroom,HUMIDITY,50.91,%,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Bedroom,CO2,720.18,ppm,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Bedroom,TEMPERATURE,19.96,C,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Bedroom,HUMIDITY,51.78,%,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Bedroom,CO2,703.10,ppm,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Bedroom,TEMPERATURE,19.90,C,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Bedroom,HUMIDITY,52.33,%,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Bedroom,CO2,689.45,ppm,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Bedroom,TEMPERATURE,19.96,C,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Bedroom,HUMIDITY,52.52,%,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Bedroom,CO2,686.17,ppm,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Bedroom,TEMPERATURE,20.14,C,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Bedroom,HUMIDITY,52.33,%,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Bedroom,CO2,694.94,ppm,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Bedroom,TEMPERATURE,20.43,C,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Bedroom,HUMIDITY,51.78,%,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Bedroom,CO2,711.30,ppm,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Bedroom,TEMPERATURE,20.80,C,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Bedroom,HUMIDITY,50.91,%,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Bedroom,CO2,784.75,ppm,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Bedroom,TEMPERATURE,21.23,C,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Bedroom,HUMIDITY,49.77,%,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Bedroom,CO2,846.60,ppm,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Bedroom,TEMPERATURE,21.70,C,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Bedroom,HUMIDITY,48.44,%,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Bedroom,CO2,890.57,ppm,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Bedroom,TEMPERATURE,22.16,C,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Bedroom,HUMIDITY,47.02,%,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Bedroom,CO2,916.91,ppm,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Bedroom,TEMPERATURE,22.60,C,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Bedroom,HUMIDITY,45.60,%,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Bedroom,CO2,931.11,ppm,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Bedroom,TEMPERATURE,22.97,C,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Bedroom,HUMIDITY,44.27,%,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Bedroom,CO2,940.17,ppm,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Bedroom,TEMPERATURE,23.26,C,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Bedroom,HUMIDITY,43.13,%,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Bedroom,CO2,948.30,ppm,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Bedroom,TEMPERATURE,23.44,C,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Bedroom,HUMIDITY,42.26,%,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Bedroom,CO2,954.36,ppm,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Bedroom,TEMPERATURE,23.50,C,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Bedroom,HUMIDITY,41.71,%,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Bedroom,CO2,952.26,ppm,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Bedroom,TEMPERATURE,23.44,C,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Bedroom,HUMIDITY,41.52,%,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Bedroom,CO2,934.24,ppm,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Bedroom,TEMPERATURE,23.26,C,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Bedroom,HUMIDITY,41.71,%,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Bedroom,CO2,895.25,ppm,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Bedroom,TEMPERATURE,22.97,C,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Bedroom,HUMIDITY,42.26,%,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Bedroom,CO2,836.23,ppm,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Bedroom,TEMPERATURE,22.60,C,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Bedroom,HUMIDITY,43.13,%,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Bedroom,CO2,764.63,ppm,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Bedroom,TEMPERATURE,22.16,C,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Bedroom,HUMIDITY,44.27,%,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Bedroom,CO2,691.67,ppm,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Bedroom,TEMPERATURE,21.70,C,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Bedroom,HUMIDITY,45.60,%,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Bedroom,CO2,685.82,ppm,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Bedroom,TEMPERATURE,21.23,C,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Bedroom,HUMIDITY,47.02,%,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Bedroom,CO2,692.19,ppm,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Bedroom,TEMPERATURE,20.80,C,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Bedroom,HUMIDITY,48.44,%,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Bedroom,CO2,707.55,ppm,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Bedroom,TEMPERATURE,20.43,C,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Bedroom,HUMIDITY,49.77,%,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Bedroom,CO2,705.12,ppm,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Bedroom,TEMPERATURE,19.95,C,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Bedroom,HUMIDITY,51.56,%,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Bedroom,CO2,714.37,ppm,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Bedroom,TEMPERATURE,19.77,C,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Bedroom,HUMIDITY,52.43,%,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Bedroom,CO2,711.65,ppm,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Bedroom,TEMPERATURE,19.71,C,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Bedroom,HUMIDITY,52.98,%,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Bedroom,CO2,698.34,ppm,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Bedroom,TEMPERATURE,19.77,C,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Bedroom,HUMIDITY,53.17,%,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Bedroom,CO2,681.23,ppm,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Bedroom,TEMPERATURE,19.95,C,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Bedroom,HUMIDITY,52.98,%,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Bedroom,CO2,669.03,ppm,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Bedroom,TEMPERATURE,20.24,C,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Bedroom,HUMIDITY,52.43,%,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Bedroom,CO2,667.97,ppm,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Bedroom,TEMPERATURE,20.61,C,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Bedroom,HUMIDITY,51.56,%,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Bedroom,CO2,736.44,ppm,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Bedroom,TEMPERATURE,21.04,C,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Bedroom,HUMIDITY,50.42,%,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Bedroom,CO2,808.27,ppm,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Bedroom,TEMPERATURE,21.51,C,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Bedroom,HUMIDITY,49.09,%,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Bedroom,CO2,872.11,ppm,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Bedroom,TEMPERATURE,21.97,C,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Bedroom,HUMIDITY,47.67,%,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Bedroom,CO2,918.07,ppm,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Bedroom,TEMPERATURE,22.41,C,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Bedroom,HUMIDITY,46.25,%,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Bedroom,CO2,941.65,ppm,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Bedroom,TEMPERATURE,22.78,C,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Bedroom,HUMIDITY,44.92,%,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Bedroom,CO2,945.06,ppm,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Bedroom,TEMPERATURE,23.07,C,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Bedroom,HUMIDITY,43.78,%,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Bedroom,CO2,935.40,ppm,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Bedroom,TEMPERATURE,23.25,C,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Bedroom,HUMIDITY,42.91,%,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Bedroom,CO2,920.59,ppm,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Bedroom,TEMPERATURE,23.31,C,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Bedroom,HUMIDITY,42.36,%,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Bedroom,CO2,905.18,ppm,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Bedroom,TEMPERATURE,23.25,C,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Bedroom,HUMIDITY,42.17,%,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Bedroom,CO2,888.19,ppm,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Bedroom,TEMPERATURE,23.07,C,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Bedroom,HUMIDITY,42.36,%,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Bedroom,CO2,864.05,ppm,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Bedroom,TEMPERATURE,22.78,C,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Bedroom,HUMIDITY,42.91,%,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Bedroom,CO2,826.13,ppm,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Bedroom,TEMPERATURE,22.41,C,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Bedroom,HUMIDITY,43.78,%,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Bedroom,CO2,771.12,ppm,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Bedroom,TEMPERATURE,21.97,C,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Bedroom,HUMIDITY,44.92,%,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Bedroom,CO2,701.80,ppm,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Bedroom,TEMPERATURE,21.51,C,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Bedroom,HUMIDITY,46.25,%,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Bedroom,CO2,684.77,ppm,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Bedroom,TEMPERATURE,21.04,C,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Bedroom,HUMIDITY,47.67,%,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Bedroom,CO2,670.85,ppm,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Bedroom,TEMPERATURE,20.61,C,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Bedroom,HUMIDITY,49.09,%,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Bedroom,CO2,667.14,ppm,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Bedroom,TEMPERATURE,20.24,C,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Bedroom,HUMIDITY,50.42,%,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Bedroom,CO2,682.28,ppm,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Bedroom,TEMPERATURE,20.02,C,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Bedroom,HUMIDITY,51.33,%,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Bedroom,CO2,698.50,ppm,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Bedroom,TEMPERATURE,19.84,C,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Bedroom,HUMIDITY,52.20,%,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Bedroom,CO2,714.27,ppm,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Bedroom,TEMPERATURE,19.78,C,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Bedroom,HUMIDITY,52.75,%,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Bedroom,CO2,721.57,ppm,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Bedroom,TEMPERATURE,19.84,C,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Bedroom,HUMIDITY,52.94,%,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Bedroom,CO2,716.67,ppm,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Bedroom,TEMPERATURE,20.02,C,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Bedroom,HUMIDITY,52.75,%,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Bedroom,CO2,702.07,ppm,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Bedroom,TEMPERATURE,20.30,C,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Bedroom,HUMIDITY,52.20,%,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Bedroom,CO2,685.21,ppm,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Bedroom,TEMPERATURE,20.68,C,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Bedroom,HUMIDITY,51.33,%,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Bedroom,CO2,732.54,ppm,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Bedroom,TEMPERATURE,21.11,C,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Bedroom,HUMIDITY,50.19,%,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Bedroom,CO2,788.67,ppm,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Bedroom,TEMPERATURE,21.58,C,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Bedroom,HUMIDITY,48.86,%,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Bedroom,CO2,850.24,ppm,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Bedroom,TEMPERATURE,22.04,C,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Bedroom,HUMIDITY,47.44,%,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Bedroom,CO2,908.52,ppm,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Bedroom,TEMPERATURE,22.48,C,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Bedroom,HUMIDITY,46.01,%,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Bedroom,CO2,952.74,ppm,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Bedroom,TEMPERATURE,22.85,C,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Bedroom,HUMIDITY,44.69,%,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Bedroom,CO2,974.58,ppm,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Bedroom,TEMPERATURE,23.14,C,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Bedroom,HUMIDITY,43.55,%,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Bedroom,CO2,971.75,ppm,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Bedroom,TEMPERATURE,23.32,C,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Bedroom,HUMIDITY,42.68,%,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Bedroom,CO2,948.70,ppm,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Bedroom,TEMPERATURE,23.38,C,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Bedroom,HUMIDITY,42.13,%,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Bedroom,CO2,914.16,ppm,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Bedroom,TEMPERATURE,23.32,C,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Bedroom,HUMIDITY,41.94,%,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Bedroom,CO2,876.91,ppm,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Bedroom,TEMPERATURE,23.14,C,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Bedroom,HUMIDITY,42.13,%,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Bedroom,CO2,841.70,ppm,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Bedroom,TEMPERATURE,22.85,C,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Bedroom,HUMIDITY,42.68,%,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Bedroom,CO2,807.56,ppm,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Bedroom,TEMPERATURE,22.48,C,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Bedroom,HUMIDITY,43.55,%,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Bedroom,CO2,769.23,ppm,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Bedroom,TEMPERATURE,22.04,C,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Bedroom,HUMIDITY,44.69,%,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Bedroom,CO2,721.00,ppm,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Bedroom,TEMPERATURE,21.58,C,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Bedroom,HUMIDITY,46.01,%,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Bedroom,CO2,718.71,ppm,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Bedroom,TEMPERATURE,21.11,C,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Bedroom,HUMIDITY,47.44,%,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Bedroom,CO2,705.69,ppm,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Bedroom,TEMPERATURE,20.68,C,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Bedroom,HUMIDITY,48.86,%,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Bedroom,CO2,688.56,ppm,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Bedroom,TEMPERATURE,20.30,C,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Bedroom,HUMIDITY,50.19,%,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Kitchen,CO2,841.82,ppm,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Kitchen,TEMPERATURE,20.84,C,dataset,synthetic_demonstration
+2026-01-01T00:00:00Z,Kitchen,HUMIDITY,52.89,%,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Kitchen,CO2,829.60,ppm,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Kitchen,TEMPERATURE,20.66,C,dataset,synthetic_demonstration
+2026-01-01T01:00:00Z,Kitchen,HUMIDITY,53.76,%,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Kitchen,CO2,812.49,ppm,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Kitchen,TEMPERATURE,20.60,C,dataset,synthetic_demonstration
+2026-01-01T02:00:00Z,Kitchen,HUMIDITY,54.31,%,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Kitchen,CO2,799.20,ppm,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Kitchen,TEMPERATURE,20.66,C,dataset,synthetic_demonstration
+2026-01-01T03:00:00Z,Kitchen,HUMIDITY,54.50,%,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Kitchen,CO2,796.52,ppm,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Kitchen,TEMPERATURE,20.84,C,dataset,synthetic_demonstration
+2026-01-01T04:00:00Z,Kitchen,HUMIDITY,54.31,%,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Kitchen,CO2,805.80,ppm,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Kitchen,TEMPERATURE,21.13,C,dataset,synthetic_demonstration
+2026-01-01T05:00:00Z,Kitchen,HUMIDITY,53.76,%,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Kitchen,CO2,822.32,ppm,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Kitchen,TEMPERATURE,21.50,C,dataset,synthetic_demonstration
+2026-01-01T06:00:00Z,Kitchen,HUMIDITY,52.89,%,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Kitchen,CO2,895.51,ppm,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Kitchen,TEMPERATURE,21.93,C,dataset,synthetic_demonstration
+2026-01-01T07:00:00Z,Kitchen,HUMIDITY,51.75,%,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Kitchen,CO2,956.81,ppm,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Kitchen,TEMPERATURE,22.40,C,dataset,synthetic_demonstration
+2026-01-01T08:00:00Z,Kitchen,HUMIDITY,50.42,%,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Kitchen,CO2,1000.21,ppm,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Kitchen,TEMPERATURE,22.87,C,dataset,synthetic_demonstration
+2026-01-01T09:00:00Z,Kitchen,HUMIDITY,49.00,%,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Kitchen,CO2,1026.26,ppm,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Kitchen,TEMPERATURE,23.30,C,dataset,synthetic_demonstration
+2026-01-01T10:00:00Z,Kitchen,HUMIDITY,47.58,%,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Kitchen,CO2,1040.60,ppm,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Kitchen,TEMPERATURE,23.67,C,dataset,synthetic_demonstration
+2026-01-01T11:00:00Z,Kitchen,HUMIDITY,46.25,%,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Kitchen,CO2,1050.14,ppm,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Kitchen,TEMPERATURE,23.96,C,dataset,synthetic_demonstration
+2026-01-01T12:00:00Z,Kitchen,HUMIDITY,45.11,%,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Kitchen,CO2,1058.87,ppm,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Kitchen,TEMPERATURE,24.14,C,dataset,synthetic_demonstration
+2026-01-01T13:00:00Z,Kitchen,HUMIDITY,44.24,%,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Kitchen,CO2,1065.33,ppm,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Kitchen,TEMPERATURE,24.20,C,dataset,synthetic_demonstration
+2026-01-01T14:00:00Z,Kitchen,HUMIDITY,43.69,%,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Kitchen,CO2,1063.23,ppm,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Kitchen,TEMPERATURE,24.14,C,dataset,synthetic_demonstration
+2026-01-01T15:00:00Z,Kitchen,HUMIDITY,43.50,%,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Kitchen,CO2,1044.81,ppm,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Kitchen,TEMPERATURE,23.96,C,dataset,synthetic_demonstration
+2026-01-01T16:00:00Z,Kitchen,HUMIDITY,43.69,%,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Kitchen,CO2,1005.22,ppm,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Kitchen,TEMPERATURE,23.67,C,dataset,synthetic_demonstration
+2026-01-01T17:00:00Z,Kitchen,HUMIDITY,44.24,%,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Kitchen,CO2,945.72,ppm,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Kitchen,TEMPERATURE,23.30,C,dataset,synthetic_demonstration
+2026-01-01T18:00:00Z,Kitchen,HUMIDITY,45.11,%,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Kitchen,CO2,873.98,ppm,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Kitchen,TEMPERATURE,22.87,C,dataset,synthetic_demonstration
+2026-01-01T19:00:00Z,Kitchen,HUMIDITY,46.25,%,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Kitchen,CO2,801.32,ppm,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Kitchen,TEMPERATURE,22.40,C,dataset,synthetic_demonstration
+2026-01-01T20:00:00Z,Kitchen,HUMIDITY,47.58,%,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Kitchen,CO2,796.03,ppm,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Kitchen,TEMPERATURE,21.93,C,dataset,synthetic_demonstration
+2026-01-01T21:00:00Z,Kitchen,HUMIDITY,49.00,%,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Kitchen,CO2,802.96,ppm,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Kitchen,TEMPERATURE,21.50,C,dataset,synthetic_demonstration
+2026-01-01T22:00:00Z,Kitchen,HUMIDITY,50.42,%,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Kitchen,CO2,818.57,ppm,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Kitchen,TEMPERATURE,21.13,C,dataset,synthetic_demonstration
+2026-01-01T23:00:00Z,Kitchen,HUMIDITY,51.75,%,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Kitchen,CO2,862.28,ppm,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Kitchen,TEMPERATURE,21.11,C,dataset,synthetic_demonstration
+2026-01-02T00:00:00Z,Kitchen,HUMIDITY,51.95,%,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Kitchen,CO2,871.02,ppm,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Kitchen,TEMPERATURE,20.93,C,dataset,synthetic_demonstration
+2026-01-02T01:00:00Z,Kitchen,HUMIDITY,52.82,%,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Kitchen,CO2,867.70,ppm,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Kitchen,TEMPERATURE,20.87,C,dataset,synthetic_demonstration
+2026-01-02T02:00:00Z,Kitchen,HUMIDITY,53.37,%,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Kitchen,CO2,854.02,ppm,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Kitchen,TEMPERATURE,20.93,C,dataset,synthetic_demonstration
+2026-01-02T03:00:00Z,Kitchen,HUMIDITY,53.56,%,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Kitchen,CO2,836.95,ppm,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Kitchen,TEMPERATURE,21.11,C,dataset,synthetic_demonstration
+2026-01-02T04:00:00Z,Kitchen,HUMIDITY,53.37,%,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Kitchen,CO2,825.18,ppm,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Kitchen,TEMPERATURE,21.40,C,dataset,synthetic_demonstration
+2026-01-02T05:00:00Z,Kitchen,HUMIDITY,52.82,%,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Kitchen,CO2,824.72,ppm,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Kitchen,TEMPERATURE,21.77,C,dataset,synthetic_demonstration
+2026-01-02T06:00:00Z,Kitchen,HUMIDITY,51.95,%,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Kitchen,CO2,893.66,ppm,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Kitchen,TEMPERATURE,22.21,C,dataset,synthetic_demonstration
+2026-01-02T07:00:00Z,Kitchen,HUMIDITY,50.81,%,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Kitchen,CO2,965.58,ppm,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Kitchen,TEMPERATURE,22.67,C,dataset,synthetic_demonstration
+2026-01-02T08:00:00Z,Kitchen,HUMIDITY,49.49,%,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Kitchen,CO2,1029.09,ppm,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Kitchen,TEMPERATURE,23.14,C,dataset,synthetic_demonstration
+2026-01-02T09:00:00Z,Kitchen,HUMIDITY,48.06,%,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Kitchen,CO2,1074.48,ppm,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Kitchen,TEMPERATURE,23.57,C,dataset,synthetic_demonstration
+2026-01-02T10:00:00Z,Kitchen,HUMIDITY,46.64,%,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Kitchen,CO2,1097.52,ppm,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Kitchen,TEMPERATURE,23.95,C,dataset,synthetic_demonstration
+2026-01-02T11:00:00Z,Kitchen,HUMIDITY,45.31,%,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Kitchen,CO2,1100.71,ppm,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Kitchen,TEMPERATURE,24.23,C,dataset,synthetic_demonstration
+2026-01-02T12:00:00Z,Kitchen,HUMIDITY,44.17,%,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Kitchen,CO2,1091.26,ppm,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Kitchen,TEMPERATURE,24.41,C,dataset,synthetic_demonstration
+2026-01-02T13:00:00Z,Kitchen,HUMIDITY,43.30,%,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Kitchen,CO2,1076.98,ppm,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Kitchen,TEMPERATURE,24.47,C,dataset,synthetic_demonstration
+2026-01-02T14:00:00Z,Kitchen,HUMIDITY,42.75,%,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Kitchen,CO2,1062.15,ppm,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Kitchen,TEMPERATURE,24.41,C,dataset,synthetic_demonstration
+2026-01-02T15:00:00Z,Kitchen,HUMIDITY,42.56,%,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Kitchen,CO2,1045.50,ppm,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Kitchen,TEMPERATURE,24.23,C,dataset,synthetic_demonstration
+2026-01-02T16:00:00Z,Kitchen,HUMIDITY,42.75,%,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Kitchen,CO2,1021.27,ppm,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Kitchen,TEMPERATURE,23.95,C,dataset,synthetic_demonstration
+2026-01-02T17:00:00Z,Kitchen,HUMIDITY,43.30,%,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Kitchen,CO2,982.90,ppm,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Kitchen,TEMPERATURE,23.57,C,dataset,synthetic_demonstration
+2026-01-02T18:00:00Z,Kitchen,HUMIDITY,44.17,%,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Kitchen,CO2,927.29,ppm,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Kitchen,TEMPERATURE,23.14,C,dataset,synthetic_demonstration
+2026-01-02T19:00:00Z,Kitchen,HUMIDITY,45.31,%,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Kitchen,CO2,857.53,ppm,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Kitchen,TEMPERATURE,22.67,C,dataset,synthetic_demonstration
+2026-01-02T20:00:00Z,Kitchen,HUMIDITY,46.64,%,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Kitchen,CO2,840.44,ppm,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Kitchen,TEMPERATURE,22.21,C,dataset,synthetic_demonstration
+2026-01-02T21:00:00Z,Kitchen,HUMIDITY,48.06,%,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Kitchen,CO2,826.88,ppm,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Kitchen,TEMPERATURE,21.77,C,dataset,synthetic_demonstration
+2026-01-02T22:00:00Z,Kitchen,HUMIDITY,49.49,%,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Kitchen,CO2,823.76,ppm,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Kitchen,TEMPERATURE,21.40,C,dataset,synthetic_demonstration
+2026-01-02T23:00:00Z,Kitchen,HUMIDITY,50.81,%,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Kitchen,CO2,839.42,ppm,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Kitchen,TEMPERATURE,21.18,C,dataset,synthetic_demonstration
+2026-01-03T00:00:00Z,Kitchen,HUMIDITY,51.72,%,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Kitchen,CO2,855.82,ppm,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Kitchen,TEMPERATURE,21.00,C,dataset,synthetic_demonstration
+2026-01-03T01:00:00Z,Kitchen,HUMIDITY,52.59,%,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Kitchen,CO2,871.35,ppm,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Kitchen,TEMPERATURE,20.94,C,dataset,synthetic_demonstration
+2026-01-03T02:00:00Z,Kitchen,HUMIDITY,53.14,%,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Kitchen,CO2,878.10,ppm,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Kitchen,TEMPERATURE,21.00,C,dataset,synthetic_demonstration
+2026-01-03T03:00:00Z,Kitchen,HUMIDITY,53.33,%,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Kitchen,CO2,872.63,ppm,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Kitchen,TEMPERATURE,21.18,C,dataset,synthetic_demonstration
+2026-01-03T04:00:00Z,Kitchen,HUMIDITY,53.14,%,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Kitchen,CO2,857.73,ppm,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Kitchen,TEMPERATURE,21.47,C,dataset,synthetic_demonstration
+2026-01-03T05:00:00Z,Kitchen,HUMIDITY,52.59,%,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Kitchen,CO2,840.98,ppm,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Kitchen,TEMPERATURE,21.84,C,dataset,synthetic_demonstration
+2026-01-03T06:00:00Z,Kitchen,HUMIDITY,51.72,%,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Kitchen,CO2,888.79,ppm,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Kitchen,TEMPERATURE,22.28,C,dataset,synthetic_demonstration
+2026-01-03T07:00:00Z,Kitchen,HUMIDITY,50.58,%,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Kitchen,CO2,945.52,ppm,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Kitchen,TEMPERATURE,22.74,C,dataset,synthetic_demonstration
+2026-01-03T08:00:00Z,Kitchen,HUMIDITY,49.25,%,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Kitchen,CO2,1007.50,ppm,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Kitchen,TEMPERATURE,23.21,C,dataset,synthetic_demonstration
+2026-01-03T09:00:00Z,Kitchen,HUMIDITY,47.83,%,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Kitchen,CO2,1065.80,ppm,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Kitchen,TEMPERATURE,23.64,C,dataset,synthetic_demonstration
+2026-01-03T10:00:00Z,Kitchen,HUMIDITY,46.41,%,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Kitchen,CO2,1109.63,ppm,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Kitchen,TEMPERATURE,24.01,C,dataset,synthetic_demonstration
+2026-01-03T11:00:00Z,Kitchen,HUMIDITY,45.08,%,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Kitchen,CO2,1130.88,ppm,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Kitchen,TEMPERATURE,24.30,C,dataset,synthetic_demonstration
+2026-01-03T12:00:00Z,Kitchen,HUMIDITY,43.94,%,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Kitchen,CO2,1127.55,ppm,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Kitchen,TEMPERATURE,24.48,C,dataset,synthetic_demonstration
+2026-01-03T13:00:00Z,Kitchen,HUMIDITY,43.07,%,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Kitchen,CO2,1104.35,ppm,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Kitchen,TEMPERATURE,24.54,C,dataset,synthetic_demonstration
+2026-01-03T14:00:00Z,Kitchen,HUMIDITY,42.52,%,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Kitchen,CO2,1070.09,ppm,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Kitchen,TEMPERATURE,24.48,C,dataset,synthetic_demonstration
+2026-01-03T15:00:00Z,Kitchen,HUMIDITY,42.33,%,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Kitchen,CO2,1033.41,ppm,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Kitchen,TEMPERATURE,24.30,C,dataset,synthetic_demonstration
+2026-01-03T16:00:00Z,Kitchen,HUMIDITY,42.52,%,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Kitchen,CO2,998.76,ppm,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Kitchen,TEMPERATURE,24.01,C,dataset,synthetic_demonstration
+2026-01-03T17:00:00Z,Kitchen,HUMIDITY,43.07,%,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Kitchen,CO2,964.88,ppm,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Kitchen,TEMPERATURE,23.64,C,dataset,synthetic_demonstration
+2026-01-03T18:00:00Z,Kitchen,HUMIDITY,43.94,%,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Kitchen,CO2,926.40,ppm,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Kitchen,TEMPERATURE,23.21,C,dataset,synthetic_demonstration
+2026-01-03T19:00:00Z,Kitchen,HUMIDITY,45.08,%,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Kitchen,CO2,877.66,ppm,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Kitchen,TEMPERATURE,22.74,C,dataset,synthetic_demonstration
+2026-01-03T20:00:00Z,Kitchen,HUMIDITY,46.41,%,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Kitchen,CO2,874.78,ppm,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Kitchen,TEMPERATURE,22.28,C,dataset,synthetic_demonstration
+2026-01-03T21:00:00Z,Kitchen,HUMIDITY,47.83,%,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Kitchen,CO2,861.38,ppm,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Kitchen,TEMPERATURE,21.84,C,dataset,synthetic_demonstration
+2026-01-03T22:00:00Z,Kitchen,HUMIDITY,49.25,%,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Kitchen,CO2,844.27,ppm,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Kitchen,TEMPERATURE,21.47,C,dataset,synthetic_demonstration
+2026-01-03T23:00:00Z,Kitchen,HUMIDITY,50.58,%,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Kitchen,CO2,813.25,ppm,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Kitchen,TEMPERATURE,20.99,C,dataset,synthetic_demonstration
+2026-01-04T00:00:00Z,Kitchen,HUMIDITY,52.37,%,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Kitchen,CO2,812.35,ppm,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Kitchen,TEMPERATURE,20.81,C,dataset,synthetic_demonstration
+2026-01-04T01:00:00Z,Kitchen,HUMIDITY,53.24,%,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Kitchen,CO2,823.08,ppm,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Kitchen,TEMPERATURE,20.75,C,dataset,synthetic_demonstration
+2026-01-04T02:00:00Z,Kitchen,HUMIDITY,53.79,%,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Kitchen,CO2,839.99,ppm,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Kitchen,TEMPERATURE,20.81,C,dataset,synthetic_demonstration
+2026-01-04T03:00:00Z,Kitchen,HUMIDITY,53.98,%,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Kitchen,CO2,854.44,ppm,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Kitchen,TEMPERATURE,20.99,C,dataset,synthetic_demonstration
+2026-01-04T04:00:00Z,Kitchen,HUMIDITY,53.79,%,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Kitchen,CO2,859.09,ppm,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Kitchen,TEMPERATURE,21.28,C,dataset,synthetic_demonstration
+2026-01-04T05:00:00Z,Kitchen,HUMIDITY,53.24,%,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Kitchen,CO2,851.55,ppm,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Kitchen,TEMPERATURE,21.65,C,dataset,synthetic_demonstration
+2026-01-04T06:00:00Z,Kitchen,HUMIDITY,52.37,%,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Kitchen,CO2,893.53,ppm,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Kitchen,TEMPERATURE,22.09,C,dataset,synthetic_demonstration
+2026-01-04T07:00:00Z,Kitchen,HUMIDITY,51.23,%,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Kitchen,CO2,932.36,ppm,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Kitchen,TEMPERATURE,22.55,C,dataset,synthetic_demonstration
+2026-01-04T08:00:00Z,Kitchen,HUMIDITY,49.90,%,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Kitchen,CO2,973.50,ppm,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Kitchen,TEMPERATURE,23.02,C,dataset,synthetic_demonstration
+2026-01-04T09:00:00Z,Kitchen,HUMIDITY,48.48,%,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Kitchen,CO2,1018.64,ppm,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Kitchen,TEMPERATURE,23.45,C,dataset,synthetic_demonstration
+2026-01-04T10:00:00Z,Kitchen,HUMIDITY,47.06,%,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Kitchen,CO2,1063.69,ppm,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Kitchen,TEMPERATURE,23.82,C,dataset,synthetic_demonstration
+2026-01-04T11:00:00Z,Kitchen,HUMIDITY,45.73,%,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Kitchen,CO2,1099.92,ppm,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Kitchen,TEMPERATURE,24.11,C,dataset,synthetic_demonstration
+2026-01-04T12:00:00Z,Kitchen,HUMIDITY,44.59,%,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Kitchen,CO2,1117.71,ppm,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Kitchen,TEMPERATURE,24.29,C,dataset,synthetic_demonstration
+2026-01-04T13:00:00Z,Kitchen,HUMIDITY,43.72,%,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Kitchen,CO2,1110.98,ppm,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Kitchen,TEMPERATURE,24.35,C,dataset,synthetic_demonstration
+2026-01-04T14:00:00Z,Kitchen,HUMIDITY,43.17,%,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Kitchen,CO2,1080.17,ppm,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Kitchen,TEMPERATURE,24.29,C,dataset,synthetic_demonstration
+2026-01-04T15:00:00Z,Kitchen,HUMIDITY,42.98,%,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Kitchen,CO2,1032.14,ppm,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Kitchen,TEMPERATURE,24.11,C,dataset,synthetic_demonstration
+2026-01-04T16:00:00Z,Kitchen,HUMIDITY,43.17,%,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Kitchen,CO2,977.14,ppm,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Kitchen,TEMPERATURE,23.82,C,dataset,synthetic_demonstration
+2026-01-04T17:00:00Z,Kitchen,HUMIDITY,43.72,%,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Kitchen,CO2,924.29,ppm,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Kitchen,TEMPERATURE,23.45,C,dataset,synthetic_demonstration
+2026-01-04T18:00:00Z,Kitchen,HUMIDITY,44.59,%,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Kitchen,CO2,877.86,ppm,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Kitchen,TEMPERATURE,23.02,C,dataset,synthetic_demonstration
+2026-01-04T19:00:00Z,Kitchen,HUMIDITY,45.73,%,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Kitchen,CO2,836.26,ppm,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Kitchen,TEMPERATURE,22.55,C,dataset,synthetic_demonstration
+2026-01-04T20:00:00Z,Kitchen,HUMIDITY,47.06,%,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Kitchen,CO2,851.98,ppm,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Kitchen,TEMPERATURE,22.09,C,dataset,synthetic_demonstration
+2026-01-04T21:00:00Z,Kitchen,HUMIDITY,48.48,%,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Kitchen,CO2,859.13,ppm,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Kitchen,TEMPERATURE,21.65,C,dataset,synthetic_demonstration
+2026-01-04T22:00:00Z,Kitchen,HUMIDITY,49.90,%,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Kitchen,CO2,854.08,ppm,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Kitchen,TEMPERATURE,21.28,C,dataset,synthetic_demonstration
+2026-01-04T23:00:00Z,Kitchen,HUMIDITY,51.23,%,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Kitchen,CO2,809.03,ppm,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Kitchen,TEMPERATURE,20.69,C,dataset,synthetic_demonstration
+2026-01-05T00:00:00Z,Kitchen,HUMIDITY,53.41,%,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Kitchen,CO2,792.20,ppm,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Kitchen,TEMPERATURE,20.51,C,dataset,synthetic_demonstration
+2026-01-05T01:00:00Z,Kitchen,HUMIDITY,54.28,%,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Kitchen,CO2,781.80,ppm,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Kitchen,TEMPERATURE,20.45,C,dataset,synthetic_demonstration
+2026-01-05T02:00:00Z,Kitchen,HUMIDITY,54.83,%,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Kitchen,CO2,783.13,ppm,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Kitchen,TEMPERATURE,20.51,C,dataset,synthetic_demonstration
+2026-01-05T03:00:00Z,Kitchen,HUMIDITY,55.02,%,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Kitchen,CO2,795.51,ppm,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Kitchen,TEMPERATURE,20.69,C,dataset,synthetic_demonstration
+2026-01-05T04:00:00Z,Kitchen,HUMIDITY,54.83,%,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Kitchen,CO2,812.63,ppm,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Kitchen,TEMPERATURE,20.98,C,dataset,synthetic_demonstration
+2026-01-05T05:00:00Z,Kitchen,HUMIDITY,54.28,%,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Kitchen,CO2,825.77,ppm,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Kitchen,TEMPERATURE,21.35,C,dataset,synthetic_demonstration
+2026-01-05T06:00:00Z,Kitchen,HUMIDITY,53.41,%,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Kitchen,CO2,886.09,ppm,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Kitchen,TEMPERATURE,21.78,C,dataset,synthetic_demonstration
+2026-01-05T07:00:00Z,Kitchen,HUMIDITY,52.27,%,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Kitchen,CO2,931.57,ppm,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Kitchen,TEMPERATURE,22.25,C,dataset,synthetic_demonstration
+2026-01-05T08:00:00Z,Kitchen,HUMIDITY,50.94,%,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Kitchen,CO2,964.28,ppm,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Kitchen,TEMPERATURE,22.71,C,dataset,synthetic_demonstration
+2026-01-05T09:00:00Z,Kitchen,HUMIDITY,49.52,%,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Kitchen,CO2,990.22,ppm,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Kitchen,TEMPERATURE,23.15,C,dataset,synthetic_demonstration
+2026-01-05T10:00:00Z,Kitchen,HUMIDITY,48.10,%,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Kitchen,CO2,1015.07,ppm,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Kitchen,TEMPERATURE,23.52,C,dataset,synthetic_demonstration
+2026-01-05T11:00:00Z,Kitchen,HUMIDITY,46.77,%,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Kitchen,CO2,1040.40,ppm,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Kitchen,TEMPERATURE,23.81,C,dataset,synthetic_demonstration
+2026-01-05T12:00:00Z,Kitchen,HUMIDITY,45.63,%,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Kitchen,CO2,1062.15,ppm,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Kitchen,TEMPERATURE,23.99,C,dataset,synthetic_demonstration
+2026-01-05T13:00:00Z,Kitchen,HUMIDITY,44.76,%,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Kitchen,CO2,1072.21,ppm,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Kitchen,TEMPERATURE,24.05,C,dataset,synthetic_demonstration
+2026-01-05T14:00:00Z,Kitchen,HUMIDITY,44.21,%,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Kitchen,CO2,1062.48,ppm,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Kitchen,TEMPERATURE,23.99,C,dataset,synthetic_demonstration
+2026-01-05T15:00:00Z,Kitchen,HUMIDITY,44.02,%,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Kitchen,CO2,1029.06,ppm,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Kitchen,TEMPERATURE,23.81,C,dataset,synthetic_demonstration
+2026-01-05T16:00:00Z,Kitchen,HUMIDITY,44.21,%,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Kitchen,CO2,974.77,ppm,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Kitchen,TEMPERATURE,23.52,C,dataset,synthetic_demonstration
+2026-01-05T17:00:00Z,Kitchen,HUMIDITY,44.76,%,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Kitchen,CO2,908.34,ppm,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Kitchen,TEMPERATURE,23.15,C,dataset,synthetic_demonstration
+2026-01-05T18:00:00Z,Kitchen,HUMIDITY,45.63,%,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Kitchen,CO2,840.99,ppm,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Kitchen,TEMPERATURE,22.71,C,dataset,synthetic_demonstration
+2026-01-05T19:00:00Z,Kitchen,HUMIDITY,46.77,%,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Kitchen,CO2,781.79,ppm,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Kitchen,TEMPERATURE,22.25,C,dataset,synthetic_demonstration
+2026-01-05T20:00:00Z,Kitchen,HUMIDITY,48.10,%,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Kitchen,CO2,792.18,ppm,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Kitchen,TEMPERATURE,21.78,C,dataset,synthetic_demonstration
+2026-01-05T21:00:00Z,Kitchen,HUMIDITY,49.52,%,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Kitchen,CO2,809.00,ppm,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Kitchen,TEMPERATURE,21.35,C,dataset,synthetic_demonstration
+2026-01-05T22:00:00Z,Kitchen,HUMIDITY,50.94,%,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Kitchen,CO2,823.69,ppm,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Kitchen,TEMPERATURE,20.98,C,dataset,synthetic_demonstration
+2026-01-05T23:00:00Z,Kitchen,HUMIDITY,52.27,%,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Kitchen,CO2,809.83,ppm,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Kitchen,TEMPERATURE,20.50,C,dataset,synthetic_demonstration
+2026-01-06T00:00:00Z,Kitchen,HUMIDITY,54.06,%,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Kitchen,CO2,802.69,ppm,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Kitchen,TEMPERATURE,20.32,C,dataset,synthetic_demonstration
+2026-01-06T01:00:00Z,Kitchen,HUMIDITY,54.93,%,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Kitchen,CO2,786.99,ppm,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Kitchen,TEMPERATURE,20.26,C,dataset,synthetic_demonstration
+2026-01-06T02:00:00Z,Kitchen,HUMIDITY,55.48,%,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Kitchen,CO2,770.72,ppm,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Kitchen,TEMPERATURE,20.32,C,dataset,synthetic_demonstration
+2026-01-06T03:00:00Z,Kitchen,HUMIDITY,55.67,%,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Kitchen,CO2,762.17,ppm,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Kitchen,TEMPERATURE,20.50,C,dataset,synthetic_demonstration
+2026-01-06T04:00:00Z,Kitchen,HUMIDITY,55.48,%,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Kitchen,CO2,765.71,ppm,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Kitchen,TEMPERATURE,20.79,C,dataset,synthetic_demonstration
+2026-01-06T05:00:00Z,Kitchen,HUMIDITY,54.93,%,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Kitchen,CO2,779.53,ppm,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Kitchen,TEMPERATURE,21.16,C,dataset,synthetic_demonstration
+2026-01-06T06:00:00Z,Kitchen,HUMIDITY,54.06,%,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Kitchen,CO2,854.44,ppm,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Kitchen,TEMPERATURE,21.59,C,dataset,synthetic_demonstration
+2026-01-06T07:00:00Z,Kitchen,HUMIDITY,52.92,%,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Kitchen,CO2,920.99,ppm,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Kitchen,TEMPERATURE,22.06,C,dataset,synthetic_demonstration
+2026-01-06T08:00:00Z,Kitchen,HUMIDITY,51.59,%,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Kitchen,CO2,970.52,ppm,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Kitchen,TEMPERATURE,22.52,C,dataset,synthetic_demonstration
+2026-01-06T09:00:00Z,Kitchen,HUMIDITY,50.17,%,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Kitchen,CO2,1000.44,ppm,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Kitchen,TEMPERATURE,22.96,C,dataset,synthetic_demonstration
+2026-01-06T10:00:00Z,Kitchen,HUMIDITY,48.75,%,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Kitchen,CO2,1014.41,ppm,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Kitchen,TEMPERATURE,23.33,C,dataset,synthetic_demonstration
+2026-01-06T11:00:00Z,Kitchen,HUMIDITY,47.42,%,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Kitchen,CO2,1019.55,ppm,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Kitchen,TEMPERATURE,23.62,C,dataset,synthetic_demonstration
+2026-01-06T12:00:00Z,Kitchen,HUMIDITY,46.28,%,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Kitchen,CO2,1022.08,ppm,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Kitchen,TEMPERATURE,23.80,C,dataset,synthetic_demonstration
+2026-01-06T13:00:00Z,Kitchen,HUMIDITY,45.41,%,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Kitchen,CO2,1023.70,ppm,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Kitchen,TEMPERATURE,23.86,C,dataset,synthetic_demonstration
+2026-01-06T14:00:00Z,Kitchen,HUMIDITY,44.86,%,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Kitchen,CO2,1020.59,ppm,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Kitchen,TEMPERATURE,23.80,C,dataset,synthetic_demonstration
+2026-01-06T15:00:00Z,Kitchen,HUMIDITY,44.67,%,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Kitchen,CO2,1005.50,ppm,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Kitchen,TEMPERATURE,23.62,C,dataset,synthetic_demonstration
+2026-01-06T16:00:00Z,Kitchen,HUMIDITY,44.86,%,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Kitchen,CO2,971.88,ppm,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Kitchen,TEMPERATURE,23.33,C,dataset,synthetic_demonstration
+2026-01-06T17:00:00Z,Kitchen,HUMIDITY,45.41,%,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Kitchen,CO2,917.96,ppm,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Kitchen,TEMPERATURE,22.96,C,dataset,synthetic_demonstration
+2026-01-06T18:00:00Z,Kitchen,HUMIDITY,46.28,%,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Kitchen,CO2,848.56,ppm,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Kitchen,TEMPERATURE,22.52,C,dataset,synthetic_demonstration
+2026-01-06T19:00:00Z,Kitchen,HUMIDITY,47.42,%,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Kitchen,CO2,773.80,ppm,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Kitchen,TEMPERATURE,22.06,C,dataset,synthetic_demonstration
+2026-01-06T20:00:00Z,Kitchen,HUMIDITY,48.75,%,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Kitchen,CO2,763.05,ppm,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Kitchen,TEMPERATURE,21.59,C,dataset,synthetic_demonstration
+2026-01-06T21:00:00Z,Kitchen,HUMIDITY,50.17,%,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Kitchen,CO2,763.93,ppm,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Kitchen,TEMPERATURE,21.16,C,dataset,synthetic_demonstration
+2026-01-06T22:00:00Z,Kitchen,HUMIDITY,51.59,%,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Kitchen,CO2,776.00,ppm,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Kitchen,TEMPERATURE,20.79,C,dataset,synthetic_demonstration
+2026-01-06T23:00:00Z,Kitchen,HUMIDITY,52.92,%,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Kitchen,CO2,799.86,ppm,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Kitchen,TEMPERATURE,20.57,C,dataset,synthetic_demonstration
+2026-01-07T00:00:00Z,Kitchen,HUMIDITY,53.83,%,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Kitchen,CO2,813.28,ppm,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Kitchen,TEMPERATURE,20.39,C,dataset,synthetic_demonstration
+2026-01-07T01:00:00Z,Kitchen,HUMIDITY,54.70,%,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Kitchen,CO2,816.18,ppm,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Kitchen,TEMPERATURE,20.33,C,dataset,synthetic_demonstration
+2026-01-07T02:00:00Z,Kitchen,HUMIDITY,55.25,%,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Kitchen,CO2,807.08,ppm,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Kitchen,TEMPERATURE,20.39,C,dataset,synthetic_demonstration
+2026-01-07T03:00:00Z,Kitchen,HUMIDITY,55.44,%,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Kitchen,CO2,790.62,ppm,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Kitchen,TEMPERATURE,20.57,C,dataset,synthetic_demonstration
+2026-01-07T04:00:00Z,Kitchen,HUMIDITY,55.25,%,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Kitchen,CO2,775.18,ppm,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Kitchen,TEMPERATURE,20.85,C,dataset,synthetic_demonstration
+2026-01-07T05:00:00Z,Kitchen,HUMIDITY,54.70,%,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Kitchen,CO2,768.64,ppm,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Kitchen,TEMPERATURE,21.23,C,dataset,synthetic_demonstration
+2026-01-07T06:00:00Z,Kitchen,HUMIDITY,53.83,%,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Kitchen,CO2,832.19,ppm,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Kitchen,TEMPERATURE,21.66,C,dataset,synthetic_demonstration
+2026-01-07T07:00:00Z,Kitchen,HUMIDITY,52.69,%,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Kitchen,CO2,902.16,ppm,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Kitchen,TEMPERATURE,22.13,C,dataset,synthetic_demonstration
+2026-01-07T08:00:00Z,Kitchen,HUMIDITY,51.36,%,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Kitchen,CO2,968.15,ppm,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Kitchen,TEMPERATURE,22.59,C,dataset,synthetic_demonstration
+2026-01-07T09:00:00Z,Kitchen,HUMIDITY,49.94,%,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Kitchen,CO2,1019.18,ppm,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Kitchen,TEMPERATURE,23.03,C,dataset,synthetic_demonstration
+2026-01-07T10:00:00Z,Kitchen,HUMIDITY,48.51,%,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Kitchen,CO2,1048.15,ppm,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Kitchen,TEMPERATURE,23.40,C,dataset,synthetic_demonstration
+2026-01-07T11:00:00Z,Kitchen,HUMIDITY,47.19,%,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Kitchen,CO2,1054.55,ppm,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Kitchen,TEMPERATURE,23.69,C,dataset,synthetic_demonstration
+2026-01-07T12:00:00Z,Kitchen,HUMIDITY,46.05,%,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Kitchen,CO2,1043.93,ppm,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Kitchen,TEMPERATURE,23.87,C,dataset,synthetic_demonstration
+2026-01-07T13:00:00Z,Kitchen,HUMIDITY,45.18,%,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Kitchen,CO2,1024.72,ppm,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Kitchen,TEMPERATURE,23.93,C,dataset,synthetic_demonstration
+2026-01-07T14:00:00Z,Kitchen,HUMIDITY,44.63,%,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Kitchen,CO2,1003.70,ppm,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Kitchen,TEMPERATURE,23.87,C,dataset,synthetic_demonstration
+2026-01-07T15:00:00Z,Kitchen,HUMIDITY,44.44,%,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Kitchen,CO2,982.75,ppm,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Kitchen,TEMPERATURE,23.69,C,dataset,synthetic_demonstration
+2026-01-07T16:00:00Z,Kitchen,HUMIDITY,44.63,%,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Kitchen,CO2,958.32,ppm,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Kitchen,TEMPERATURE,23.40,C,dataset,synthetic_demonstration
+2026-01-07T17:00:00Z,Kitchen,HUMIDITY,45.18,%,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Kitchen,CO2,923.94,ppm,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Kitchen,TEMPERATURE,23.03,C,dataset,synthetic_demonstration
+2026-01-07T18:00:00Z,Kitchen,HUMIDITY,46.05,%,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Kitchen,CO2,874.47,ppm,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Kitchen,TEMPERATURE,22.59,C,dataset,synthetic_demonstration
+2026-01-07T19:00:00Z,Kitchen,HUMIDITY,47.19,%,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Kitchen,CO2,809.89,ppm,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Kitchen,TEMPERATURE,22.13,C,dataset,synthetic_demonstration
+2026-01-07T20:00:00Z,Kitchen,HUMIDITY,48.51,%,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Kitchen,CO2,794.37,ppm,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Kitchen,TEMPERATURE,21.66,C,dataset,synthetic_demonstration
+2026-01-07T21:00:00Z,Kitchen,HUMIDITY,49.94,%,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Kitchen,CO2,777.96,ppm,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Kitchen,TEMPERATURE,21.23,C,dataset,synthetic_demonstration
+2026-01-07T22:00:00Z,Kitchen,HUMIDITY,51.36,%,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Kitchen,CO2,769.04,ppm,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Kitchen,TEMPERATURE,20.85,C,dataset,synthetic_demonstration
+2026-01-07T23:00:00Z,Kitchen,HUMIDITY,52.69,%,dataset,synthetic_demonstration
