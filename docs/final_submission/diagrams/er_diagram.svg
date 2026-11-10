@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3600" height="2550" viewBox="0 0 3600 2550">
+  <defs>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #17324d; }
+      .title { font-size: 42px; font-weight: 700; }
+      .subtitle { font-size: 21px; fill: #425b70; }
+      .section { font-size: 25px; font-weight: 700; }
+      .entity { fill: #ffffff; stroke: #176b87; stroke-width: 3; }
+      .entityhead { fill: #e8f4f8; stroke: #176b87; stroke-width: 3; }
+      .name { font-size: 24px; font-weight: 700; }
+      .field { font-size: 18px; }
+      .rel { font-size: 19px; }
+      .line { stroke: #176b87; stroke-width: 2; }
+      .note { font-size: 17px; fill: #425b70; }
+    </style>
+  </defs>
+  <rect width="3600" height="2550" fill="#f8fafc"/>
+  <text x="60" y="65" class="title">AirSense active ORM — entity relationship diagram</text>
+  <text x="60" y="103" class="subtitle">13 SQLAlchemy application tables · field names, key markers and declared foreign keys from app/models/</text>
+
+  <!-- Column 1 -->
+  <g transform="translate(60,145)">
+    <rect width="1060" height="132" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">homes</text>
+    <text x="22" y="79" class="field">PK id: String(64)</text>
+    <text x="22" y="106" class="field">name: String(120), NOT NULL</text>
+  </g>
+  <g transform="translate(60,295)">
+    <rect width="1060" height="264" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">users</text>
+    <text x="22" y="79" class="field">PK id: String(36)</text>
+    <text x="22" y="106" class="field">email: String(254), UNIQUE, NOT NULL</text>
+    <text x="22" y="133" class="field">display_name: String(120), NOT NULL</text>
+    <text x="22" y="160" class="field">password_hash: String(256), NOT NULL</text>
+    <text x="22" y="187" class="field">session_version: Integer, default 0</text>
+    <text x="22" y="214" class="field">is_active: Boolean, default true</text>
+    <text x="22" y="241" class="field">email_verified_at: DateTime, NULL</text>
+    <text x="22" y="258" class="field">created_at: DateTime, server default</text>
+  </g>
+  <g transform="translate(60,577)">
+    <rect width="1060" height="160" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">home_memberships</text>
+    <text x="22" y="79" class="field">PK, FK home_id: String(64) → homes.id</text>
+    <text x="22" y="106" class="field">PK, FK user_id: String(36) → users.id</text>
+    <text x="22" y="133" class="field">role: String(16), NOT NULL; joined_at: DateTime</text>
+  </g>
+  <g transform="translate(60,755)">
+    <rect width="1060" height="264" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">home_invitations</text>
+    <text x="22" y="79" class="field">PK id: String(36)</text>
+    <text x="22" y="106" class="field">FK home_id: String(64) → homes.id</text>
+    <text x="22" y="133" class="field">email: String(254); role: String(16), default member</text>
+    <text x="22" y="160" class="field">token_hash: String(64), UNIQUE</text>
+    <text x="22" y="187" class="field">FK created_by: String(36) → users.id</text>
+    <text x="22" y="214" class="field">created_at: DateTime; expires_at: DateTime</text>
+    <text x="22" y="241" class="field">accepted_at: DateTime, NULL</text>
+  </g>
+  <g transform="translate(60,1037)">
+    <rect width="1060" height="372" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">email_challenges</text>
+    <text x="22" y="79" class="field">PK id: String(36)</text>
+    <text x="22" y="106" class="field">FK user_id: String(36) → users.id, NULL</text>
+    <text x="22" y="133" class="field">email: String(254), indexed</text>
+    <text x="22" y="160" class="field">purpose: String(32), indexed</text>
+    <text x="22" y="187" class="field">otp_hash: String(64)</text>
+    <text x="22" y="214" class="field">created_at, expires_at, last_sent_at: DateTime</text>
+    <text x="22" y="241" class="field">attempts: Integer, default 0</text>
+    <text x="22" y="268" class="field">consumed_at: DateTime, NULL</text>
+    <text x="22" y="295" class="field">reset_token_hash: String(64), UNIQUE, NULL</text>
+    <text x="22" y="322" class="field">reset_token_expires_at: DateTime, NULL</text>
+    <text x="22" y="349" class="field">reset_token_used_at: DateTime, NULL</text>
+  </g>
+  <g transform="translate(60,1427)">
+    <rect width="1060" height="132" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">rate_limit_buckets</text>
+    <text x="22" y="79" class="field">PK key: String(255)</text>
+    <text x="22" y="106" class="field">window_started_at: DateTime; count: Integer</text>
+  </g>
+  <g transform="translate(60,1577)">
+    <rect width="1060" height="132" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">metrics</text>
+    <text x="22" y="79" class="field">PK code: String(32)</text>
+    <text x="22" y="106" class="field">name: String(80); unit: String(24)</text>
+  </g>
+
+  <!-- Column 2 -->
+  <g transform="translate(1270,145)">
+    <rect width="1060" height="186" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">rooms</text>
+    <text x="22" y="79" class="field">PK id: String(64)</text>
+    <text x="22" y="106" class="field">FK home_id: String(64) → homes.id</text>
+    <text x="22" y="133" class="field">name: String(100); ventilation: String(80)</text>
+    <text x="22" y="160" class="field">ventilation_sources: JSON, NOT NULL</text>
+  </g>
+  <g transform="translate(1270,349)">
+    <rect width="1060" height="240" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">sensors</text>
+    <text x="22" y="79" class="field">PK id: String(36)</text>
+    <text x="22" y="106" class="field">FK home_id → homes.id; FK room_id → rooms.id</text>
+    <text x="22" y="133" class="field">name: String(120); key_hash: String(64), UNIQUE</text>
+    <text x="22" y="160" class="field">status: String(16), active/revoked</text>
+    <text x="22" y="187" class="field">reporting_interval_seconds: Integer, 30–86400</text>
+    <text x="22" y="214" class="field">last_seen_at: DateTime, NULL; created_at: DateTime</text>
+  </g>
+  <g transform="translate(1270,607)">
+    <rect width="1060" height="294" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">threshold_policies</text>
+    <text x="22" y="79" class="field">PK id: Integer</text>
+    <text x="22" y="106" class="field">FK home_id → homes.id; FK room_id → rooms.id</text>
+    <text x="22" y="133" class="field">FK metric_code: String → metrics.code</text>
+    <text x="22" y="160" class="field">high_threshold: Float; elevated_threshold: Float</text>
+    <text x="22" y="187" class="field">elevated_duration_seconds: Integer</text>
+    <text x="22" y="214" class="field">rapid_rise_per_minute: Float</text>
+    <text x="22" y="241" class="field">all_clear_duration_seconds: Integer</text>
+    <text x="22" y="268" class="field">max_reading_gap_seconds: Integer</text>
+    <text x="22" y="289" class="field">elevated_since: DateTime, NULL</text>
+  </g>
+  <g transform="translate(1270,919)">
+    <rect width="1060" height="267" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">air_readings</text>
+    <text x="22" y="79" class="field">PK id: Integer</text>
+    <text x="22" y="106" class="field">FK home_id → homes.id; FK room_id → rooms.id</text>
+    <text x="22" y="133" class="field">FK sensor_id → sensors.id, NULL</text>
+    <text x="22" y="160" class="field">FK metric_code: String(32) → metrics.code</text>
+    <text x="22" y="187" class="field">value: Float; source: String(24)</text>
+    <text x="22" y="214" class="field">measured_at: DateTime, NOT NULL</text>
+    <text x="22" y="241" class="field">received_at: DateTime, NULL</text>
+  </g>
+
+  <!-- Column 3 -->
+  <g transform="translate(2480,145)">
+    <rect width="1060" height="483" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">air_alerts</text>
+    <text x="22" y="79" class="field">PK id: Integer</text>
+    <text x="22" y="106" class="field">FK home_id → homes.id; FK room_id → rooms.id</text>
+    <text x="22" y="133" class="field">FK metric_code: String → metrics.code</text>
+    <text x="22" y="160" class="field">level: String(24); status: String(24)</text>
+    <text x="22" y="187" class="field">trigger_value, threshold_value, latest_value: Float</text>
+    <text x="22" y="214" class="field">threshold_unit: String(24)</text>
+    <text x="22" y="241" class="field">clear_duration_seconds: Integer</text>
+    <text x="22" y="268" class="field">below_threshold_since: DateTime, NULL</text>
+    <text x="22" y="295" class="field">created_at: DateTime</text>
+    <text x="22" y="322" class="field">acknowledged_at: DateTime, NULL</text>
+    <text x="22" y="349" class="field">acknowledged_by: String(120), NULL</text>
+    <text x="22" y="376" class="field">all_clear_at: DateTime, NULL</text>
+    <text x="22" y="403" class="field">detail: Text</text>
+    <text x="22" y="430" class="field">Filtered unique index prevents duplicate open alerts</text>
+    <text x="22" y="457" class="field">No trigger-reading or sensor FK in active ORM</text>
+  </g>
+  <g transform="translate(2480,646)">
+    <rect width="1060" height="240" rx="8" class="entity"/>
+    <path d="M0 48 H1060" class="line"/>
+    <rect width="1060" height="48" rx="8" class="entityhead"/>
+    <text x="20" y="33" class="name">audit_logs</text>
+    <text x="22" y="79" class="field">PK id: Integer</text>
+    <text x="22" y="106" class="field">FK home_id → homes.id</text>
+    <text x="22" y="133" class="field">FK actor_user_id → users.id, NULL</text>
+    <text x="22" y="160" class="field">event_type: String(80); entity_type: String(40)</text>
+    <text x="22" y="187" class="field">entity_id: String(64), NULL; details_json: Text</text>
+    <text x="22" y="214" class="field">created_at: DateTime; index (home_id, created_at)</text>
+  </g>
+
+  <rect x="60" y="1760" width="3480" height="690" rx="16" fill="#eef3f7" stroke="#71889b" stroke-width="2"/>
+  <text x="95" y="1810" class="section">Relationships and cardinality (parent 1 : child many unless noted)</text>
+  <text x="95" y="1860" class="rel">homes 1:N rooms, sensors, invitations, threshold_policies, air_readings, air_alerts, audit_logs</text>
+  <text x="95" y="1905" class="rel">users 1:N audit_logs and invitations (creator); users 1:N email_challenges (user_id is nullable)</text>
+  <text x="95" y="1950" class="rel">homes 1:N home_memberships and users 1:N home_memberships; together these implement homes N:M users</text>
+  <text x="95" y="1995" class="rel">rooms 1:N sensors, threshold_policies, air_readings, air_alerts</text>
+  <text x="95" y="2040" class="rel">sensors 1:N air_readings (reading.sensor_id is nullable); metrics 1:N threshold_policies, air_readings, air_alerts</text>
+  <text x="95" y="2085" class="rel">rate_limit_buckets has no declared foreign-key relationship. email_challenges.user_id and audit_logs.actor_user_id are nullable.</text>
+  <text x="95" y="2150" class="section">Key and integrity notes</text>
+  <text x="95" y="2200" class="rel">PK = primary key; FK = foreign key; UNIQUE = unique constraint/index; NULL indicates nullable field. home_memberships has a composite PK.</text>
+  <text x="95" y="2245" class="rel">room names have a home-scoped case-insensitive unique index; readings are unique by home, room, metric and measured_at.</text>
+  <text x="95" y="2290" class="rel">The active ORM does not enforce same-home consistency across independent home_id and room_id foreign keys.</text>
+  <text x="95" y="2345" class="note">Source: app/models/*.py on local divija. SQL Server proposal under database/migrations is a separate schema and is not represented here.</text>
+</svg>

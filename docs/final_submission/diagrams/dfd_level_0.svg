@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1050" viewBox="0 0 1800 1050">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#176b87"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #17324d; }
+      .title { font-size: 40px; font-weight: 700; }
+      .sub { font-size: 21px; fill: #425b70; }
+      .head { font-size: 26px; font-weight: 700; }
+      .body { font-size: 20px; }
+      .small { font-size: 17px; fill: #425b70; }
+      .external { fill: #e8f4f8; stroke: #176b87; stroke-width: 3; }
+      .process { fill: #e9f4ec; stroke: #398258; stroke-width: 4; }
+      .flow { fill: none; stroke: #176b87; stroke-width: 3; marker-end: url(#arrow); }
+      .label { font-size: 17px; font-weight: 600; fill: #164b61; }
+    </style>
+  </defs>
+  <rect width="1800" height="1050" fill="#f8fafc"/>
+  <text x="60" y="65" class="title">DFD Level 0 — AirSense context diagram</text>
+  <text x="60" y="104" class="sub">One system process and external entities; internal data stores are omitted at this level.</text>
+
+  <rect x="55" y="200" width="390" height="230" rx="14" class="external"/>
+  <text x="85" y="245" class="head">E1 Home user / owner</text>
+  <text x="85" y="290" class="body">Account and home actions</text>
+  <text x="85" y="326" class="body">Room, sensor, policy requests</text>
+  <text x="85" y="362" class="body">Dashboard, history, exports</text>
+  <text x="85" y="400" class="small">Browser session; CSRF for writes</text>
+
+  <rect x="55" y="620" width="390" height="190" rx="14" class="external"/>
+  <text x="85" y="665" class="head">E2 Sensor client</text>
+  <text x="85" y="710" class="body">Timestamped measurement</text>
+  <text x="85" y="746" class="body">Device key header</text>
+  <text x="85" y="785" class="small">Hardware operation unverified</text>
+
+  <rect x="650" y="190" width="500" height="640" rx="20" class="process"/>
+  <text x="700" y="275" class="head">0 — AirSense system</text>
+  <text x="700" y="340" class="body">Authenticate and authorize</text>
+  <text x="700" y="388" class="body">Validate and normalize input</text>
+  <text x="700" y="436" class="body">Persist and evaluate policies</text>
+  <text x="700" y="484" class="body">Present history and status</text>
+  <text x="700" y="560" class="small">Local Flask application</text>
+  <text x="700" y="594" class="small">SQLAlchemy + SQLite default</text>
+  <text x="700" y="660" class="small">Device, simulated and dataset</text>
+  <text x="700" y="694" class="small">sources remain distinguishable</text>
+
+  <rect x="1360" y="200" width="390" height="230" rx="14" class="external"/>
+  <text x="1390" y="245" class="head">E3 Email provider</text>
+  <text x="1390" y="290" class="body">OTP / invitation messages</text>
+  <text x="1390" y="326" class="body">Provider outcome</text>
+  <text x="1390" y="362" class="body">Brevo API integration</text>
+  <text x="1390" y="400" class="small">External credentials required</text>
+
+  <rect x="1360" y="620" width="390" height="190" rx="14" class="external"/>
+  <text x="1390" y="665" class="head">E4 Project operator</text>
+  <text x="1390" y="710" class="body">Local model training command</text>
+  <text x="1390" y="746" class="body">Forecast evaluation output</text>
+  <text x="1390" y="785" class="small">Not an in-app admin role</text>
+
+  <path d="M445 270 H650" class="flow"/>
+  <text x="455" y="250" class="label">credentials / user actions</text>
+  <path d="M650 380 H445" class="flow"/>
+  <text x="460" y="410" class="label">authorized views / errors</text>
+
+  <path d="M445 680 H650" class="flow"/>
+  <text x="455" y="660" class="label">device-key readings</text>
+  <path d="M650 760 H445" class="flow"/>
+  <text x="455" y="790" class="label">accepted / rejected</text>
+
+  <path d="M1150 280 H1360" class="flow"/>
+  <text x="1170" y="258" class="label">configured email request</text>
+  <path d="M1360 380 H1150" class="flow"/>
+  <text x="1170" y="410" class="label">delivery outcome</text>
+
+  <path d="M1360 680 H1150" class="flow"/>
+  <text x="1170" y="658" class="label">training / configuration</text>
+  <path d="M1150 760 H1360" class="flow"/>
+  <text x="1170" y="790" class="label">evaluation file</text>
+
+  <text x="60" y="960" class="small">This context is based on local code paths. It does not assert that a sensor, email service, or cloud deployment is operational.</text>
+</svg>
