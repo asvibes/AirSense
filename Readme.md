@@ -1,56 +1,228 @@
+<div align="center">
+
 # AirSense
 
-AirSense is a ventilation-support application for reviewing indoor air readings, room trends, and advisory threshold alerts. It consumes readings from configured sensors or manually submitted simulator values; it does not measure air quality itself.
+**Household ventilation-support application: indoor air-quality readings turned into room status, advisory alerts and searchable history.**
 
-## Run Locally
+[![CI](https://github.com/asvibes/AirSense/actions/workflows/ci.yml/badge.svg)](https://github.com/asvibes/AirSense/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/flask-app%20factory-000000?logo=flask)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.x-D71F00)
+![Database](https://img.shields.io/badge/database-SQLite%20%7C%20PostgreSQL-336791?logo=postgresql&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-202%20Python%20%2B%2019%20JS-2ea44f)
+![Status](https://img.shields.io/badge/status-feature%20freeze-blue)
 
-**Requirements:** Python 3.10 or later.
+</div>
 
-### 1. Create and activate a virtual environment
+> **Project type:** B.Tech academic full-stack project (system design, relational databases, Azure data fundamentals, cloud security)
+> **Status:** feature development frozen; documentation and submission phase
+> **Last verified commit:** `ce1a862` (10 November 2026)
 
-```powershell
+> [!IMPORTANT]
+> AirSense is a ventilation-support **demonstration**. It is not a medical, diagnostic or safety system and does not replace a certified carbon monoxide alarm.
+
+---
+
+## Contents
+
+[Overview](#overview) · [Screenshots](#screenshots) · [Features](#features) · [Technology stack](#technology-stack) · [Architecture](#architecture) · [Getting started](#getting-started) · [Configuration](#configuration) · [Deployment](#deployment) · [Interface and API](#interface-and-api) · [Security](#security) · [Database](#database) · [Testing](#testing) · [Project status](#project-status) · [Documentation](#documentation) · [Limitations](#limitations) · [Future scope](#future-scope)
+
+---
+
+## Overview
+
+AirSense lets a household owner create a home, add rooms, pair sensors and watch air-quality readings (CO₂ first, plus other supported metrics) in one dashboard. Readings are validated on arrival, compared with per-room thresholds to raise advisory alerts, stored for history and export, and used for a simple, honestly validated trend forecast.
+
+| | |
+|---|---|
+| **Users** | Home owners (manage rooms, sensors, members) and members (view) |
+| **Data sources** | Authenticated devices, imported DALTON-style CSV datasets, simulated demo readings. Each reading carries its source label and sources are never mixed in one average. |
+| **Scope** | Application, relational database, security controls, tests and documentation. Azure SQL, Blob Storage and Power BI are documented as proposals only (see [Project status](#project-status)). |
+
+## Screenshots
+
+> Screenshots have not been added to the repository yet. Capture them from the running application and store them in `docs/screenshots/`.
+
+## Screenshots
+
+### Landing Page
+![AirSense Landing Page](docs/screenshots/iimage.png)
+
+### Dashboard
+![AirSense Dashboard](docs/screenshots/dash.png)
+
+### Alerts
+![AirSense Alerts](docs/screenshots/alert.png)
+
+### Analytics
+![AirSense Analytics](docs/screenshots/analytics.png)
+## Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Accounts and homes**
+- Registration with an emailed 6-digit code
+- Login and password recovery
+- Home creation, email-bound member invitations
+- Owner and member roles
+
+**Rooms and sensors**
+- Room management
+- Sensor pairing; device key shown once, stored as a peppered hash
+- Key rotation and revocation
+
+**Reading ingestion**
+- Authenticated device endpoint (`X-Device-Key`)
+- Native AirGradient CO₂ payloads (`rco2`)
+- Checks for unit, plausible range, timestamp and duplicates
+- Source labels: `device`, `dataset`, `simulated`
+
+</td>
+<td width="50%" valign="top">
+
+**Alerts**
+- High, sustained-elevated and rapid-rise alerts
+- Acknowledge and all-clear handling
+- Per-room thresholds
+
+**Dashboard**
+- Room-wise status, 20-second refresh
+- Live and stale indicators, trend arrows
+- Separate averages per source
+
+**History and analytics**
+- Filters by home, room, sensor, parameter and date
+- Charts; CSV and PDF export
+
+**Predictions**
+- Per-series linear trend, shown only if it beats a persistence baseline by 5% or more
+- Separate offline training command
+
+**Demo lab**
+- Simulated readings and replay of up to 1,000 CSV rows
+
+</td>
+</tr>
+</table>
+
+## Technology stack
+
+| Layer | Technologies |
+|---|---|
+| Backend | Python, Flask (application factory, 12 blueprints) |
+| Frontend | HTML5, CSS3, vanilla JavaScript (no build step) |
+| Database | SQLite (local), PostgreSQL (Render, CI) |
+| ORM and migrations | SQLAlchemy 2, Alembic |
+| Authentication | Session cookies, scrypt, CSRF token |
+| Email | Brevo API |
+| Testing | pytest, Node.js `node:test` |
+| CI/CD | GitHub Actions (SQLite and PostgreSQL jobs) |
+| Hosting | Render, Gunicorn |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser<br/>HTML, CSS, JS"] -->|session cookie + CSRF| App
+    Device["Sensor / AirGradient"] -->|X-Device-Key| App
+    subgraph App["Flask application"]
+        Routes["Routers and request guards"] --> Services["Validation, alerts,<br/>forecasting services"]
+    end
+    Services --> DB[("SQLite / PostgreSQL")]
+    Routes -->|OTP and invitations| Mail["Brevo email API"]
+    Services --> Models["instance/forecast_models.json"]
+```
+
+Routers handle authentication, authorisation and ingestion; services validate readings, evaluate alerts and serve history and predictions; SQLAlchemy persists to SQLite or PostgreSQL. The full diagrams (system architecture, ER, data flow levels 0 and 1) are in [`docs/final_submission/diagrams/`](docs/final_submission/diagrams/).
+
+## Getting started
+
+**Prerequisites:** Python 3.10+, Git, pip, and Node.js (only for the JavaScript tests).
+
+```bash
+git clone https://github.com/asvibes/AirSense.git
+cd AirSense
+
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+source .venv/bin/activate            # Windows PowerShell: .\.venv\Scripts\Activate.ps1
 
-### 2. Install dependencies
-
-```powershell
 pip install -r requirements.txt
-```
+pip install -r requirements-dev.txt  # optional: adds pytest for running tests
 
-### 3. Apply database migrations
-
-```powershell
 python -m alembic upgrade head
-```
-
-### 4. Start the application
-
-```powershell
 python -m flask --app "app.main:create_app()" run
 ```
 
-Open `http://127.0.0.1:5000/` for the landing page, then use Sign in or Register to access the dashboard.
+Open <http://127.0.0.1:5000/> and choose **Create account**.
 
-The default database is SQLite at `instance\airsense.sqlite3`. Set `DATABASE_URL` to use another supported SQLAlchemy database URL.
+- The default database is SQLite at `instance/airsense.sqlite3`. Set `DATABASE_URL` for another SQLAlchemy URL.
+- A root `.env` file is loaded automatically and is git-ignored. `.env.example` is a template only and is **not** loaded.
+- `AUTO_CREATE_SCHEMA` defaults to `false`; use Alembic migrations.
+- Back up any database containing data before running migrations, and check which `DATABASE_URL` the command will use.
+- Registration sends an emailed code through Brevo. For local work without email, set `EMAIL_VERIFICATION_REQUIRED=false` and register through the API.
 
-`AUTO_CREATE_SCHEMA` defaults to `false`; apply Alembic migrations before starting the application. SQLAlchemy's `create_all()` can create missing tables, but it does not migrate existing tables. Set `AUTO_CREATE_SCHEMA=true` only for disposable databases such as isolated tests.
+## Configuration
 
-The application does not automatically load `.env.example`. In PowerShell, set required environment variables in the current shell before starting Flask, or configure them in your development environment:
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Database connection (default: local SQLite) |
+| `SECRET_KEY` | Session signing key; production refuses to start with a default |
+| `AIRSENSE_DEVICE_KEY_PEPPER` | Device-key hashing secret; required in production |
+| `APP_ENV` | Set to `production` on Render |
+| `SESSION_COOKIE_SECURE` | `true` when served over HTTPS |
+| `TRUSTED_PROXY_HOPS` | Trusted reverse proxies (`0` locally, `1` in production) |
+| `BREVO_API_KEY`, `MAIL_DEFAULT_SENDER`, `MAIL_DEFAULT_SENDER_NAME` | Email delivery; sender must be verified in Brevo |
+| `PUBLIC_BASE_URL` | Canonical HTTPS URL used in emailed links |
+| `EMAIL_VERIFICATION_REQUIRED` | Whether the API demands an emailed code at registration |
+| `AIRSENSE_MAX_LIVE_READING_AGE_SECONDS` | Oldest accepted live reading (default 24 hours) |
+| `AIRSENSE_HIGH_THRESHOLD`, `AIRSENSE_ELEVATED_THRESHOLD`, `AIRSENSE_ELEVATED_DURATION_SECONDS`, `AIRSENSE_RAPID_RISE_PER_MINUTE`, `AIRSENSE_ALL_CLEAR_DURATION_SECONDS` | Alert defaults (CO₂: 1,500 ppm high; 1,000 ppm for 5 minutes elevated; +200 ppm/min rapid rise) |
+| `REQUIRE_API_TOKEN`, `AIRSENSE_API_TOKEN` | Optional bearer-token gate for legacy routes (32+ characters) |
+| `PRIVATE_UPLOAD_FOLDER` (or `AIRSENSE_PRIVATE_UPLOAD_FOLDER`) | Room photo storage (default `instance/private_uploads`) |
 
-```powershell
-$env:DATABASE_URL = "sqlite:///instance/airsense.sqlite3"
-$env:SECRET_KEY = "<private random value>"
-$env:AIRSENSE_DEVICE_KEY_PEPPER = "<private random value>"
+Never commit real credentials. Threshold defaults are illustrative demo values, not published health guidelines.
+
+## Deployment
+
+`render.yaml` defines one web service that installs requirements, runs `python -m alembic upgrade head` before each deploy, and starts Gunicorn with two workers. Set `DATABASE_URL`, `AIRSENSE_DEVICE_KEY_PEPPER`, `AIRSENSE_API_TOKEN`, the Brevo variables and `PUBLIC_BASE_URL` in the Render dashboard. Production mode refuses to start without a real secret key and pepper.
+
+Render's filesystem is not persistent unless a disk is added, so room photos and `instance/forecast_models.json` can be lost on redeploy.
+
+> The live URL (<https://airsense-85qa.onrender.com>) has not been independently verified for headers, HTTPS configuration or availability. Free-tier Render services can be slow to wake or return 503 while starting.
+
+## Interface and API
+
+The interface is served at `/alerts` after sign-in, with `/history`, `/analytics` and `/predictions` beside it. The application has **69 routes in 12 blueprints**; roughly half are pages and form posts, the rest JSON. Browser requests that change data need the `X-CSRF-Token` header (from `GET /api/me`); devices use `X-Device-Key`.
+
+| Group | Main endpoints |
+|---|---|
+| Authentication | `POST /api/auth/register/send-otp`, `/register`, `/verify-email`, `/login`, `/logout`, `/forgot-password`, `/verify-reset`, `/reset-password`; `GET /api/me` |
+| Homes and members | `GET/POST /api/homes`, `POST /api/active-home`, `GET /api/homes/{id}/members`, `POST /api/homes/{id}/invitations`, `POST /api/invitations/accept` |
+| Rooms, sensors, thresholds | `GET/POST /api/homes/{id}/rooms`, `.../sensors`, `.../sensors/{sensor}/rotate-key`, `.../revoke`, `GET/PUT .../thresholds` |
+| Readings and alerts | `POST /api/sensors/{sensor}/readings`, `GET /api/homes/{id}/dashboard`, `POST /api/alerts/{alert}/acknowledge`, `GET /api/homes/{id}/activity` |
+| History | `GET /api/homes/{id}/history`, `.../history.csv`, `.../history.pdf`, `.../history/options`, `.../predictions` |
+| Demo (owner) | `POST /api/homes/{id}/demo/readings`, `POST /api/homes/{id}/demo/replay` |
+| Photos | `POST/GET/DELETE /api/homes/{id}/rooms/{room}/photos[/{file}]` (API only) |
+| Health | `GET /api/health` |
+
+<details>
+<summary><strong>Example device reading</strong></summary>
+
+```bash
+curl -X POST https://<host>/api/sensors/<sensor_id>/readings \
+  -H "X-Device-Key: <device key>" \
+  -H "Content-Type: application/json" \
+  -d '{"room": "Bedroom", "metric": "CO2", "value": 820, "unit": "ppm", "measured_at": "2026-11-09T10:30:00Z"}'
 ```
 
-Keep real values in an ignored local `.env` or protected environment settings, never in source control. Before running migrations against a database that contains data, stop the application and make a separate verified backup of the database file. Do not use `AUTO_CREATE_SCHEMA` to update an existing schema.
+A native AirGradient payload containing `rco2` is also accepted and stored as CO₂ in ppm. Its room must match the sensor's room; other AirGradient fields are ignored.
 
-### Production configuration
+</details>
 
-Set `SECRET_KEY` and `AIRSENSE_DEVICE_KEY_PEPPER` to strong, private values before production use. Production mode refuses to start without them.
+The complete reference is in [`docs/final_submission/06_api_reference.md`](docs/final_submission/06_api_reference.md). List routes locally with `python -m flask --app "app.main:create_app()" routes`.
 
+<<<<<<< Updated upstream
 Sessions use HttpOnly, SameSite cookies, and mutation requests require a CSRF token. Home-scoped routes enforce owner/member membership. Device ingestion uses per-sensor keys whose peppered hashes are stored in the database.
 Authentication and abuse-sensitive routes use database-backed rate-limit buckets shared across workers. Set `TRUSTED_PROXY_HOPS` only when the deployment has a known proxy chain; leave it at `0` to ignore forwarded client headers.
 
@@ -125,29 +297,56 @@ AirGradient device push payloads containing `rco2` are normalized to CO₂ ppm a
 Authenticated mutating routes use session authentication and CSRF protection. Device ingestion is authenticated separately with the sensor key. `REQUIRE_API_TOKEN` is an optional additional gate in the legacy alerts blueprint; it does not replace session, membership, or device authentication and is not a global API gate.
 
 Forecast training is a separate offline task and is never run during page or API loading. Run `python -m app.ml.train` after adding real device or dataset readings. It evaluates each home/room/sensor/metric series with an 80/20 chronological split, compares the linear time trend with a persistence baseline, and writes model/evaluation results to `instance/forecast_models.json`. Series with fewer than 30 distinct timestamps or without the required holdout improvement are saved as unavailable, not forecast.
+=======
+Forecast training is manual: run `python -m app.ml.train` after adding device or dataset readings. It writes `instance/forecast_models.json`; simulated readings are never used for training.
+>>>>>>> Stashed changes
 
 ## Security
 
-* **Password storage:** Passwords are validated and hashed using scrypt.
-* **Session protection:** Sessions use HttpOnly, SameSite cookies, and mutation requests require CSRF protection.
-* **Household authorization:** Home-scoped requests check household membership. Owners manage rooms, sensors, thresholds, and invitations; members can view home data and submit simulator readings.
-* **Device credentials:** Device keys are randomly generated, peppered, and stored only as hashes. The one-time provisioning or rotation response must be treated as a secret.
-* **Invitations:** Invitation tokens are stored by token hash and restricted to the invited email address. Invite delivery is manual, and tokens must be shared securely.
-* **Rate limiting:** The current rate limiter is in-memory and does not coordinate across workers.
-* **Deployment:** Configure strong secrets and use HTTPS before public deployment.
+| Control | Implementation |
+|---|---|
+| Passwords and sessions | scrypt hashes; HttpOnly, SameSite=Lax cookies (Secure in production); `session_version` signs out other sessions after a reset |
+| CSRF | Token required on every browser POST, PUT, PATCH and DELETE |
+| Email codes and recovery | 6-digit code, hashed, 10 minutes, 5 attempts, 60-second resend cooldown; reset tokens hashed, single use, 15 minutes |
+| Authorisation | Every home route checks `owner` or `member`; reading, room, sensor, threshold, invitation, import and activity routes are owner-only |
+| Devices | Per-sensor keys stored as peppered hashes; failed attempts written to the audit log |
+| Rate limiting | Database-backed buckets shared across workers (login, codes, invitations, device readings, demo) |
+| Invitations | Hashed, bound to the invited email, single use, 24 hours |
+| Uploads and exports | Type, magic-byte and size checks; random names; private folder; CSV formula escaping |
+| Headers | CSP, `X-Frame-Options`, nosniff, referrer and permissions policies; HSTS on secure production requests |
+| Audit | `audit_logs` table records relevant security events |
+
+**Known weaknesses** (documented, not hidden):
+- The CSP still allows inline scripts and styles.
+- `render.yaml` sets `EMAIL_VERIFICATION_REQUIRED=false`, so accounts created through the API are not email-verified and an existing address can be detected at registration in that mode.
+- There is no per-room photo quota, and accepting an invitation at login has no confirm step.
+- There is no application logging beyond the email module.
+- HTTPS, database network rules and monitoring depend on the host and were not verified.
+
+See the threat model and security checklist in [`docs/final_submission/`](docs/final_submission/).
 
 ## Database
 
-The application uses SQLAlchemy models and Alembic migrations. The current local SQLite database is at revision `20261105_0004`, which adds nullable `air_readings.received_at`. The active schema contains 11 application tables plus Alembic's version table. Fresh migration-to-head and ORM metadata comparison, upgrade from the prior revision, and downgrade/re-upgrade are tested with temporary databases; no production database is used for these tests.
+SQLAlchemy 2 models with **13 tables** and **8 Alembic migrations** (latest `20261108_0008`).
 
-Readings and alerts use relational models. Duplicate home/room/metric/timestamp readings are rejected, open-alert uniqueness is enforced in the database, and reading/alert updates are transactional. Foreign keys ensure individual referenced records exist, but the active schema does not enforce same-home consistency between a row's `home_id`, `room_id`, and optional sensor through composite constraints. Current local records passed integrity and foreign-key checks, and read-only same-home relationship checks found no mismatches.
+| Domain | Tables |
+|---|---|
+| Identity and access | `users`, `homes`, `home_memberships`, `home_invitations`, `email_challenges` |
+| Devices and rooms | `rooms`, `sensors`, `metrics` |
+| Readings and alerts | `air_readings`, `threshold_policies`, `air_alerts` |
+| Platform | `audit_logs`, `rate_limit_buckets` |
 
-Separate, one-time Azure SQL target-schema scripts and their application order are documented in [`database/README.md`](./database/README.md). They define a different schema—including global roles, composite same-home relationships, temporal threshold provenance, additional reading/alert constraints, activity logs, views, and triggers—and are not wired into the Flask application's Alembic migrations. Do not execute them against the local SQLite database.
+- Duplicate readings (same home, room, metric and time) are rejected.
+- A partial unique index allows one open alert per home, room, metric and level.
+- Ingestion runs in a single transaction.
+- Room photos are files, not database rows.
+- Migrations were run (upgrade, downgrade, upgrade) on SQLite and PostgreSQL 16.
 
-## Testing and Verification
+The scripts in [`database/`](database/README.md) describe a separate Azure SQL schema. They were never run on Azure SQL and are not used by the application.
 
-Run the integration tests:
+## Testing
 
+<<<<<<< Updated upstream
 ```powershell
 python -m pip install -r requirements-dev.txt
 python -m pytest -q
@@ -157,45 +356,86 @@ Create a demo home for an existing account (after applying migrations):
 
 ```powershell
 python tools/seed_demo_home.py --email owner@example.com
+=======
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -q                                  # Python suite (what CI runs)
+python -m pytest --cov=app --cov-report=term-missing # with coverage (needs pytest-cov)
+node --test tests/dashboard_live_updates.test.js
+node --test tests/dashboard_room_trends.test.js
+node --test tests/dashboard_co2_averages.test.js
+>>>>>>> Stashed changes
 ```
 
-Apply migrations:
+| Check at commit `ce1a862` | Result |
+|---|---|
+| Python tests (pytest) | 202 passed |
+| JavaScript tests | 19 passed |
+| Python line coverage | 91% |
+| Migrations on SQLite | upgrade, downgrade, upgrade passed |
+| Migrations and suite on PostgreSQL 16 | passed |
 
-```powershell
-python -m alembic upgrade head
-```
+Use `pytest`, not `python -m unittest discover`: the newer test files are pytest-style, so `unittest` finds only 186 of the 202.
 
-Back up any populated database before applying migrations. The migration command targets the `DATABASE_URL` environment variable when set, otherwise the URL in `alembic.ini`; verify the target first. The latest full local test run passed **77 tests and 64 subtests**. That is backend/unit/API/database test evidence, not browser E2E, PostgreSQL, or cloud deployment evidence.
+**What is not covered:** real hardware, real DALTON data, live Brevo delivery, load testing, penetration testing and Azure integration. Dashboard behaviour was checked in a headless browser with ad hoc scripts that are not stored in the repository. GitHub Actions results were not independently verified.
 
-List registered Flask routes:
+Useful migration commands: `python -m alembic current`, `python -m alembic history`.
 
-```powershell
-python -m flask --app "app.main:create_app()" routes
-```
+## Project status
 
-## Project status and known gaps
-
-The latest known backend test baseline is **77 tests and 64 subtests passed**. No percentage-complete score is reported because PRD scope and delivery criteria have not been independently weighted or fully verified.
-
-| Area | Local implementation status | Remaining or unverified |
+| Component | Status | Notes |
 |---|---|---|
-| Authentication and authorization | Session auth, scrypt password hashes, CSRF, per-home owner/member checks; selected access-control tests. | PRD facility-manager/admin roles and role-change flow are absent; browser E2E not verified. |
-| Rooms and sensors | Room creation/listing/editing; sensor provision/rotate/revoke; freshness and device-key ingestion. | Room deletion and sensor move/edit are absent. |
-| Readings, thresholds, alerts | Validated simulator/device/DALTON flows, server-generated UTC `received_at`, threshold evaluation, duplicate suppression, acknowledgement/all-clear, and selected audit events. | Threshold source citations are not stored. Existing readings retain `received_at = NULL` because historical receipt times are unknown. |
-| History and dashboard | Same-origin UI API calls, polling, history filters, charts, heatmap, CSV. | UI behavior has no automated browser E2E evidence. |
-| Audit/security | Login/logout (known account), threshold, sensor, membership, reading, and alert events; credentials are not intentionally included. | No role changes; unknown-account failed logins have no home-scoped audit record. Full threat-model/security evidence remains incomplete. |
-| Analytics and files | Local dashboard reporting and CSV streaming. | Power BI report is a zero-byte placeholder; Blob Storage is not integrated. |
-| Cloud/deployment | Render configuration exists as a deployment template. | No verified live deployment, HTTPS/security headers, Azure SQL/Blob configuration, firewall evidence, or cloud test result is claimed. |
+| Accounts, roles, invitations | Implemented, tested | Production keeps email verification off; no role-change screen |
+| Rooms and sensors | Implemented | No room deletion; no moving a sensor between rooms |
+| Reading ingestion and alerts | Implemented, tested | AirGradient CO₂ only; real hardware never connected |
+| Dashboard | Implemented | Checked in a headless browser only |
+| History, analytics, exports | Implemented | Real DALTON data never loaded |
+| Predictions | Implemented | Accuracy on real data unknown; training is manual |
+| Photo uploads | API only | No screen |
+| Analytics report | Standalone HTML, generated by `tools/generate_analytics_report.py` | 1,512 synthetic rows; not a Power BI file |
+| PWA | Not implemented | `manifest.webmanifest` and `sw.js` are empty |
+| Azure SQL, Blob Storage, Power BI | Not implemented | `.pbix` is a zero-byte placeholder |
 
-The application currently implements home-scoped `owner` and `member` roles—not the full proposed standard-user/facility-manager/administrator model. See [docs/PRD.md](docs/PRD.md) for the local implementation summary and [docs/product-requirements.md](docs/product-requirements.md) for target requirements.
+Feature development is frozen; remaining work is documentation, verification and submission material.
 
-## Project Constraints and Limitations
+## Documentation
 
-* AirSense is a ventilation-support demo, not a medical or diagnostic system.
-* Readings depend on configured sensors or submitted simulator values; the application does not measure air quality independently.
-* Threshold defaults are illustrative, not published health or safety guidelines.
-* The dashboard displays only measurements present in stored readings. Verify metric units and sensor ranges before any non-demo use.
-* The application does not replace a certified carbon monoxide alarm or other safety equipment.
-* Thresholds do not currently have stored authoritative citations.
-* Dataset replay requires the user to provide a CSV; imported historical rows do not create live alerts. Email delivery, automatic sensor adapters, and live vendor integrations are not configured.
-* Authentication and ingestion abuse limits use persistent database-backed buckets; verify database locking and cleanup behavior on the deployment database.
+The submission pack in [`docs/final_submission/`](docs/final_submission/) contains 15 documents:
+
+| # | Document | # | Document |
+|---|---|---|---|
+| 1 | Submission index and summary | 9 | Security checklist |
+| 2 | Requirements, scope, traceability | 10 | Test and submission evidence |
+| 3 | Architecture and data flow | 11 | Technology stack and module map |
+| 4 | ER diagram and database design | 12 | User manual |
+| 5 | SQL artifacts and schema status | 13 | Data flow diagrams |
+| 6 | API reference | 14 | B.Tech final project report (draft) |
+| 7 | Setup and user guide | 15 | Final submission checklist |
+| 8 | Data classification and threat model | | |
+
+Additional design notes: [`docs/PRD.md`](docs/PRD.md), [`docs/architecture.md`](docs/architecture.md), [`docs/data-model.md`](docs/data-model.md), [`docs/alert-lifecycle.md`](docs/alert-lifecycle.md), [`docs/reading-validation.md`](docs/reading-validation.md), [`docs/dalton-notes.md`](docs/dalton-notes.md), [`docs/threshold-sources.md`](docs/threshold-sources.md).
+
+## Limitations
+
+- An academic demonstration, not a medical or safety system; thresholds are illustrative.
+- It does not measure air quality itself; it processes submitted readings. Verify units and sensor ranges before any real use.
+- Real hardware integration, real DALTON replay and Brevo delivery have not been verified end to end.
+- Dataset replay needs a CSV you provide; imported historical rows do not create live alerts.
+- Alerts appear on the dashboard only; there are no email or push alerts.
+- Photos and forecast models use local disk, which Render may reset on redeploy.
+- Azure SQL, Blob Storage and Power BI are not implemented.
+- Production infrastructure, monitoring and load behaviour are unverified.
+
+## Future scope
+
+These are possible extensions, not implemented features:
+
+- Connect physical AirGradient hardware and ingest more than CO₂
+- Persistent cloud storage for photos and models
+- Progressive Web App support
+- Email and push alerts
+- Better forecasting on larger real datasets
+
+---
+
+<sub>AirSense was developed as a B.Tech academic project to demonstrate application development, relational database design, data processing, application security and basic predictive analytics. It is intended for educational and demonstration use only.</sub>
