@@ -222,7 +222,6 @@ A native AirGradient payload containing `rco2` is also accepted and stored as CO
 
 The complete reference is in [`docs/final_submission/06_api_reference.md`](docs/final_submission/06_api_reference.md). List routes locally with `python -m flask --app "app.main:create_app()" routes`.
 
-<<<<<<< Updated upstream
 Sessions use HttpOnly, SameSite cookies, and mutation requests require a CSRF token. Home-scoped routes enforce owner/member membership. Device ingestion uses per-sensor keys whose peppered hashes are stored in the database.
 Authentication and abuse-sensitive routes use database-backed rate-limit buckets shared across workers. Set `TRUSTED_PROXY_HOPS` only when the deployment has a known proxy chain; leave it at `0` to ignore forwarded client headers.
 
@@ -297,9 +296,6 @@ AirGradient device push payloads containing `rco2` are normalized to CO₂ ppm a
 Authenticated mutating routes use session authentication and CSRF protection. Device ingestion is authenticated separately with the sensor key. `REQUIRE_API_TOKEN` is an optional additional gate in the legacy alerts blueprint; it does not replace session, membership, or device authentication and is not a global API gate.
 
 Forecast training is a separate offline task and is never run during page or API loading. Run `python -m app.ml.train` after adding real device or dataset readings. It evaluates each home/room/sensor/metric series with an 80/20 chronological split, compares the linear time trend with a persistence baseline, and writes model/evaluation results to `instance/forecast_models.json`. Series with fewer than 30 distinct timestamps or without the required holdout improvement are saved as unavailable, not forecast.
-=======
-Forecast training is manual: run `python -m app.ml.train` after adding device or dataset readings. It writes `instance/forecast_models.json`; simulated readings are never used for training.
->>>>>>> Stashed changes
 
 ## Security
 
@@ -346,7 +342,6 @@ The scripts in [`database/`](database/README.md) describe a separate Azure SQL s
 
 ## Testing
 
-<<<<<<< Updated upstream
 ```powershell
 python -m pip install -r requirements-dev.txt
 python -m pytest -q
@@ -356,28 +351,27 @@ Create a demo home for an existing account (after applying migrations):
 
 ```powershell
 python tools/seed_demo_home.py --email owner@example.com
-=======
-```bash
-pip install -r requirements-dev.txt
-python -m pytest -q                                  # Python suite (what CI runs)
-python -m pytest --cov=app --cov-report=term-missing # with coverage (needs pytest-cov)
+```
+
+The three JavaScript tests require Node.js:
+
+```powershell
 node --test tests/dashboard_live_updates.test.js
 node --test tests/dashboard_room_trends.test.js
 node --test tests/dashboard_co2_averages.test.js
->>>>>>> Stashed changes
 ```
 
-| Check at commit `ce1a862` | Result |
+| Check and evidence baseline | Result |
 |---|---|
-| Python tests (pytest) | 202 passed |
-| JavaScript tests | 19 passed |
-| Python line coverage | 91% |
-| Migrations on SQLite | upgrade, downgrade, upgrade passed |
-| Migrations and suite on PostgreSQL 16 | passed |
+| Python tests (`27a83d1`, local run) | 202 passed, 14 warnings |
+| JavaScript tests | Not run in the verification environment; Node.js was unavailable |
+| Python line coverage | Not measured |
+| PostgreSQL CI (`0fe75da`) | All three CI jobs passed |
+| Migrations on SQLite | Upgrade, downgrade, and upgrade passed |
 
 Use `pytest`, not `python -m unittest discover`: the newer test files are pytest-style, so `unittest` finds only 186 of the 202.
 
-**What is not covered:** real hardware, real DALTON data, live Brevo delivery, load testing, penetration testing and Azure integration. Dashboard behaviour was checked in a headless browser with ad hoc scripts that are not stored in the repository. GitHub Actions results were not independently verified.
+**What is not covered:** real hardware, real DALTON data, live Brevo delivery, load testing, penetration testing and Azure integration. Dashboard behaviour was checked in a headless browser with ad hoc scripts that are not stored in the repository. The CI result above is the verified run for commit `0fe75da`; later CI runs were not checked for this evidence snapshot.
 
 Useful migration commands: `python -m alembic current`, `python -m alembic history`.
 
